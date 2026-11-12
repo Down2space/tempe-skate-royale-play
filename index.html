@@ -4827,7 +4827,8 @@ function rollItem(q){const r=Math.random();
 function itemName(it){if(it.kind==='hwtok')return it.name;if(it.kind==='fangs')return 'Chupacabra Fangs';if(it.kind==='vshard')return 'Void Shard';if(it.kind==='can')return 'Spray Can';if(it.kind==='trip')return TRIP[it.type].name;if(it.kind==='tok'||it.kind==='sq')return it.name;if(it.kind==='cash')return '$'+(it.amt||5);if(it.kind==='key')return it.col.toUpperCase()+' KEYCARD';if(it.kind==='wep')return RAR_N[it.r]+pwName(it.type);if(it.kind==='ammo')return 'Ammo';if(it.kind==='heal')return healName(it);if(it.kind==='armor')return ARMOR_N[it.tier];if(it.kind==='shroom')return 'Desert Shroom';return 'Item';}
 let itemId=1;
 const TRIP={weed:{name:'Weed',dur:22,col:'#5ab84a'},purple:{name:'Purple Shroom',dur:24,col:'#a86bff'},gold:{name:'Golden Teacher',dur:24,col:'#ffc23d'},green:{name:'Green Melter',dur:26,col:'#3aff6a'},black:{name:'Black Neon',dur:26,col:'#1a1a1a'}};
-function dropItem(x,y,it){if(gameMode==='story'&&it.kind==='armor')it={kind:'heal',type:pick(['water','burrito'])};if(gameMode==='story'&&((it.kind==='wep'&&it.type!=='bat')||it.kind==='ammo'))it=Math.random()<0.1?{kind:'trip',type:pick(['weed','purple','gold','purple','gold'])}:{kind:'heal',type:pick(['water','burrito'])};const p=isFree(x,y,3)?{x,y}:freeNear(x,y);const o=Object.assign({},it,{x:p.x,y:p.y,id:itemId++,t:Math.random()*TAU});items.push(o);return o;}
+function nearDoor(x,y){return buildings.some(b=>b.dc&&Math.hypot(x-b.dc.x,y-b.dc.y)<48);}
+function dropItem(x,y,it){if(gameMode==='story'&&it.kind==='armor')it={kind:'heal',type:pick(['water','burrito'])};if(gameMode==='story'&&((it.kind==='wep'&&it.type!=='bat')||it.kind==='ammo'))it=Math.random()<0.03?{kind:'trip',type:pick(['weed','purple','gold','purple','gold'])}:{kind:'heal',type:pick(['water','burrito'])};if((it.kind==='trip'||it.kind==='shroom')&&nearDoor(x,y)){let q=null;for(let r=24;r<=160&&!q;r+=12)for(let k=0;k<12;k++){const a=k/12*TAU,X=x+Math.cos(a)*r,Y=y+Math.sin(a)*r;if(isFree(X,Y,3)&&!nearDoor(X,Y)){q={x:X,y:Y};break;}}if(q){x=q.x;y=q.y;}}const p=isFree(x,y,3)?{x,y}:freeNear(x,y);const o=Object.assign({},it,{x:p.x,y:p.y,id:itemId++,t:Math.random()*TAU});items.push(o);return o;}
 function removeItem(it){const i=items.indexOf(it);if(i>=0)items.splice(i,1);}
 
 /* ---------------- match state ---------------- */
@@ -4866,16 +4867,16 @@ function newSkater(P,name,isPlayer){return{P,name,isPlayer,keys:{},ugFrom:null,x
   think:Math.random()*0.3,mode:'loot',goal:null,wp:null,enemy:null,react:0,aimErr:0,strafe:1,stuckT:0,sx:0,sy:0,unstick:0,uDir:0,aggro:null,aggroT:0,deadT:0,goalT:0};}
 function curWep(e){if(e.cur>0&&e.weps[e.cur-1]){const w=e.weps[e.cur-1];return{type:w.type,r:w.r,w,def:WEP[w.type]};}return{type:'fists',r:0,w:null,def:WEP.fists};}
 
-function startMatch(){const __MR=Math.random;Math.random=crowdRng(20261029);try{startMatch0();}finally{Math.random=__MR;}}
+function startMatch(){const __MR=Math.random;Math.random=crowdRng(20261029);try{startMatch0();}finally{Math.random=__MR;}try{for(const it of items){if((it.kind!=='trip'&&it.kind!=='shroom')||!nearDoor(it.x,it.y))continue;let q=null;for(let r=24;r<=160&&!q;r+=12)for(let k=0;k<12;k++){const a=k/12*TAU,X=it.x+Math.cos(a)*r,Y=it.y+Math.sin(a)*r;if(isFree(X,Y,3)&&!nearDoor(X,Y)){q={x:X,y:Y};break;}}if(q){it.x=q.x;it.y=q.y;}}}catch(e){}}
 function startMatch0(){if(typeof HWB!=='undefined'&&HWB.applied&&!(HALLOWEEN&&gameMode==='story'))hwMapRevert();if(NPC_ONLY.includes(selChar))selChar='dylan';FW.rk.length=0;FW.sp.length=0;FW.ss.length=0;FW.ov=null;
   skaters=[];bullets=[];parts=[];texts=[];items=[];cats=[];npcs=[];cars=[];decals=[];missions=[];offers=[];
   matchT=0;act=null;playerPet=null;spectate=null;endT=0;drainUsed=false;motelSeen=false;outage=null;flicker=0;figure=null;figureT=8;
   outageAt=Math.random()<0.65?rnd(95,170):1e9;
   shroomsOut=false;ent=null;ST={kills:0,dmg:0,missions:0,mRep:0,grinds:0,place:0,time:0,pets:0};
   for(const d of dumpsters)d.searched=false;
-  {const near=(x,y,r,fn)=>items.some(o=>D(o.x,o.y,x,y)<r&&(!fn||fn(o)));const sameK=(a,b)=>a.kind===b.kind&&(a.type||'')===(b.type||'');for(const p of lootPts){if(near(p.x,p.y,26))continue;const CV=(it=>{if(gameMode==='story'&&it.kind==='armor')return{kind:'heal',type:pick(['water','burrito'])};if(gameMode==='story'&&((it.kind==='wep'&&it.type!=='bat')||it.kind==='ammo'))return Math.random()<0.1?{kind:'trip',type:pick(['weed','purple','gold','purple','gold'])}:{kind:'heal',type:pick(['water','burrito'])};return it;});let it=CV(rollItem(p.q));for(let k=0;k<4&&near(p.x,p.y,130,o=>sameK(o,it));k++)it=CV(rollItem(p.q));if(near(p.x,p.y,130,o=>sameK(o,it)))continue;dropItem(p.x,p.y,it);}}
+  {const near=(x,y,r,fn)=>items.some(o=>D(o.x,o.y,x,y)<r&&(!fn||fn(o)));const sameK=(a,b)=>a.kind===b.kind&&(a.type||'')===(b.type||'');for(const p of lootPts){if(near(p.x,p.y,26))continue;const CV=(it=>{if(gameMode==='story'&&it.kind==='armor')return{kind:'heal',type:pick(['water','burrito'])};if(gameMode==='story'&&((it.kind==='wep'&&it.type!=='bat')||it.kind==='ammo'))return Math.random()<0.03?{kind:'trip',type:pick(['weed','purple','gold','purple','gold'])}:{kind:'heal',type:pick(['water','burrito'])};return it;});let it=CV(rollItem(p.q));for(let k=0;k<4&&near(p.x,p.y,130,o=>sameK(o,it));k++)it=CV(rollItem(p.q));if(near(p.x,p.y,130,o=>sameK(o,it)))continue;dropItem(p.x,p.y,it);}}
   Math.random=crowdRng(20261031);const sp=shuffle(streetPts);
-  {const ib=buildings.filter(b=>b.y<H&&!b.trip&&b.w>=40&&b.h>=40);let n=0,tr=0;while(n<75&&tr++<4000){const b=ib[(Math.random()*ib.length)|0];const x=b.x+12+Math.random()*(b.w-24),y=b.y+12+Math.random()*(b.h-24);if(!isFree(x,y,5))continue;if(items.filter(o=>o.x>b.x&&o.x<b.x+b.w&&o.y>b.y&&o.y<b.y+b.h).length>=2)continue;if(items.some(o=>D(o.x,o.y,x,y)<44))continue;const CV=(it=>{if(gameMode==='story'&&it.kind==='armor')return{kind:'heal',type:pick(['water','burrito'])};if(gameMode==='story'&&((it.kind==='wep'&&it.type!=='bat')||it.kind==='ammo'))return Math.random()<0.1?{kind:'trip',type:pick(['weed','purple','gold','purple','gold'])}:{kind:'heal',type:pick(['water','burrito'])};return it;});let it=CV(rollItem(0));for(let k=0;k<4&&items.some(o=>o.kind===it.kind&&(o.type||'')===(it.type||'')&&D(o.x,o.y,x,y)<150);k++)it=CV(rollItem(0));if(items.some(o=>o.kind===it.kind&&(o.type||'')===(it.type||'')&&D(o.x,o.y,x,y)<150))continue;dropItem(x,y,it);n++;}}
+  {const ib=buildings.filter(b=>b.y<H&&!b.trip&&b.w>=40&&b.h>=40);let n=0,tr=0;while(n<75&&tr++<4000){const b=ib[(Math.random()*ib.length)|0];const x=b.x+12+Math.random()*(b.w-24),y=b.y+12+Math.random()*(b.h-24);if(!isFree(x,y,5))continue;if(items.filter(o=>o.x>b.x&&o.x<b.x+b.w&&o.y>b.y&&o.y<b.y+b.h).length>=2)continue;if(items.some(o=>D(o.x,o.y,x,y)<44))continue;const CV=(it=>{if(gameMode==='story'&&it.kind==='armor')return{kind:'heal',type:pick(['water','burrito'])};if(gameMode==='story'&&((it.kind==='wep'&&it.type!=='bat')||it.kind==='ammo'))return Math.random()<0.03?{kind:'trip',type:pick(['weed','purple','gold','purple','gold'])}:{kind:'heal',type:pick(['water','burrito'])};return it;});let it=CV(rollItem(0));for(let k=0;k<4&&items.some(o=>o.kind===it.kind&&(o.type||'')===(it.type||'')&&D(o.x,o.y,x,y)<150);k++)it=CV(rollItem(0));if(items.some(o=>o.kind===it.kind&&(o.type||'')===(it.type||'')&&D(o.x,o.y,x,y)<150))continue;dropItem(x,y,it);n++;}}
   player=newSkater(hwSkin(CHARS[selChar]),CHARS[selChar].name,true);skaters.push(player);
   {const BR_N=20;const named=['dylan','max','bill','zach','dre','marco','lucas','chris','nickpapa','josh','goon','jeo','wes'].filter(k=>CHARS[k]&&k!==selChar);
     for(const k of shuffle(named.slice()).slice(0,BR_N-1)){const P=CHARS[k];skaters.push(newSkater(P,P.name,false));}
@@ -8691,7 +8692,7 @@ function flashRed(){$('redflash').style.opacity=1;flashT=0.2;}
 /* ---------------- events ---------------- */
 function updateEvents(dt){
   if(player.shroomT>0)player.shroomT-=dt;
-  if(!shroomsOut&&tod()>0.62){shroomsOut=true;const sp=shuffle(streetPts);for(let i=0;i<12;i++)dropItem(sp[i].x,sp[i].y,{kind:'shroom'});if(player.alive&&matchT>2)toast('Glowing mushrooms are sprouting in the dark…');}
+  if(!shroomsOut&&tod()>0.62){shroomsOut=true;const sp=shuffle(streetPts);for(let i=0;i<4;i++)dropItem(sp[i].x,sp[i].y,{kind:'shroom'});if(player.alive&&matchT>2)toast('Glowing mushrooms are sprouting in the dark…');}
   if(!outage&&matchT>outageAt&&tod()>0.8){outage={t:25};flicker=1;toast('The power just went out across Tempe…');sfx('whisper',0.7);outageAt=1e9;}
   if(outage){outage.t-=dt;if(outage.t<=0){outage=null;toast('Lights are back.');}}
   if(flicker>0)flicker-=dt;
@@ -13441,7 +13442,7 @@ function skiFrame(g,c,dt){const M=MGM,s=Math.min(c.height/200,c.width/320),LW=c.
   g.restore();}
 /* ---- elder's apartment shroom stash ---- */
 const ELDSH={t:0};
-function spawnElderShrooms(){const b=buildings.find(b=>b.name==='ELDERS APT');if(!b)return;ELDSH.b=b;ELDSH.spots=[{x:b.x+28,y:b.y+b.h-24,type:'purple'},{x:b.x+48,y:b.y+b.h-24,type:'gold'}];for(const sp of ELDSH.spots)dropItem(sp.x,sp.y,{kind:'trip',type:sp.type});}
+function spawnElderShrooms(){const b=buildings.find(b=>b.name==='ELDERS APT');if(!b)return;ELDSH.b=b;ELDSH.spots=[{x:b.x+28,y:b.y+b.h-24,type:'purple'},{x:b.x+48,y:b.y+b.h-24,type:'gold'}];for(const sp of ELDSH.spots){const o=dropItem(sp.x,sp.y,{kind:'trip',type:sp.type});sp.x=o.x;sp.y=o.y;}}
 function spawnMtnShrooms(){const L=HOUSE_SPOTS.find(h=>h.label==='LOOK OUT');if(!L||!ELDSH.spots)return;for(const [dx,dy,t] of [[-20,8,'purple'],[18,10,'gold'],[2,20,'purple']]){const q=freeNear(L.x+dx,L.y+dy);ELDSH.spots.push({x:q.x,y:q.y,type:t});dropItem(q.x,q.y,{kind:'trip',type:t});}}
 function elderShroomTick(dt){if(!ELDSH.spots)return;ELDSH.t-=dt;if(ELDSH.t>0)return;ELDSH.t=45;for(const sp of ELDSH.spots){if(!items.some(it=>it.kind==='trip'&&it.type===sp.type&&Math.hypot(it.x-sp.x,it.y-sp.y)<14))dropItem(sp.x,sp.y,{kind:'trip',type:sp.type});}}
 
@@ -20147,8 +20148,8 @@ function bloomInit(){try{for(const id of['game','mgc']){const c=document.getElem
 
 
 /* ===== SKULL RADIO: background music player ===== */
-const RADIO={on:true,paused:false,i:0,shuf:false,vol:0.45,a:null,gest:false,cur:-1,v:0,list:null};
-try{const r=JSON.parse(localStorage.getItem('tsr_radio')||'null');if(r){RADIO.on=r.on!==false;RADIO.paused=!!r.paused;RADIO.i=r.i|0;RADIO.shuf=!!r.shuf;if(r.vol!=null)RADIO.vol=r.vol;}}catch(e){}
+const RADIO={on:false,paused:false,i:0,shuf:false,vol:0.45,a:null,gest:false,cur:-1,v:0,list:null};
+try{const r=JSON.parse(localStorage.getItem('tsr_radio')||'null');if(r){RADIO.on=false;RADIO.paused=!!r.paused;RADIO.i=r.i|0;RADIO.shuf=!!r.shuf;if(r.vol!=null)RADIO.vol=r.vol;}}catch(e){}
 setInterval(()=>{try{const rb=document.getElementById('radioBtn');if(rb)rb.style.visibility=((typeof sheet!=='undefined'&&!sheet.hidden)||state!=='play')?'hidden':'';}catch(e){}},150);
 function radioSave(){try{localStorage.setItem('tsr_radio',JSON.stringify({on:RADIO.on,paused:RADIO.paused,i:RADIO.i,shuf:RADIO.shuf,vol:RADIO.vol}));}catch(e){}}
 function radioList(){if(RADIO.list)return RADIO.list;const L=[],seen=new Set();const add=(name,by,file,dur)=>{if(!file||seen.has(file))return;seen.add(file);L.push({name,by:by||'',file,dur:dur||0});};
