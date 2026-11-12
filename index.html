@@ -8692,7 +8692,7 @@ function flashRed(){$('redflash').style.opacity=1;flashT=0.2;}
 /* ---------------- events ---------------- */
 function updateEvents(dt){
   if(player.shroomT>0)player.shroomT-=dt;
-  if(!shroomsOut&&tod()>0.62){shroomsOut=true;const sp=shuffle(streetPts);for(let i=0;i<4;i++)dropItem(sp[i].x,sp[i].y,{kind:'shroom'});if(player.alive&&matchT>2)toast('Glowing mushrooms are sprouting in the dark…');}
+  
   if(!outage&&matchT>outageAt&&tod()>0.8){outage={t:25};flicker=1;toast('The power just went out across Tempe…');sfx('whisper',0.7);outageAt=1e9;}
   if(outage){outage.t-=dt;if(outage.t<=0){outage=null;toast('Lights are back.');}}
   if(flicker>0)flicker-=dt;
