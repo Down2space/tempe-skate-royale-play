@@ -20912,21 +20912,23 @@ const _initAudioAmb=initAudio;initAudio=function(){_initAudioAmb();try{ambInit()
 /* ---------------- online battle royale: one phone hosts a room, friends join with the code (PeerJS / WebRTC, works on Wi-Fi or the internet) ---------------- */
 const MP={on:false,host:false,peer:null,conns:{},hc:null,id:null,room:'',players:{},rem:{},started:false,sendT:0,zoneT:0,applying:false,cap:null,me:false,recv:false};
 const MP_ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},{urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}]};
+(async()=>{try{const sec='openrelayprojectsecret',user=String(Math.floor(Date.now()/1000)+86400*3)+':tsr';const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(sec),{name:'HMAC',hash:'SHA-1'},false,['sign']);const sig=await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(user));const cred=btoa(String.fromCharCode(...new Uint8Array(sig)));
+  const H='staticauth.openrelay.metered.ca';MP_ICE.iceServers.push({urls:['turn:'+H+':80','turn:'+H+':443','turn:'+H+':80?transport=tcp','turn:'+H+':443?transport=tcp','turns:'+H+':443'],username:user,credential:cred});}catch(e){}})();
 function mpLib(cb){if(window.Peer)return cb();const add=(src,next)=>{const sc=document.createElement('script');sc.src=src;sc.onload=()=>cb();sc.onerror=next;document.head.appendChild(sc);};add('peerjs.min.js',()=>add('https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js',()=>mpMsg('Could not load the online module. Check your connection.')));}
 function mpNewPeer(id){return new Peer(id,Object.assign({config:MP_ICE,debug:0},window.TSR_PEER_OPTS||{}));}
 function mpMsg(t){const el=$('mpMsg');if(el)el.textContent=t||'';}
 function mpName(){const v=($('mpName')&&$('mpName').value||'').trim().toUpperCase().replace(/[^A-Z0-9 _.-]/g,'').slice(0,12);return v||CHARS[selChar].name;}
 function mpCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ';let c='';for(let i=0;i<4;i++)c+=A[(Math.random()*A.length)|0];return c;}
-function mpHost(){mpLeave(true);mpMsg('Opening a room…');mpLib(()=>{const code=mpCode();const pe=mpNewPeer('tsrroyale-'+code);MP.peer=pe;
+function mpHost(){mpLeave(true);mpMsg('Opening a room…');mpLib(()=>{const code=mpCode();const pe=mpNewPeer('tsrroyale-'+code);MP.peer=pe;setTimeout(()=>{if(MP.peer===pe&&!pe.open)mpMsg('Can\'t reach the online server. Check your internet and try again.');},12000);
   pe.on('open',id=>{MP.on=true;MP.host=true;MP.id=id;MP.room=code;MP.players={[id]:{name:mpName(),char:selChar}};mpMsg('');mpLobbyUI();});
   pe.on('connection',c=>{c.on('open',()=>{MP.conns[c.peer]=c;});c.on('data',d=>mpOnData(d,c));c.on('close',()=>mpGone(c.peer));c.on('error',()=>mpGone(c.peer));});
   pe.on('error',e=>{if(e.type==='unavailable-id'){mpHost();return;}mpMsg('Network error: '+(e.type||e.message||e));});
   pe.on('disconnected',()=>{try{pe.reconnect();}catch(e){}});});}
 function mpJoin(){const code=(($('mpCode')&&$('mpCode').value)||'').trim().toUpperCase();if(code.length!==4){mpMsg('Type the 4-letter room code');return;}mpLeave(true);mpMsg('Joining '+code+'…');
-  mpLib(()=>{const pe=mpNewPeer();MP.peer=pe;pe.on('open',id=>{MP.id=id;const c=pe.connect('tsrroyale-'+code,{reliable:true,serialization:'json'});MP.hc=c;
+  mpLib(()=>{const pe=mpNewPeer();MP.peer=pe;setTimeout(()=>{if(MP.peer===pe&&!pe.open)mpMsg('Can\'t reach the online server. Check your internet and try again.');},12000);pe.on('open',id=>{MP.id=id;mpMsg('Connecting to the host phone…');setTimeout(()=>{if(MP.peer===pe&&!MP.on&&!pe._err)mpMsg('Found room '+code+' but couldn\'t connect to the host phone. Keep the host\'s game open on screen and try JOIN again.');},20000);const c=pe.connect('tsrroyale-'+code,{reliable:true,serialization:'json'});MP.hc=c;
     c.on('open',()=>{MP.on=true;MP.host=false;MP.room=code;c.send({t:'hello',name:mpName(),char:selChar});mpMsg('');});
     c.on('data',d=>mpOnData(d,c));c.on('close',()=>{if(MP.on){mpMsg('Lost the host.');mpEndOnline('THE HOST LEFT');}});});
-   pe.on('error',e=>{mpMsg(e.type==='peer-unavailable'?'No room with code '+code+'. Check the code and that the host is still open.':'Network error: '+(e.type||e.message||e));});});}
+   pe.on('error',e=>{pe._err=1;mpMsg(e.type==='peer-unavailable'?'No room with code '+code+'. Check the code and that the host is still open.':'Network error: '+(e.type||e.message||e));});});}
 function mpLeave(quiet){try{if(MP.hc)MP.hc.close();}catch(e){}for(const k in MP.conns){try{MP.conns[k].close();}catch(e){}}try{if(MP.peer)MP.peer.destroy();}catch(e){}
   Object.assign(MP,{on:false,host:false,peer:null,conns:{},hc:null,id:null,room:'',players:{},rem:{},started:false});if(!quiet)mpLobbyUI();}
 function mpSend(o,skip){if(!MP.on)return;if(MP.host){for(const k in MP.conns){if(k===skip)continue;const c=MP.conns[k];if(c.open)try{c.send(o);}catch(e){}}}else if(MP.hc&&MP.hc.open){try{MP.hc.send(o);}catch(e){}}}
