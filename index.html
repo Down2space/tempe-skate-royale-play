@@ -426,7 +426,7 @@ const SFX={
   land:v=>{tone(130,48,0.11,'sine',0.45*v);nz(0.09,0.42*v,520);nz(0.02,0.3*v,3800,'highpass');setTimeout(()=>{nz(0.03,0.16*v,2400,'bandpass');tone(700,500,0.025,'triangle',0.05*v);},55);},
   hop:v=>{nz(0.05,0.18*v,1400,'bandpass');tone(150,90,0.05,'sine',0.14*v);},
   step:v=>{tone(110,55,0.06,'sine',0.3*v);nz(0.05,0.25*v,700);},
-  grind:v=>nz(0.14,0.22*v,4500,'bandpass'),
+  grind:v=>nz(0.14,0.14*v,4500,'bandpass'),
   bail:v=>{nz(0.25,0.5*v,700);tone(400,90,0.25,'sawtooth',0.1*v);},
   meow:v=>{tone(620,980,0.12,'sawtooth',0.07*v);setTimeout(()=>tone(980,520,0.18,'sawtooth',0.06*v),110);},
   hiss:v=>nz(0.3,0.22*v,5000,'highpass'),
@@ -8782,7 +8782,7 @@ function playerControl(dt){const p=player;let ix=0,iy=0;if(p.fwRide){fwRideTick(
   if(quickFire){quickFire=false;const t=nearestTarget(p,w.def.melee?40:Math.min(w.def.range,230));if(t)p.aim=Math.atan2(t.y-p.y,t.x-p.x);p.aimHold=0.6;tryFire(p);}
   if(firing){const t=nearestTarget(p,w.def.melee?40:w.def.range,0.22);if(t){const a=Math.atan2(t.y-p.y,t.x-p.x);p.aim+=angDiff(p.aim,a)*Math.min(1,dt*6);}tryFire(p);}
   updateSkater(p,ix,iy,dt);playerPickups();
-  if(rollG){const sp=Math.hypot(p.vx,p.vy);rollG.gain.value=p.grind?clamp(sp/SK_MAX,0,1)*0.2:0;rollF.frequency.value=2600;rollTick(p,sp,dt);}}
+  if(rollG){const sp=Math.hypot(p.vx,p.vy);rollG.gain.value=p.grind?clamp(sp/SK_MAX,0,1)*0.13:0;rollF.frequency.value=2600;rollTick(p,sp,dt);}}
 function nearestTarget(p,range,cone){let best=null,bd=range;const pool=ugOf(p)>=0?lurkers.filter(l=>l.alive):skaters;for(const t of pool){if(t===p||!t.alive)continue;const d=D(p.x,p.y,t.x,t.y);if(d>=bd)continue;if(cone!==undefined&&Math.abs(angDiff(p.aim,Math.atan2(t.y-p.y,t.x-p.x)))>cone)continue;if(!canSee(p,t))continue;bd=d;best=t;}return best;}
 
 /* ---------------- loop ---------------- */
