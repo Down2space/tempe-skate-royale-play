@@ -20909,9 +20909,19 @@ const _sheetOpenBlip=sheetOpen;sheetOpen=function(html){try{let nm=(typeof CINE!
 
 /* owner: baseball sounds at Tempe Diablo Stadium: glove pops, bat cracks, the crowd, the ump and the organ */
 const BBA={t:3,org:25,ump:0,pend:[]};
-function bbCheer(x,y,big){const out=ambOut(x,y,520,big?0.2:0.09);if(!out)return;const t=AC.currentTime,s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain(),dur=big?2.6:1.4;
-  s.buffer=NBUF;s.loop=true;f.type='bandpass';f.frequency.value=1100;f.Q.value=0.7;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(1,t+0.35);g.gain.setValueAtTime(1,t+dur*0.45);g.gain.linearRampToValueAtTime(0.0001,t+dur);
-  s.connect(f);f.connect(g);g.connect(out);s.start(t,Math.random());s.stop(t+dur+0.05);}
+function bbCheer(x,y,big){const out=ambOut(x,y,520,big?0.16:0.08);if(!out)return;const t0=AC.currentTime+0.02,N=big?18:9;
+  /* a crowd of voices: each fan yells a "woo"/"yeah" with their own pitch, timing and slide, through mouth-like formant filters */
+  const sum=AC.createGain();sum.gain.value=1/Math.sqrt(N);sum.connect(out);
+  for(let k=0;k<N;k++){const girl=Math.random()<0.4,f0=girl?210+Math.random()*90:105+Math.random()*60,st=t0+Math.random()*(big?0.45:0.3),dur=(big?0.9:0.55)+Math.random()*(big?1.1:0.5),woo=Math.random()<0.5;
+    const o=AC.createOscillator(),vb=AC.createOscillator(),vg=AC.createGain(),g=AC.createGain();o.type='sawtooth';
+    o.frequency.setValueAtTime(f0*0.85,st);o.frequency.linearRampToValueAtTime(f0*(1.25+Math.random()*0.3),st+dur*0.35);o.frequency.linearRampToValueAtTime(f0*(0.9+Math.random()*0.2),st+dur);
+    vb.frequency.value=4+Math.random()*3;vg.gain.value=f0*0.025;vb.connect(vg);vg.connect(o.frequency);
+    const F=woo?[[350,6],[750,7],[2400,9]]:[[700,6],[1200,7],[2600,9]];const fs=girl?1.15:1;
+    g.gain.setValueAtTime(0.0001,st);g.gain.exponentialRampToValueAtTime(1,st+0.08);g.gain.setValueAtTime(1,st+dur*0.6);g.gain.exponentialRampToValueAtTime(0.0001,st+dur);
+    F.forEach(([ff,q],m)=>{const b=AC.createBiquadFilter();b.type='bandpass';b.frequency.setValueAtTime(ff*fs*(woo?1:0.8),st);if(woo)b.frequency.linearRampToValueAtTime(ff*fs*1.6,st+dur*0.5);b.Q.value=q;const bg=AC.createGain();bg.gain.value=[1,0.55,0.18][m];o.connect(b);b.connect(bg);bg.connect(g);});
+    g.connect(sum);o.start(st);vb.start(st);o.stop(st+dur+0.05);vb.stop(st+dur+0.05);}
+  /* clapping: lots of short, bright hand claps */
+  const nc=big?40:16;for(let k=0;k<nc;k++){const ct=t0+0.15+Math.random()*(big?2:1.1);ambNoise(out,ct,0.035,0.5+Math.random()*0.4,'bandpass',1400+Math.random()*1400,1.4);}}
 function bbPop(x,y){const out=ambOut(x,y,420,0.22);if(!out)return;const t=AC.currentTime;ambNoise(out,t,0.07,1,'bandpass',1500,1.2);ambTone(out,t,320,140,0.06,'sine',0.6);}
 function bbCrack(x,y){const out=ambOut(x,y,520,0.3);if(!out)return;const t=AC.currentTime;ambNoise(out,t,0.05,1,'highpass',2600);ambTone(out,t,2100,900,0.07,'triangle',0.5);ambTone(out,t,1150,700,0.11,'sine',0.35);}
 function bbOrgan(x,y){const out=ambOut(x,y,600,0.06);if(!out)return;let t=AC.currentTime;for(const[n,d]of[[392,0.16],[523,0.16],[659,0.16],[784,0.3],[659,0.14],[784,0.6]]){ambTone(out,t,n,n,d,'square',0.5,['lowpass',1800]);ambTone(out,t,n*2,n*2,d,'sine',0.25);t+=d+0.02;}
