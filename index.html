@@ -5659,7 +5659,7 @@ function searchDump(dm){dm.searched=true;const n=ri(1,2);for(let i=0;i<n;i++){co
 function drainAct(){if(!drainUsed){drainUsed=true;sfx('whisper');flicker=0.8;toast('Something in the drain whispers your name. It left you a gift.');dropItem(DRAIN.x,DRAIN.y-12,{kind:'wep',type:'bat',r:3,mag:0});}else{toast(pick(["It's quiet down there now. Too quiet.","Something shuffles under the grate. Then nothing.","A whisper from the drain: \"I see you up there.\"","Footsteps under the street. Somebody lives down there.","A whisper from the drain: \"Keep skating. I'm watching.\""]));sfx('whisper',0.3);}}/* owner: someone lives in the drains */
 const BR_NOMG=/\b(PLAY|WORK|SHIFT|WASH|SHOP|BAR|ORDER|TENNIS|HOOPS|FOOTBALL|JAM|CEE-LO|SHOW|RUMBLE|HYPE|TICKETS|ICE CREAM|KARAOKE|POOL|COOK|DANCE|BATTLE|GAMES|BAND|SING|TATTOO|ARCADE|FLYER|LISTEN|JOB|DJ|RAP|SCAN|BAKE|MIX|POUR|GRILL|FINGERBOARD|RACE|BOWL|GOLF|SHOOT|CHALLENGE|DUEL|COMEDY|DARTS|CARDS|CHESS|UNO)\b/;const BR_BLOCKED=new Set();
 function computeAct(){act=null;const p=player;if(!p||!p.alive)return;let best=null,bd=1e9;const cand=(d,lim,label,fn,tg)=>{if(gameMode!=='story'&&(BR_NOMG.test(label)||BR_BLOCKED.has(label)))return;if(d<lim&&d<bd){bd=d;best={label,fn:gameMode!=='story'?(()=>{MG_BR_LBL=label;try{fn();}finally{MG_BR_LBL=null;}}):fn,tg};}};if(p.roof){roofActs(cand,p);act=best;return;}
-  if(gameMode==='story'&&storyRun&&!storyRun.dlg){const s=storyStep();if(s&&s.t==='talk'){const n=npcs.find(n=>n.cast===s.who);if(n)cand(D(p.x,p.y,n.x,n.y)-40,34,'TALK',storyStart,n);}}/* owner: the mission talk always beats crew chatter */
+  if(gameMode==='story'&&storyRun&&!storyRun.dlg){const s=storyStep();if(s&&s.t==='talk'){const n=npcs.find(n=>n.cast===s.who);if(n)cand(D(p.x,p.y,n.x,n.y)-40,34,'TALK',storyStart,n);}if(s&&s.t==='go'&&s.npc){const L=storyLoc(s);const n=L&&npcs.find(n=>n.name===s.npc&&!n.hidden&&D(n.x,n.y,L.x,L.y)<120);if(n)cand(D(p.x,p.y,n.x,n.y)-40,-6,'TALK',storyStart,n);}}/* owner: the mission talk always beats crew chatter */
   /* your crew hanging out in story mode (e.g. Bill at Cowtown): TALK reaches them before any work bench beside them */
   if(gameMode==='story'){const s0=storyRun&&!storyRun.dlg?storyStep():null;for(const n of npcs){if(!n.alive||n.hidden||!n.story||!n.cast||(s0&&s0.t==='talk'&&s0.who===n.cast))continue;if(s0&&s0.t==='talk'){const tn=npcs.find(q=>q.cast===s0.who);if(tn&&D(tn.x,tn.y,n.x,n.y)<34)continue;}const d=D(p.x,p.y,n.x,n.y);if(d<26)cand(d-8,26,'TALK',()=>crewTalk(n),n);}}
   for(const n of npcs){if(!n.alive||n.fleeT>0||n.story)continue;const d=D(p.x,p.y,n.x,n.y);const dm=missions.find(m=>!m.done&&m.def.id==='deliver'&&m.stage==='carry'&&m.giver===n);
@@ -19296,7 +19296,7 @@ const STORY_LOC=Object.assign({
   amtn:()=>({x:MOUNT.x,y:MOUNT.y-43,name:'the top of A Mountain'}),
   butte:()=>({x:MOUNT.x+6,y:MOUNT.y-40,name:'the top of A Mountain (Hayden Butte)'}),
   trap:()=>({x:ENT_POS.x-90,y:ENT_POS.y+4,name:'the trap house'}),
-  abandon:()=>({x:518,y:1752,name:'the Abandoned House'}),dumbbro:()=>({x:1861,y:368,name:'Dumb Brothers'}),
+  abandon:()=>({x:518,y:1752,name:'the Abandoned House'}),dumbbro:()=>({x:1861,y:368,name:'Dumb Brothers'}),hqIn:()=>{const b=buildings.find(b=>b.name==='HEADQUARTERS');return b?{x:b.x+72,y:b.y+24,name:'Headquarters'}:{x:528,y:1028,name:'Headquarters'};},
   trapYard:()=>({x:ENT_POS.x-60,y:ENT_POS.y+22,name:'the trap house yard'}),
   trapIn:()=>{const b=buildings.find(b=>b.kind==='trap');return{x:b.x+75,y:b.y+108,name:'inside the trap house'};},
   dreIn:()=>{const b=buildings.find(b=>b.kind==='dre');return b?{x:b.x+b.w/2,y:b.y+b.h/2,name:"Dre's house"}:{x:2075,y:1990,name:"Dre's house"};},
@@ -19565,8 +19565,8 @@ STORY.dylan.missions=[
     {t:'run',who:'bill',route:'tw2',fromRoute:true,lead:true,label:'Follow Bill to Dumb Brothers'},
     {t:'skate',ev:'window',prop:'DUMB BROTHERS',n:1,at:'dumbbro',crew:'bill',label:'Trick out the Dumb Brothers window',lines:[['BILL','Two more turds, flushed.'],['DYLAN','Tim\'s gonna need a bigger tree.']]},
     {t:'run',who:'bill',route:'tw3',fromRoute:true,lead:true,label:'Follow Bill to Headquarters'},
-    {t:'go',at:'hq',label:'Meet Bill at Headquarters',lines:[['BILL','Rent\'s still due. Grab an apron.'],['DYLAN','Shift time. Let\'s get it.']]},
-    {t:'play',game:'hq',at:'hq',crew:'bill',label:'Work a shift at Headquarters with Bill',lines:[],after:[['BILL','That\'s rent money. Kind of.'],['DYLAN','Every dollar counts against Tim Wright.']]}]),
+    {t:'go',at:'hqIn',npc:'Josh',label:'Walk into Headquarters and talk to Josh',lines:[['JOSH','Yo, welcome to HQ. 21+ only, chief.'],['BILL','Rent\'s still due. Grab an apron.'],['DYLAN','Shift time. Let\'s get it.']]},
+    {t:'play',game:'hq',at:'hqIn',crew:'bill',label:'Work a shift at Headquarters with Bill',lines:[],after:[['BILL','That\'s rent money. Kind of.'],['DYLAN','Every dollar counts against Tim Wright.']]}]),
   M_('Paint God',[
     {t:'go',at:'goon',label:'Find Cowboy Goonface',lines:[['GOONFACE','Skate rat. You see these tags? Cobra Doug. All over MY town.'],['DYLAN','They\'re kinda everywhere.'],['GOONFACE','You make music, right? Then you can make a piece. Show me.']]},
     {t:'play',game:'graf',at:'goon',label:'Design your own graffiti piece',lines:[],after:[['GOONFACE','Not bad. Now go put it over three of Doug\'s.']]},
@@ -19810,7 +19810,7 @@ const RUNS={
   ['r',[[2000,1852],[1975,1853]]],['h',[1944,1851]],['g',[[1944,1851],[1771,1851]]],
   ['r',[[1760,1866],[1754,1886],[1745,1917],[1742,1949],[1742,1975],[1746,1990]]]],
  tw1:[['r',[[806,1430],[830,1432],[900,1432],[992,1432],[1048,1432],[1200,1432],[1400,1432],[1600,1432],[1712,1432],[1712,1500],[1712,1612],[1712,1760],[1712,1852],[1600,1852],[1400,1852],[1200,1852],[1048,1852],[950,1852],[850,1852],[748,1852],[690,1853],[600,1853],[540,1852],[518,1840],[518,1800],[518,1760]]]],/* Bill: trap house to the Abandoned House, the long way round */
- tw2:[['r',[[748,1600],[748,1500],[748,1432],[748,1300],[748,1244],[748,1100],[748,948],[700,948],[600,948],[470,948],[448,930],[448,800],[448,660],[448,518],[500,518],[700,518],[870,518],[1000,518],[1048,518],[1230,518],[1450,518],[1712,518],[1768,505],[1768,450],[1768,380],[1800,369],[1861,368]]]],/* Bill: Abandoned House to Dumb Brothers, the long way round */
+ tw2:[['r',[[518,1760],[518,1800],[518,1840],[540,1852],[600,1853],[690,1853],[748,1852],[748,1760],[748,1680],[748,1600],[748,1500],[748,1432],[748,1300],[748,1244],[748,1100],[748,948],[700,948],[600,948],[470,948],[448,930],[448,800],[448,660],[448,518],[500,518],[700,518],[870,518],[1000,518],[1048,518],[1230,518],[1450,518],[1712,518],[1768,505],[1768,450],[1768,380],[1800,369],[1861,368]]]],/* Bill: Abandoned House to Dumb Brothers, the long way round */
  tw3:[['r',[[1712,300],[1712,380],[1712,462],[1712,518],[1712,700],[1712,892],[1600,892],[1450,892],[1300,892],[1100,892],[1048,892],[992,892],[850,892],[750,892],[680,892],[630,948],[560,948],[511,960],[511,990]]]],/* Bill: Dumb Brothers to Headquarters */
  jt:[['r',[[627,1196],[600,1196],[560,1198],[520,1203],[480,1206],[445,1204],[434,1194]]],
   ['h',[425,1182]],['g',[[425,1182],[425,1106],[428,1093],[438,1083],[452,1079],[688,1079]]],
@@ -20024,7 +20024,7 @@ function gsHit(s,i){const R=storyRun;R.gsDone.push(i);R.prog=R.gsDone.length;flo
 function storyFrame(){const ctx=(tripOf(player)||{id:'tempe'}).id;if(storyRun.ctx!==ctx&&!storyRun.dlg&&!storyRun.fight)storyBegin();
   const T=tripOf(player);if(T&&T.id==='psych'&&(!player.trip||player.trip.t>20))player.trip={k:player.trip&&player.trip.k==='gold'?'purple':'gold',t:2,dur:9999};
   const s=storyStep();if(!s||storyRun.dlg)return;const L=storyLoc(s);if(s.t==='gspots'){gspotsTick(s);if(!storyRun.intro){storyRun.intro=true;toast('MAIN: '+s.label);}}
-  if(storyRun.hold&&L&&D(player.x,player.y,L.x,L.y)>60)storyRun.hold=false;if((s.t==='go'||s.t==='play')&&L&&D(player.x,player.y,L.x,L.y)<36&&!storyRun.playing&&!storyRun.hold)storyStart();
+  if(storyRun.hold&&L&&D(player.x,player.y,L.x,L.y)>60)storyRun.hold=false;if((s.t==='go'&&!s.npc||s.t==='play')&&L&&D(player.x,player.y,L.x,L.y)<36&&!storyRun.playing&&!storyRun.hold)storyStart();
   if((s.t==='skate'||s.t==='tw'||s.t==='collect')&&!storyRun.intro){storyRun.intro=true;toast((s.tripId?'TRIP: ':'MAIN: ')+s.label+(s.t==='tw'?' (orange markers)':''));}
   if(s.t==='fight'){if(storyRun.fightHold&&D(player.x,player.y,L.x,L.y)>90)storyRun.fightHold=false;if(!storyRun.fight&&!storyRun.fightHold&&D(player.x,player.y,L.x,L.y)<70){if(s.boss)crewAll();storyStart();}else if(storyRun.fight&&storyRun.fight.left<=0){storyRun.fight=null;storyDialog(s.after||[['','Done.']],storyAdvance);}}}
 function storyMarker(){const s=storyStep();if(!s||(s.t==='skate'&&!s.at)||s.t==='tw')return null;if(s.t==='gspots'){const dn=storyRun.gsDone||[];let best=null,bd=1e9;s.spots.forEach((sp,i)=>{if(dn.includes(i))return;const d=D(sp.x,sp.y,player.x,player.y);if(d<bd){bd=d;best=sp;}});return best?{x:best.x,y:best.y,c:'#ffc23d',icon:'go'}:null;}if(s.t==='skate'){const L4=storyLoc(s);return L4?{x:L4.x,y:L4.y,c:'#ffc23d',icon:'go'}:null;}if(s.t==='collect'){let best=null,bd=1e9;for(const it of items)if(it.kind==='tok'){const d=D(it.x,it.y,player.x,player.y);if(d<bd){bd=d;best=it;}}return best?{x:best.x,y:best.y,c:s.col,icon:'go'}:null;}
@@ -20907,6 +20907,24 @@ function blipChar(ch){if(!AC)return;const prev=BLIP.prev||' ';BLIP.prev=ch;const
 const _sheetOpenBlip=sheetOpen;sheetOpen=function(html){try{let nm=(typeof CINE!=='undefined'&&CINE.nextN)||'';const P=(typeof CINE!=='undefined'&&CINE.nextP)||null;
   if(!nm&&typeof html==='string'){const m=/<p class="who2?">([^<]{1,40})<\/p>/.exec(html);if(m)nm=m[1];}blipVoiceFor(nm,P);}catch(e){}return _sheetOpenBlip.apply(this,arguments);};
 
+/* owner: baseball sounds at Tempe Diablo Stadium: glove pops, bat cracks, the crowd, the ump and the organ */
+const BBA={t:3,org:25,ump:0,pend:[]};
+function bbCheer(x,y,big){const out=ambOut(x,y,520,big?0.2:0.09);if(!out)return;const t=AC.currentTime,s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain(),dur=big?2.6:1.4;
+  s.buffer=NBUF;s.loop=true;f.type='bandpass';f.frequency.value=1100;f.Q.value=0.7;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(1,t+0.35);g.gain.setValueAtTime(1,t+dur*0.45);g.gain.linearRampToValueAtTime(0.0001,t+dur);
+  s.connect(f);f.connect(g);g.connect(out);s.start(t,Math.random());s.stop(t+dur+0.05);}
+function bbPop(x,y){const out=ambOut(x,y,420,0.22);if(!out)return;const t=AC.currentTime;ambNoise(out,t,0.07,1,'bandpass',1500,1.2);ambTone(out,t,320,140,0.06,'sine',0.6);}
+function bbCrack(x,y){const out=ambOut(x,y,520,0.3);if(!out)return;const t=AC.currentTime;ambNoise(out,t,0.05,1,'highpass',2600);ambTone(out,t,2100,900,0.07,'triangle',0.5);ambTone(out,t,1150,700,0.11,'sine',0.35);}
+function bbOrgan(x,y){const out=ambOut(x,y,600,0.06);if(!out)return;let t=AC.currentTime;for(const[n,d]of[[392,0.16],[523,0.16],[659,0.16],[784,0.3],[659,0.14],[784,0.6]]){ambTone(out,t,n,n,d,'square',0.5,['lowpass',1800]);ambTone(out,t,n*2,n*2,d,'sine',0.25);t+=d+0.02;}
+  BBA.pend.push([AC.currentTime+1.75,()=>bbCheer(x,y-40,true)]);}
+function bbAmb(dt){if(!AC||!AMB.on)return;const live=state==='play'&&player&&!(typeof MGM!=='undefined'&&MGM);if(!live)return;const L=ambListener();if(!L)return;
+  const hx=DIA.hx,hy=DIA.hy;if(Math.hypot(L.x-hx,L.y-hy)>600){BBA.pend.length=0;return;}
+  const now=AC.currentTime;for(let i=BBA.pend.length-1;i>=0;i--)if(now>=BBA.pend[i][0]){const f=BBA.pend[i][1];BBA.pend.splice(i,1);try{f();}catch(e){}}
+  BBA.t-=dt;if(BBA.t<=0){BBA.t=4.5+Math.random()*4;const r=Math.random();
+    if(r<0.3){bbCrack(hx-6,hy);const big=Math.random()<0.35;BBA.pend.push([now+0.25,()=>bbCheer(hx,hy-60,big)]);if(Math.random()<0.6)BBA.pend.push([now+(big?2.2:1.4),()=>bbPop(hx+44,hy-48)]);}
+    else{bbPop(hx,hy+8);if(Math.random()<0.45)BBA.pend.push([now+0.35,()=>ambBabble(hx,hy+14,{type:'deep',base:92,fs:0.93,rate:1.1,lilt:0.04,spread:0.06,breath:0.06,vib:5},1+(Math.random()<0.5?1:0),0.16,420)]);
+      if(Math.random()<0.3)BBA.pend.push([now+0.6,()=>bbCheer(hx,hy-60,false)]);}}
+  BBA.org-=dt;if(BBA.org<=0){BBA.org=35+Math.random()*30;bbOrgan(hx,hy+40);}}
+{const _ambTkBB=ambTick;ambTick=function(dt){_ambTkBB(dt);try{bbAmb(dt);}catch(e){}};}
 const _initAudioAmb=initAudio;initAudio=function(){_initAudioAmb();try{ambInit();}catch(e){console.error(e);}try{if(VOICES_ON)voxnIndex();}catch(e){}try{if(VOICES_ON&&LIVE_AI_ON&&VAI.st==='off'){VAI.st='pending';setTimeout(vaiStart,4000);}}catch(e){}};
 {let last=performance.now();setInterval(()=>{const now=performance.now(),dt=Math.min(0.5,(now-last)/1000);last=now;try{ambTick(dt);}catch(e){}},100);}
 /* ---------------- online battle royale: one phone hosts a room, friends join with the code (PeerJS / WebRTC, works on Wi-Fi or the internet) ---------------- */
