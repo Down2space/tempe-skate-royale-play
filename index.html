@@ -8093,8 +8093,9 @@ function crewTalk(n){if(n.cast==='lucas'&&!store.get('tsr_lucasAlly',0)){lucasMe
   n.ctI=((n.ctI==null?Math.floor(Math.random()*L.length):n.ctI+1))%L.length;const nm=(n.cast||'').toUpperCase();n.face=player.x<n.x?-1:1;
   if(typeof CINE!=='undefined'){CINE.nextP=n.P;CINE.nextN=nm;}
   metAdd(n.cast);crewPend=n;const k=n.cast;sheetOpen(`<h3>${nm}</h3><p class="line">“${L[n.ctI]}”</p><div class="row"><button class="pbtn" data-a="crewjoin">ROLL WITH ME</button>${PLAY_KEYS.includes(k)?'<button class="pbtn" data-a="crewswap">PLAY AS '+esc(CHARS[k].name)+'</button>':''}<button class="pbtn ghost" data-a="close">LATER</button></div>`);}/* owner: talking to a crew member always lets you recruit them */
-const JAMFB={x:158,y:2004};
-function townActs(cand,p){const S=gameMode==='story';cand(D(p.x,p.y,JAMFB.x,JAMFB.y),24,'FINGERBOARD',startSkateJam,JAMFB);{const q={x:CHESS.x,y:CHESS.y+16};cand(D(p.x,p.y,q.x,q.y)-10,26,'PLAY',bgMenu,q);}
+const JAMFB={x:158,y:2004};const CRFB={x:1000,y:4766};/* a second fingerboard lying in the Las Cruces skatepark */
+function startSkateJamCruces(){if(window.FB&&FB.start)FB.start({theme:'cruces'});else toast('Fingerboard is still loading.');}
+function townActs(cand,p){const S=gameMode==='story';cand(D(p.x,p.y,JAMFB.x,JAMFB.y),24,'FINGERBOARD',startSkateJam,JAMFB);cand(D(p.x,p.y,CRFB.x,CRFB.y),24,'FINGERBOARD',startSkateJamCruces,CRFB);{const q={x:CHESS.x,y:CHESS.y+16};cand(D(p.x,p.y,q.x,q.y)-10,26,'PLAY',bgMenu,q);}
   for(const n of npcs){if(!n.alive||!n.fixed)continue;const d=D(p.x,p.y,n.x,n.y);if(n.argue)cand(d,26,'TALK',()=>argueTalk(n),n);else if(n.cegg)cand(d,26,'TALK',()=>ceggTalk(n),n);else if(n.josh)cand(d,26,'TALK',()=>joshTalk(n),n);else if(n.dmt)cand(d,28,'TALK',()=>dmtTalk(n),n);else if(n.festTalk&&!NPC_MUTE)cand(d,26,'TALK',()=>{n.face=player.x<n.x?-1:1;toast(n.name.toUpperCase()+': '+pick(n.festTalk));},n);else if(n.chris)cand(d,26,'TALK',()=>chrisTalk(n),n);else if(S&&n.vendor==='ice')cand(d,30,'ICE CREAM',iceMenu,n);else if(S&&n.vendor==='tix')cand(d,28,'TICKETS',ticketMenu,n);else if(S&&n.coach)cand(d,28,'FOOTBALL',startFootball,n);else if(S&&n.jamMC)cand(d,28,'FINGERBOARD',startSkateJam,n);}
   if(!S)return;
   cand(D(p.x,p.y,BEAST.x-30,BEAST.y),22,'ORDER',beastMenu,{x:BEAST.x-30,y:BEAST.y});
@@ -15948,6 +15949,8 @@ function lampPoleDraw(g,l,p){const behind=p&&p.y<l.y&&p.y>l.y-LAMP_H-8&&Math.abs
   F(x-0.5,y-H2-1,3,H2+1,'#14101a');F(x,y-H2,1,H2,'#6a6a74');F(x+1,y-H2,1,H2,'#3a3a42');if((l.d||1)<0){/* arm points left, toward the street */F(x-5.5,y-H2-2,7,3,'#14101a');F(x-4,y-H2-1.5,6,1.5,'#5a5a64');F(x-4.5,y-H2-0.5,3.5,2,'#e8e2c8');}else{F(x-0.5,y-H2-2,7,3,'#14101a');F(x,y-H2-1.5,6,1.5,'#5a5a64');F(x+3,y-H2-0.5,3.5,2,'#e8e2c8');}g.restore();}
 /* depth-sorted overlays: roofs/facades sort with people by their front edge, so you walk in front of them */
 {const _hwLHd=hwListHook;hwListHook=function(list,inV,tm){const p=player;
+  if(typeof CRFB!=='undefined'&&inV(CRFB.x,CRFB.y,40))list.push({y:CRFB.y-6,k:11,o:{draw:g=>{const x=CRFB.x,y=CRFB.y,F=(a,b,c,d,col)=>{g.fillStyle=col;g.fillRect(a,b,c,d);};
+    F(x-7,y+1,15,2,'rgba(0,0,0,0.25)');F(x-7.5,y-2.5,15,4,'#14101a');F(x-7,y-2,14,3,'#ff8a2a');F(x-3,y-2,6,3,'#2ec4b6');F(x-7,y-2,14,1,'rgba(255,255,255,0.35)');F(x-5,y+1,2,1.2,'#e8e2da');F(x+3,y+1,2,1.2,'#e8e2da');}}});
   if(typeof JAMFB!=='undefined'&&inV(JAMFB.x,JAMFB.y,40))list.push({y:JAMFB.y-6,k:11,o:{draw:g=>{const x=JAMFB.x,y=JAMFB.y,F=(a,b,c,d,col)=>{g.fillStyle=col;g.fillRect(a,b,c,d);};
     F(x-7,y+1,15,2,'rgba(0,0,0,0.25)');F(x-7.5,y-2.5,15,4,'#14101a');F(x-7,y-2,14,3,'#ff3d9a');F(x-3,y-2,6,3,'#4fc3f7');F(x-7,y-2,14,1,'rgba(255,255,255,0.35)');F(x-5,y+1,2,1.2,'#e8e2da');F(x+3,y+1,2,1.2,'#e8e2da');}}});
   if(typeof lamps!=='undefined')for(const l of lamps)if(inV(l.x,l.y-14,60))list.push({y:l.y+0.5,k:11,o:{draw:g=>lampPoleDraw(g,l,p)}});

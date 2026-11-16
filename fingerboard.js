@@ -92,9 +92,9 @@ const CFG={
   rot180:150,manualRate:120,noseManualRate:150,heightBonus:0.6,cleanBonus:0.15,
   comboWindow:1.4,comboMax:8,
   /* session */
-  session:90,storyTarget:1500,payDiv:220,payMax:60,bestKey:'tsr_fb_best',cfgKey:'tsr_fb_cfg'
+  session:60,storyTarget:1500,payDiv:220,payMax:60,bestKey:'tsr_fb_best',cfgKey:'tsr_fb_cfg'
 };
-{const o=lsGet(CFG.cfgKey,null);if(o&&typeof o==='object')for(const k in o)if(k in CFG&&typeof o[k]===typeof CFG[k])CFG[k]=o[k];}
+{const o=lsGet(CFG.cfgKey,null);if(o&&typeof o==='object')for(const k in o)if(k in CFG&&typeof o[k]===typeof CFG[k])CFG[k]=o[k];CFG.session=60;/* owner: sessions are one minute */}
 const thr=n=>CFG[n]/CFG.sensitivity;
 
 let M=null;                         /* the live minigame object (MGM) */
@@ -534,14 +534,15 @@ const OUTLINE=(()=>{const L=CFG.boardLen,W=CFG.boardWid,R=W/2,a=L/2-R,p=[];for(l
 
 /* procedural skatepark floor: big smooth poured-concrete slabs, saw-cut joints, cracks, wheel and wax marks */
 const Plaza={
-  C:128,cache:new Map(),
+  C:128,cache:new Map(),theme:'tempe',
+  setTheme(t){t=t||'tempe';if(t!==this.theme){this.theme=t;this.cache.clear();}},
   hash(a,b,s){let h=(a*73856093^b*19349663^s*83492791)|0;h=Math.imul(h^(h>>>15),2246822519);h=Math.imul(h^(h>>>13),3266489917);return((h^(h>>>16))>>>0)/4294967296;},
   rng(seed){let s=(seed>>>0)||1;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};},
   chunk(cx,cy){const key=cx+','+cy;let c=this.cache.get(key);if(c){this.cache.delete(key);this.cache.set(key,c);return c;}
     c=this.gen(cx,cy);this.cache.set(key,c);if(this.cache.size>48)this.cache.delete(this.cache.keys().next().value);return c;},
   vn(x,y,sz,s){const gx=Math.floor(x/sz),gy=Math.floor(y/sz),fx=x/sz-gx,fy=y/sz-gy,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);
     const a=this.hash(gx,gy,s),b=this.hash(gx+1,gy,s),c=this.hash(gx,gy+1,s),d=this.hash(gx+1,gy+1,s);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;},
-  gen(cx,cy){const C=this.C,c=mk(C,C),g=c.getContext('2d'),id=g.createImageData(C,C),d=id.data;
+  gen(cx,cy){if(this.theme==='cruces')return this.genCruces(cx,cy);const C=this.C,c=mk(C,C),g=c.getContext('2d'),id=g.createImageData(C,C),d=id.data;
     /* one big slab per chunk; each slab poured a touch lighter or darker than its neighbours */
     const tint=(this.hash(cx,cy,11)-0.5)*14;
     for(let y=0;y<C;y++)for(let x=0;x<C;x++){const wx=cx*C+x,wy=cy*C+y,i=(y*C+x)*4;let v;
@@ -563,10 +564,47 @@ const Plaza={
     if(R()<0.5){const x0=ri(8,70),y0=ri(10,110),n=ri(30,56),a=(R()-0.5)*1.2;g.globalAlpha=0.22;for(let k=0;k<n;k++){const x=x0+Math.cos(a)*k,y=y0+Math.sin(a)*k+Math.sin(k*0.08)*3;g.fillStyle='#2a2522';g.fillRect(x|0,y|0,1,1);g.fillRect(x|0,(y+5)|0,1,1);}g.globalAlpha=1;}
     if(R()<0.25){const x0=ri(10,80),y0=ri(10,110);g.fillStyle='rgba(90,80,70,0.12)';g.fillRect(x0,y0,ri(20,40),ri(3,6));}
     return c;},
+  /* Las Cruces park: warm sun-baked concrete in long staggered slabs, desert sand blown in along the joints */
+  genCruces(cx,cy){const C=this.C,c=mk(C,C),g=c.getContext('2d'),id=g.createImageData(C,C),d=id.data;const md=(v,m)=>((v%m)+m)%m;
+    for(let y=0;y<C;y++)for(let x=0;x<C;x++){const wx=cx*C+x,wy=cy*C+y,i=(y*C+x)*4;const col=Math.floor(wx/64),jx=md(wx,64),jy=md(wy+(md(col,2)?64:0),128);
+      const tint=(this.hash(col,Math.floor((wy+(md(col,2)?64:0))/128),12)-0.5)*16;let r,gg,b;
+      if(jx===0||jy===0){r=150;gg=118;b=92;}else if(jx===1||jy===1){r=228;gg=196;b=160;}
+      else{const m=this.vn(wx,wy,36,31)*0.6+this.vn(wx,wy,10,32)*0.4,h=this.hash(wx,wy,33);const v=tint+(m-0.5)*24+(h<0.05?-14:h<0.12?8:h<0.2?-6:0);r=212+v;gg=174+v*0.9;b=136+v*0.8;
+        if((jx<4||jy<4)&&this.hash(wx,wy,34)<0.35){r=196;gg=160;b=112;}}
+      d[i]=r;d[i+1]=gg;d[i+2]=b;d[i+3]=255;}
+    g.putImageData(id,0,0);
+    const R=this.rng((cx*928371+cy*12345701)^0x2c1b3c6d),px=(x,y,cl)=>{g.fillStyle=cl;g.fillRect(x|0,y|0,1,1);},ri=(a,b)=>a+Math.floor(R()*(b-a+1));
+    for(let k=0;k<14;k++){const x=ri(2,125),y=ri(2,125);px(x,y,R()<0.5?'#a07a52':'#8a6440');if(R()<0.4)px(x+1,y,'#b88c5e');}
+    for(let k=0;k<ri(0,2);k++){let x=ri(10,118),y=ri(10,118);const n=ri(10,30);let ang=R()*TAU;for(let s=0;s<n;s++){px(x,y,'#9a7650');ang+=(R()-0.5)*0.9;x=clamp(x+Math.cos(ang),3,124);y=clamp(y+Math.sin(ang),3,124);}}
+    if(R()<0.5){const x0=ri(8,70),y0=ri(10,110),n=ri(30,56),a=(R()-0.5)*1.2;g.globalAlpha=0.22;for(let k=0;k<n;k++){const x=x0+Math.cos(a)*k,y=y0+Math.sin(a)*k+Math.sin(k*0.08)*3;g.fillStyle='#3a2a1e';g.fillRect(x|0,y|0,1,1);g.fillRect(x|0,(y+5)|0,1,1);}g.globalAlpha=1;}
+    if(R()<0.35){const x=ri(10,110),y=ri(10,110);for(let k=0;k<6;k++)px(x+ri(-3,3),y+ri(-2,2),['#7a8a4a','#9aa05a','#6a7a3a'][k%3]);}   /* a dry weed tuft */
+    if(R()<0.3){const x=ri(10,116),y=ri(10,116);g.fillStyle='#8a7a6a';g.fillRect(x,y,3,2);g.fillStyle='#b8a898';g.fillRect(x,y,2,1);}   /* pebble */
+    return c;},
   draw(lg,ox,oy,W,H){const C=this.C;const x0=Math.floor(ox/C),y0=Math.floor(oy/C),x1=Math.floor((ox+W)/C),y1=Math.floor((oy+H)/C);
     for(let cy=y0;cy<=y1;cy++)for(let cx=x0;cx<=x1;cx++)lg.drawImage(this.chunk(cx,cy),cx*C-ox,cy*C-oy);}
 };
 
+/* the Las Cruces lizard: darts around the slabs, freezes, does push-ups, and bolts when the board gets close */
+const Lizard={
+  tick(lg,dt,sx,sy){const b=M.b,D=Cam.D,cx=M.ox+D/2,cy=M.oy+D/2;let L=M.liz;
+    if(!L){L=M.liz={x:b.x+70,y:b.y-60,a:Math.PI,tx:b.x+70,ty:b.y-60,w:1.2,run:0,ph:0,pu:0};}
+    const db=Math.hypot(L.x-b.x,L.y-b.y);
+    if(Math.hypot(L.x-cx,L.y-cy)>D*0.75){const a=Math.random()*TAU;L.x=cx+Math.cos(a)*D*0.42;L.y=cy+Math.sin(a)*D*0.42;L.tx=L.x;L.ty=L.y;L.w=0.6;}   /* never far from view */
+    if(db<70&&L.run<=0){const a=Math.atan2(L.y-b.y,L.x-b.x)+(Math.random()-0.5)*1.2;L.tx=L.x+Math.cos(a)*110;L.ty=L.y+Math.sin(a)*110;L.run=0.8;L.w=0;L.pu=0;}
+    const dx=L.tx-L.x,dy=L.ty-L.y,d=Math.hypot(dx,dy);
+    if(d>2){const sp=L.run>0?260:140;const st=Math.min(d,sp*dt);L.x+=dx/d*st;L.y+=dy/d*st;let da=Math.atan2(dy,dx)-L.a;while(da>Math.PI)da-=TAU;while(da<-Math.PI)da+=TAU;L.a+=da*Math.min(1,dt*14);L.ph+=st*0.35;}
+    else{L.w-=dt;if(L.pu<=0&&Math.random()<dt*0.5)L.pu=1.2;if(L.w<=0){L.w=0.6+Math.random()*2.2;const a=Math.random()*TAU,r=40+Math.random()*80;L.tx=cx+Math.cos(a)*r;L.ty=cy+Math.sin(a)*r;}}
+    L.run-=dt;if(L.pu>0)L.pu-=dt;
+    const x=L.x-M.ox+0,y=L.y-M.oy+0,mv=d>2,sw=mv?Math.sin(L.ph):0,up=L.pu>0?Math.abs(Math.sin(L.pu*9))*1.5:0;
+    lg.save();lg.shadowColor='rgba(0,0,0,0)';lg.shadowBlur=0;lg.shadowOffsetX=lg.shadowOffsetY=0;lg.globalAlpha=1;lg.globalCompositeOperation='source-over';lg.translate(Math.round(x),Math.round(y));lg.rotate(L.a);
+    const P=(px,py,w,h,c)=>{lg.fillStyle=c;lg.fillRect(px,py,w,h);};
+    /* shadow */lg.globalAlpha=0.16;lg.fillStyle='#2a1a10';lg.beginPath();lg.ellipse(-2,2,15,4.5,0,0,TAU);lg.fill();lg.globalAlpha=1;
+    /* tail, swinging */for(let i=0;i<14;i++){const tx=-12-i*2.2,ty=Math.sin(L.ph*0.6+i*0.35)*(1+i*0.12)*(mv?1:0.3),w=Math.max(1,3.4-i*0.22);P(tx,ty-w/2,2.4,w,i%3===1?'#7a6a3a':'#8e7c48');}
+    /* legs */const lg2=(lx,ly,s)=>{P(lx-1,ly,2,4*s,'#6a5a30');P(lx-1+(s>0?1:-1)*(1+sw),ly+4*s-(s>0?0:1),3,1.5,'#6a5a30');};
+    lg2(6+sw*2,2,1);lg2(6-sw*2,-2,-1);lg2(-6-sw*2,2,1);lg2(-6+sw*2,-2,-1);
+    /* body with banded back */P(-13,-3.5-up*0.3,22,7,'#9a8650');P(-12,-2.5-up*0.3,20,5,'#b09a5c');for(let i=-10;i<8;i+=4)P(i,-1.5-up*0.3,2,3,'#7a6a3a');
+    /* head */P(8,-3-up,7,6,'#a8925a');P(14,-2-up,3,4,'#a8925a');P(12,-3-up,1.4,1.4,'#14101a');P(12,1.6-up,1.4,1.4,'#14101a');P(9,-1-up,3,2,'#c8b278');
+    lg.restore();}};
 const Anim={
   lc:null,lg:null,PX:0,vig:null,
   view(c){const PX=Math.max(1,Math.round(Math.min(c.width,c.height)/CFG.viewShort)),W=Math.ceil(c.width/PX),H=Math.ceil(c.height/PX);
@@ -605,6 +643,7 @@ const Anim={
   draw(g,c,dt){const V=M.view,lg=this.lg;if(!TEX.grip)makeTex();
     let sx=0,sy=0;if(M.shake>0){M.shake-=dt;sx=Math.round((Math.random()-0.5)*4);sy=Math.round((Math.random()-0.5)*4);}
     lg.setTransform(1,0,0,1,0,0);lg.globalAlpha=1;Plaza.draw(lg,M.ox+sx,M.oy+sy,Cam.D,Cam.D);
+    if(M.theme==='cruces')Lizard.tick(lg,dt,sx,sy);
     lg.save();lg.translate(-sx,-sy);
     for(const p of M.parts){p.t-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.9;p.vy*=0.9;}M.parts=M.parts.filter(p=>p.t>0);
     for(const p of M.parts){lg.globalAlpha=clamp(p.t*2,0,0.7);lg.fillStyle=p.c||'#e6dfd2';lg.fillRect(Math.round(p.x-M.ox),Math.round(p.y-M.oy),p.s||2,p.s||2);}
@@ -693,8 +732,8 @@ const HUD={
 };
 
 /* =============================== GAME =============================== */
-function start(){const P=(LV.player&&LV.player.P)||null;Cam.init=false;
-  call('mgOpen','finger',{title:'FINGERBOARD',P,target:CFG.storyTarget,score:0,over:false});
+function start(opts){opts=opts||{};const P=(LV.player&&LV.player.P)||null;Cam.init=false;Plaza.setTheme(opts.theme);
+  call('mgOpen','finger',{title:opts.theme==='cruces'?'FINGERBOARD · LAS CRUCES':'FINGERBOARD',theme:opts.theme||'tempe',P,target:CFG.storyTarget,score:0,over:false});
   const m=LV.MGM;if(!m||m.kind!=='finger')return false;M=m;
   Object.assign(M,{b:{x:0,y:0,th:-Math.PI/2,vx:0,vy:0,h:0,vz:0,pitch:0,roll:0,flip:0,rollRate:0,yawRate:0,pitchRate:0,st:'ground',air:null,bailT:0,snap:0,land:0,slide:0},
     cam:{x:0,y:0},view:{W:215,H:400,PX:1},ox:0,oy:0,pops:[],parts:[],marks:[],log:[],ui:{},tilt:{tail:0,nose:0,side:0},time:CFG.session,paused:false,over:false,overT:0,shake:0,
