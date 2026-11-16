@@ -5565,8 +5565,9 @@ function pedGoal(n){let named=false;try{named=!!ndbOf(n);}catch(e){}/* named tow
   const k=pickFrom(PED.walk,k=>near((k%gw)*C,((k/gw)|0)*C,R*0.7));if(k!=null)return{k:'stroll',x:(k%gw)*C+C/2,y:((k/gw)|0)*C+C/2};return{k:'home',x:H0.x,y:H0.y};}
 function pedHome(n){if(n.pedH)return n.pedH;let q={x:n.hx,y:n.hy};const k=pedK(q.x,q.y);if(k<0||pedCost(k,false)===Infinity){const gw=PED.gw,C=PED.C,cx=Math.floor(q.x/C),cy=Math.floor(q.y/C);let best=null,bd=1e9;for(let dy=-12;dy<=12;dy++)for(let dx=-12;dx<=12;dx++){const X=cx+dx,Y=cy+dy;if(X<0||Y<0||X>=gw||Y>=PED.gh)continue;const kk=Y*gw+X,c=pedCost(kk,false);if(c===Infinity||c>2)continue;const d=dx*dx+dy*dy;if(d<bd){bd=d;best={x:X*C+C/2,y:Y*C+C/2};}}if(best)q=best;}return n.pedH=q;}
 /* follow a list of points with smooth steering, spacing from other walkers, and stuck detection */
+let PSG=null;function psgNear(n){if(!PSG){PSG=new Map();for(const o of npcs){if(!o.alive)continue;const k=Math.floor(o.x/16)*65536+Math.floor(o.y/16);let a=PSG.get(k);if(!a)PSG.set(k,a=[]);a.push(o);}}const out=[],cx=Math.floor(n.x/16),cy=Math.floor(n.y/16);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const a=PSG.get((cx+i)*65536+cy+j);if(a)for(const o of a)out.push(o);}return out;}
 function pedSteer(n,dt,tx,ty,sp){const dx=tx-n.x,dy=ty-n.y,d=Math.hypot(dx,dy)||1;let vx=dx/d*sp,vy=dy/d*sp;
-  for(const o of npcs){if(o===n||!o.alive)continue;const ex=n.x-o.x,ey=n.y-o.y,e2=ex*ex+ey*ey;if(e2<1||e2>196)continue;const e=Math.sqrt(e2),push=(14-e)/14*sp*0.6;vx+=ex/e*push;vy+=ey/e*push;}
+  for(const o of psgNear(n)){if(o===n||!o.alive)continue;const ex=n.x-o.x,ey=n.y-o.y,e2=ex*ex+ey*ey;if(e2<1||e2>196)continue;const e=Math.sqrt(e2),push=(14-e)/14*sp*0.6;vx+=ex/e*push;vy+=ey/e*push;}
   const a=Math.min(1,dt*6);n.vx+=(vx-n.vx)*a;n.vy+=(vy-n.vy)*a;const ox=n.x,oy=n.y;moveE(n,n.vx*dt,n.vy*dt);
   if(onRoad(n.x,n.y)){const k=pedK(n.x,n.y);if(k<0||PCOST[PED.t[k]]===Infinity){n.x=ox;n.y=oy;}}
   if(Math.abs(n.vx)>4)n.face=n.vx<0?-1:1;return Math.hypot(n.x-ox,n.y-oy);}
@@ -5600,7 +5601,7 @@ function pedUpdate(n,dt){if(n.zoey&&!(n.rom&&n.rom.st==='gf'))return zoeyTick(n,
   if(v.st==='exitIn'){const D0=v.goal.d,q=D0.in,dx=q.x-n.x,dy=q.y-n.y,d=Math.hypot(dx,dy);if(d<2.5){v.st='exit';v.leg=1;return true;}n.vx=dx/d*18;n.vy=dy/d*18;moveE(n,n.vx*dt,n.vy*dt);if(Math.abs(n.vx)>4)n.face=n.vx<0?-1:1;return true;}
   v.st='idle';v.t=1;return true;}
 function pedInside(D0){const b=D0.b;for(let i=0;i<14;i++){const x=D0.in.x-D0.n.x*rnd(4,22)+rnd(-14,14)*(D0.n.y?1:0.3),y=D0.in.y-D0.n.y*rnd(4,22)+rnd(-14,14)*(D0.n.x?1:0.3);if(x>b.x+8&&x<b.x+b.w-8&&y>b.y+8&&y<b.y+b.h-8&&isFree(x,y,5))return{x,y};}return{x:D0.in.x,y:D0.in.y};}
-function updateNpcs(dt){try{sk8Setup();}catch(e){}PED.budget=0;if(gameMode!=='story'&&npcs.length)npcs.length=0;for(const n of npcs){if(!n.alive){n.deadT+=dt;if(n.trix&&n.deadT>40){n.alive=true;n.hp=40;n.deadT=0;}continue;}n.anim+=dt;n.t-=dt;n.flash-=dt;if(n.jealPend&&player&&player.alive&&D(n.x,n.y,player.x,player.y)<260)ndbJealStart(n);if(n.jealT>0&&jealUpdate(n,dt))continue;
+function updateNpcs(dt){try{sk8Setup();}catch(e){}PED.budget=0;PSG=null;if(gameMode!=='story'&&npcs.length)npcs.length=0;for(const n of npcs){if(!n.alive){n.deadT+=dt;if(n.trix&&n.deadT>40){n.alive=true;n.hp=40;n.deadT=0;}continue;}n.anim+=dt;n.t-=dt;n.flash-=dt;if(n.jealPend&&player&&player.alive&&D(n.x,n.y,player.x,player.y)<260)ndbJealStart(n);if(n.jealT>0&&jealUpdate(n,dt))continue;
   if(n.react&&!(n.rom&&n.rom.st==='gf')&&n.fleeT<=0){const RK=reactOn(n);if(RK){n.vx=n.vy=0;continue;}}
   if(typeof CINE!=='undefined'&&CINE.talkN===n){if(!sheet.hidden){n.vx=n.vy=0;if(player)n.face=player.x<n.x?-1:1;continue;}CINE.talkN=null;}
   if(n.cobra){cobraUpdate(n,dt);continue;}
@@ -5663,7 +5664,7 @@ function computeAct(){act=null;const p=player;if(!p||!p.alive)return;let best=nu
   if(gameMode==='story'&&storyRun&&!storyRun.dlg){const s=storyStep();if(s&&s.t==='talk'){const n=npcs.find(n=>n.cast===s.who);if(n)cand(D(p.x,p.y,n.x,n.y)-40,34,'TALK',storyStart,n);}if(s&&s.t==='go'&&s.npc){const L=storyLoc(s);const n=L&&npcs.find(n=>n.name===s.npc&&!n.hidden&&D(n.x,n.y,L.x,L.y)<120);if(n)cand(D(p.x,p.y,n.x,n.y)-40,-6,'TALK',storyStart,n);}}/* owner: the mission talk always beats crew chatter */
   /* your crew hanging out in story mode (e.g. Bill at Cowtown): TALK reaches them before any work bench beside them */
   if(gameMode==='story'){const s0=storyRun&&!storyRun.dlg?storyStep():null;for(const n of npcs){if(!n.alive||n.hidden||!n.story||!n.cast||(s0&&s0.t==='talk'&&s0.who===n.cast))continue;if(s0&&s0.t==='talk'){const tn=npcs.find(q=>q.cast===s0.who);if(tn&&D(tn.x,tn.y,n.x,n.y)<34)continue;}const d=D(p.x,p.y,n.x,n.y);if(d<26)cand(d-8,26,'TALK',()=>crewTalk(n),n);}}
-  for(const n of npcs){if(!n.alive||n.fleeT>0||n.story)continue;const d=D(p.x,p.y,n.x,n.y);const dm=missions.find(m=>!m.done&&m.def.id==='deliver'&&m.stage==='carry'&&m.giver===n);
+  for(const n of npcs){if(!n.alive||n.fleeT>0||n.story)continue;const d=D(p.x,p.y,n.x,n.y);if(d>=26)continue;const dm=missions.find(m=>!m.done&&m.def.id==='deliver'&&m.stage==='carry'&&m.giver===n);
     if(dm)cand(d,26,'DELIVER',()=>completeMission(dm),n);else if(!n.given)cand(d,26,'TALK',()=>npcSheet(n),n);else if(chatOK(n))cand(d+2,24,'TALK',()=>chatOpen(n),n);}
   pigActs(cand,p);gfActs(cand,p);if(typeof palActs==='function')palActs(cand,p);
   townActs(cand,p);
@@ -8881,12 +8882,12 @@ function applyTrip(dt){const p=player;const tr=p&&p.trip;if(!tr||gameMode!=='sto
     g.globalCompositeOperation='source-over';
     for(let i=0;i<120;i++){const sx=((i*173.7)%W2+Math.sin(t*0.2+i)*12*dpr+W2)%W2,sy=((i*97.3+t*(6+i%5)*dpr)%H2),tw=Math.sin(t*(2.2+(i%7)*0.5)+i*2.3);if(tw<0.2)continue;const r=(1.5+4.5*(tw-0.2))*dpr*k,c=i%3?'255,236,160':'255,255,255';g.fillStyle=`rgba(${c},${0.9*k})`;g.fillRect(sx-r,sy-0.5*dpr,r*2,dpr);g.fillRect(sx-0.5*dpr,sy-r,dpr,r*2);g.fillStyle=`rgba(${c},${0.35*k})`;g.fillRect(sx-1.5*dpr,sy-1.5*dpr,3*dpr,3*dpr);}
     g.restore();}}
-function frame(now){requestAnimationFrame(frame);const dt=Math.min(0.05,(now-last)/1000);last=now;
+function frame(now){requestAnimationFrame(frame);const dtRaw=Math.min(0.1,Math.max(0,(now-last)/1000));const dt=Math.min(0.05,dtRaw);last=now;
   menuBgTick(now);
   if(state==='menu'){drawPreviews(now);return;}
   if(state==='mg'){mgUpdate(dt);return;}
   if(state==='drop'){dropTimer-=dt;$('dropT').textContent=Math.max(0,Math.ceil(dropTimer));if(dropTimer<=0)doDrop(null);return;}
-  if(state==='play'||state==='dead'||state==='won'){update(dt);render();fwOverlay(ctx);applyTrip(dt);hudAcc+=dt;if(hudAcc>0.08){hudAcc=0;hud();bandAmbience();}
+  if(state==='play'||state==='dead'||state==='won'){if(dtRaw>0.05){update(dtRaw/2);if(state==='play'||state==='dead'||state==='won')update(dtRaw/2);}else update(dt);render();fwOverlay(ctx);applyTrip(dt);hudAcc+=dt;if(hudAcc>0.08){hudAcc=0;hud();bandAmbience();}
     if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').classList.remove('show');}
     if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('banner').classList.remove('show');}
     if(flashT>0){flashT-=dt;if(flashT<=0){$('redflash').style.opacity=0;$('staticwarn').style.opacity=0;}}
