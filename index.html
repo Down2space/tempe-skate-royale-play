@@ -10285,27 +10285,45 @@ const DSH={W:220,H:476,tick:[6,40,208,60],SINK:[8,150,204,124],DC:[110,214],RACK
 const DSH_TOOLS=[['soap','SOAP'],['sponge','SPONGE'],['brush','BRUSH'],['spray','SPRAYER']];
 const DSH_GRIME={food:{col:'#8a5a2a',dk:'#5a3a14',tool:'sponge'},sauce:{col:'#c0392b',dk:'#7a1a10',tool:'sponge'},burnt:{col:'#2a1c14',dk:'#120a06',tool:'brush'}};
 function dishKind(){return pick(['plate','plate','bowl','mug','pan','pan','tray']);}
-function startDish(){initAudio();mgOpen('dish',{title:'DISHWASHER · THE BEAST',clock:60,done:0,served:0,over:false,msg:'',msgT:0,LW:220,LH:476,ox:0,oy:0,rack:[],queue:[dishKind(),dishKind(),dishKind()],tool:'sponge',px:0,py:0,drag:false,fx:[],bell:0});dishNext(MGM);}
+function startDish(){initAudio();mgOpen('dish',{title:'DISHWASHER · THE BEAST',clock:75,done:0,served:0,over:false,msg:'',msgT:0,LW:220,LH:476,ox:0,oy:0,rack:[],queue:[dishKind(),dishKind(),dishKind()],tool:'sponge',px:0,py:0,drag:false,fx:[],bell:0});dishNext(MGM);}
 function dishNext(M){const kind=M.queue.shift();M.queue.push(dishKind());const sp=[];const n=kind==='pan'?ri(4,6):kind==='mug'?ri(2,3):ri(3,5);const R0=kind==='mug'?20:kind==='bowl'?30:kind==='pan'?32:34;
   for(let i=0;i<n;i++){const a=rnd(TAU),r=rnd(0,R0*0.62);const type=kind==='pan'?(Math.random()<0.7?'burnt':'food'):kind==='tray'?pick(['food','sauce','burnt']):pick(['food','food','sauce','sauce','burnt']);sp.push({x:Math.cos(a)*r,y:Math.sin(a)*r*0.62,r:rnd(7,11),hp:1,type,seed:Math.random()*99});}
-  M.d={kind,R0,sp,stage:'soap',suds:0,rinse:-1,shine:0,slide:-1,in:1};}
+  const ryk=kind==='pan'?0.62:kind==='tray'?0.55:0.7,RX=R0*1.25,RY=R0*ryk*1.25,cells=[];
+  for(let y=-RY+3;y<RY;y+=6)for(let x=-RX+3;x<RX;x+=6){if(kind==='tray'||(x*x)/(RX*RX)+(y*y)/(RY*RY)<=1)cells.push({x,y,w:0,s:0,u:0});}
+  M.d={kind,R0,sp,stage:'soak',suds:0,rinse:-1,shine:0,slide:-1,in:1,cells,RX,RY,load:0,dunk:-1,cov:0};}
+/* paint the tool onto the dish: wet (sprayer), soap gel (soap), suds (sponge spreads soap), rinse (sprayer after scrubbing) */
+function dishPaint(M,lx,ly,t,amt){const D2=M.d,L=DSH,dx=lx-L.DC[0],dy=ly-L.DC[1],R=t==='soap'?6:10;let hit=false;
+  for(const c of D2.cells){if(Math.hypot(c.x-dx,c.y-dy)>R)continue;hit=true;
+    if(t==='spray'){if(D2.stage==='soak')c.w=Math.min(1,c.w+amt*3);else if(D2.stage==='rinse'){c.u=Math.max(0,c.u-amt*3);c.s=Math.max(0,c.s-amt*3);}}
+    else if(t==='soap'){c.s=Math.min(1,c.s+amt*2.5);c.u=Math.max(c.u,c.s*0.6);}
+    else if(t==='sponge'){if(c.s>0.05){D2.load=Math.min(1.5,D2.load+c.s*0.5);c.s=0;c.u=1;}else if(D2.load>0&&c.u<1){const k=Math.min(1-c.u,D2.load/0.05*0.25);c.u+=k;D2.load=Math.max(0,D2.load-k*0.05);}}}
+  return hit;}
+function dishCov(D2,k){let n=0,v=0;for(const c of D2.cells){n++;v+=Math.min(1,c[k]);}return n?v/n:0;}
 function dishLocal(M,x,y){return[x*M.LW-M.ox,y*M.LH-M.oy];}
 function dishInput(x,y,down,id){const M=MGM;if(M.over){if(down===true&&M.t>0.6){const pay=M.done*6;if(pay)addCash(pay);jobCd.beast=matchT+45;mgClose();banner('SHIFT DONE',M.done+' DISHES · +$'+pay,2.2);}return;}
-  if(x===null){if(down===false)M.drag=false;return;}const[lx,ly]=dishLocal(M,x,y);M.px=lx;M.py=ly;const D2=M.d,L=DSH;const inR=(r,p)=>{p=p||0;return lx>=r[0]-p&&lx<=r[0]+r[2]+p&&ly>=r[1]-p&&ly<=r[1]+r[3]+p;};
-  const say=(t,ok)=>{M.msg=t;M.msgT=1.1;if(!ok)sfx('deny',0.5);};
-  if(down===true){
-    if(inR(L.BINS)){const B=L.BINS,i=Math.max(0,Math.min(3,Math.floor((lx-B[0])/(B[2]/4))));const t=DSH_TOOLS[i][0];
-      if(t==='soap'){if(D2.slide>=0)return;if(D2.stage!=='soap'){say(D2.stage==='scrub'?'ALREADY SOAPY':'IT\'S CLEAN!');return;}D2.stage='scrub';D2.suds=1;sfx('spray',0.5);M.msg='SCRUB THE GUNK!';M.msgT=1;for(let k=0;k<14;k++)M.fx.push({x:L.DC[0]+rnd(-24,24),y:L.DC[1]+rnd(-14,14),vx:rnd(-20,20),vy:rnd(-40,-10),t:0.7,c:'#ffffff'});return;}
-      if(t==='spray'){if(D2.slide>=0)return;if(D2.stage==='soap'){say('SOAP IT FIRST');return;}if(D2.stage==='scrub'){say('STILL DIRTY!');return;}if(D2.stage==='rack'){say('RACK IT!');return;}D2.rinse=0;sfx('spray',0.6);return;}
-      M.tool=t;sfx('pick',0.3);return;}
-    if(inR(L.RACK)&&D2.stage==='rack'&&D2.slide<0){D2.slide=0;sfx('thud',0.4);return;}
-    if(Math.hypot(lx-L.DC[0],(ly-L.DC[1])/0.75)<D2.R0+16){M.drag=true;}}
-  else if(down===false){M.drag=false;}
-  if(M.drag&&down!==false){const dx=lx-L.DC[0],dy=ly-L.DC[1];const mv=M.lastP?Math.hypot(lx-M.lastP[0],ly-M.lastP[1]):0;M.lastP=[lx,ly];
-    if(mv>0.6){if(D2.stage==='soap'){if(!M.msgT)say('SOAP FIRST!');return;}if(D2.stage!=='scrub')return;D2.wob=0.15;
-      for(const q of D2.sp){if(q.hp<=0)continue;if(Math.hypot(dx-q.x*1.25,dy-q.y*1.25)<q.r*1.25+9){if(DSH_GRIME[q.type].tool!==M.tool){if(!M.msgT)say(q.type==='burnt'?'BURNT ON! USE THE BRUSH':'USE THE SPONGE');continue;}q.hp-=mv*0.03;if(Math.random()<0.25)M.fx.push({x:lx+rnd(-4,4),y:ly+rnd(-3,3),vx:rnd(-30,30),vy:rnd(-40,-5),t:0.45,c:Math.random()<0.5?'#ffffff':DSH_GRIME[q.type].col});if(q.hp<=0)sfx('spray',0.2);}}
-      if(D2.sp.every(q=>q.hp<=0)){D2.stage='rinse';M.msg='NOW RINSE IT!';M.msgT=1;sfx('pick',0.5);}}}
-  if(down===false)M.lastP=null;}
+  if(x===null){if(down===false){M.drag=false;M.lastP=null;}return;}const[lx,ly]=dishLocal(M,x,y);M.px=lx;M.py=ly;const D2=M.d,L=DSH;const inR=(r,p)=>{p=p||0;return lx>=r[0]-p&&lx<=r[0]+r[2]+p&&ly>=r[1]-p&&ly<=r[1]+r[3]+p;};
+  const say=(t,ok)=>{M.msg=t;M.msgT=1.1;if(!ok)sfx('deny',0.5);};const onDish=Math.hypot(lx-L.DC[0],(ly-L.DC[1])/0.75)<D2.R0*1.25+12;
+  if(down===true){if(D2.slide>=0||D2.dunk>=0||D2.in>0.2)return;
+    /* grab a tool out of its bin and keep your thumb down to drag it onto the dish */
+    if(inR(L.BINS)){const B=L.BINS,i=Math.max(0,Math.min(3,Math.floor((lx-B[0])/(B[2]/4))));M.tool=DSH_TOOLS[i][0];M.drag=true;M.lastP=[lx,ly];sfx('pick',0.3);return;}
+    if(onDish&&D2.stage==='dunk'){D2.dunk=0;sfx('spray',0.6);return;}
+    if(onDish){M.drag=true;M.lastP=[lx,ly];}return;}
+  if(down===false){M.drag=false;M.lastP=null;return;}
+  if(!M.drag)return;const t=M.tool;const lp=M.lastP||[lx,ly];const mv=Math.hypot(lx-lp[0],ly-lp[1]);M.lastP=[lx,ly];if(!onDish||mv<0.4)return;
+  if(D2.stage==='dunk'||D2.dunk>=0||D2.slide>=0)return;
+  if(D2.stage==='soak'&&t!=='spray'){if(!M.msgT)say('SOAK IT WITH THE SPRAYER FIRST');return;}
+  if(D2.stage==='rinse'&&t!=='spray'){if(!M.msgT)say('RINSE IT WITH THE SPRAYER');return;}
+  if(t==='spray')return;/* the sprayer paints every frame it is held over the dish */
+  if(D2.stage!=='scrub')return;
+  if(t==='soap')return;/* soap squirts every frame too */
+  /* sponge and brush: scrub along the swipe */
+  const n=Math.max(1,Math.ceil(mv/3));for(let k=1;k<=n;k++){const px=lp[0]+(lx-lp[0])*k/n,py=lp[1]+(ly-lp[1])*k/n;if(t==='sponge')dishPaint(M,px,py,'sponge',0);
+    const dx=px-L.DC[0],dy=py-L.DC[1];
+    for(const q of D2.sp){if(q.hp<=0)continue;if(Math.hypot(dx-q.x*1.25,dy-q.y*1.25)>q.r*1.25+8)continue;
+      const need=DSH_GRIME[q.type].tool;if(t==='sponge'&&need==='brush'){if(!M.msgT)say('BAKED ON! GRAB THE BRUSH');continue;}
+      const soapy=D2.cells.some(c=>c.u>0.4&&Math.hypot(c.x-q.x*1.25,c.y-q.y*1.25)<q.r*1.25+4);if(!soapy){if(!M.msgT)say('NEEDS SOAP THERE');continue;}
+      q.hp-=(t==='brush'?0.045:0.03)*(mv/n);if(Math.random()<0.2)M.fx.push({x:px+rnd(-4,4),y:py+rnd(-3,3),vx:rnd(-30,30),vy:rnd(-40,-5),t:0.45,c:Math.random()<0.5?'#ffffff':DSH_GRIME[q.type].col});if(q.hp<=0)sfx('spray',0.2);}}
+  D2.wob=0.12;}
 function dishDraw(g,kind,R0,sc){const O='#14101a',E=(a,b,rx,ry,col)=>{g.fillStyle=col;g.beginPath();g.ellipse(a,b,rx,ry,0,0,TAU);g.fill();};g.save();g.scale(sc,sc);
   if(kind==='pan'){g.fillStyle=O;g.fillRect(R0-2,-5,34,10);g.fillStyle='#3a3a42';g.fillRect(R0,-3.4,31,6.8);g.fillStyle='#5a5a64';g.fillRect(R0,-3.4,31,1.4);g.fillStyle='#7a4a24';g.fillRect(R0+16,-3,14,6);E(0,1.6,R0+2.4,R0*0.66+2.4,O);E(0,1,R0+1,R0*0.66+1,'#4a4a54');E(0,0,R0-2,R0*0.62-2,'#2a2a32');E(0,0,R0-5,R0*0.62-4.6,'#34343e');g.strokeStyle='rgba(255,255,255,0.08)';g.lineWidth=1;for(let r=6;r<R0-6;r+=5){g.beginPath();g.ellipse(0,0,r,r*0.62,0,0,TAU);g.stroke();}}
   else if(kind==='tray'){g.fillStyle=O;g.fillRect(-R0-3,-R0*0.55-3,R0*2+6,R0*1.1+6);g.fillStyle='#b8bcc6';g.fillRect(-R0-1.5,-R0*0.55-1.5,R0*2+3,R0*1.1+3);g.fillStyle='#d8dce4';g.fillRect(-R0+3,-R0*0.55+3,R0*2-6,R0*1.1-6);g.fillStyle='rgba(255,255,255,0.4)';g.fillRect(-R0+4,-R0*0.55+4,R0*2-8,2);}
@@ -10326,7 +10344,14 @@ function dishTool(g,t,x,y,sc,on){const O='#14101a',R=(a,b,c,d,col)=>{g.fillStyle
   g.restore();}
 function dishFrame(g,c,dt){const M=MGM,L=DSH;const s=Math.min(c.height/L.H,c.width/L.W),LW=c.width/s,LH=c.height/s;M.LW=LW;M.LH=LH;M.ox=(LW-L.W)/2;M.oy=(LH-L.H)/2;const D2=M.d;M.served=M.done;
   if(!M.over){M.clock-=dt;if(M.clock<=0){M.clock=0;M.over=true;M.t=0;}
-    if(D2.rinse>=0){D2.rinse+=dt;D2.suds=Math.max(0,1-D2.rinse/0.7);if(D2.rinse>=0.8){D2.rinse=-1;D2.stage='rack';D2.shine=1;M.msg='SPARKLING! RACK IT';M.msgT=1;sfx('ok',0.4);}}
+    {const onD=M.drag&&Math.hypot(M.px-L.DC[0],(M.py-L.DC[1])/0.75)<D2.R0*1.25+12;D2.spraying=false;
+      if(onD&&M.tool==='spray'&&(D2.stage==='soak'||D2.stage==='rinse')){D2.spraying=true;dishPaint(M,M.px,M.py,'spray',dt);if(Math.random()<dt*20)M.fx.push({x:M.px+rnd(-6,6),y:M.py+rnd(-4,4),vx:rnd(-20,20),vy:rnd(-30,0),t:0.35,c:'#a8dcff'});M.sprT=(M.sprT||0)-dt;if(M.sprT<=0){M.sprT=0.35;sfx('spray',0.25);}}
+      else if(onD&&M.tool==='soap'&&D2.stage==='scrub'){dishPaint(M,M.px,M.py,'soap',dt);M.sprT=(M.sprT||0)-dt;if(M.sprT<=0){M.sprT=0.4;sfx('spray',0.18);}}}
+    if(D2.stage==='soak'&&dishCov(D2,'w')>=0.85){D2.stage='scrub';M.msg='SOAKED! SOAP + SPONGE IT';M.msgT=1.2;sfx('pick',0.5);}
+    if(D2.stage==='scrub'&&D2.sp.every(q=>q.hp<=0)&&dishCov(D2,'u')>=0.85){D2.stage='rinse';M.msg='CLEAN! NOW RINSE IT';M.msgT=1.1;sfx('pick',0.5);}
+    if(D2.stage==='rinse'&&dishCov(D2,'u')<=0.06&&D2.cells.every(c=>c.s<0.1)){D2.stage='dunk';D2.shine=1;M.msg='SPARKLING! TAP IT TO DUNK';M.msgT=1.2;sfx('ok',0.4);}
+    D2.suds=0;
+    if(D2.dunk>=0){D2.dunk+=dt;if(D2.dunk>=0.7){D2.dunk=-1;D2.stage='rack';D2.slide=0;sfx('thud',0.4);}}
     if(D2.slide>=0){D2.slide+=dt;if(D2.slide>=0.45){M.done++;M.rack.push(D2.kind);if(M.rack.length>9)M.rack.shift();M.msg='+$6';M.msgT=0.7;dishNext(M);}}
     if(D2.in>0)D2.in=Math.max(0,D2.in-dt*3);}
   const R=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x,y,w,h);};const O='#14101a';const X0=-M.ox,Y0=-M.oy;
@@ -10347,27 +10372,31 @@ function dishFrame(g,c,dt){const M=MGM,L=DSH;const s=Math.min(c.height/L.H,c.wid
     {const fx=x+w-26;R(fx-1,y+2,6,18,O);R(fx,y+3,4,16,'#c8ccd4');R(fx-14,y+2,18,5,O);R(fx-13,y+3,16,3,'#e8ecf2');R(fx-14,y+6,4,6,O);R(fx-13.4,y+6,2.8,5,'#c8ccd4');if(D2.rinse>=0){g.fillStyle='rgba(160,220,255,0.75)';for(let i=0;i<8;i++){g.beginPath();g.arc(fx-12+rnd(-2,2),y+14+i*5,1.2,0,TAU);g.fill();}}}
     for(const[a,b]of[[x+4,y+4],[x+w-4,y+4],[x+4,y+h-4],[x+w-4,y+h-4]])kitRivet(g,a,b);}
   /* the dish */
-  {let[cx,cy]=L.DC;if(D2.slide>=0){const u=D2.slide/0.45;cx+=u*40;cy+=u*92;}if(D2.in>0){cx-=D2.in*80;}const wob=D2.wob>0?(D2.wob-=dt,Math.sin(M.t*60)*1.4):0;g.save();g.translate(cx+wob,cy);const sc=D2.slide>=0?1-D2.slide:1;g.scale(sc,sc);
+  {let[cx,cy]=L.DC;if(D2.slide>=0){const u=D2.slide/0.45;cx+=u*40;cy+=u*92;}if(D2.in>0){cx-=D2.in*80;}let dk=1;if(D2.dunk>=0){const u=D2.dunk/0.7,dip=Math.sin(u*Math.PI);cy+=dip*10;dk=1-dip*0.35;if(u>0.3&&u<0.5&&Math.random()<0.6)for(let i=0;i<3;i++)M.fx.push({x:L.DC[0]+rnd(-D2.R0,D2.R0),y:L.DC[1]+rnd(-6,6),vx:rnd(-50,50),vy:rnd(-90,-30),t:0.6,c:'#a8dcff'});}const wob=D2.wob>0?(D2.wob-=dt,Math.sin(M.t*60)*1.4):0;g.save();g.translate(cx+wob,cy);const sc=D2.slide>=0?1-D2.slide:1;g.scale(sc,sc*dk);
     g.fillStyle='rgba(0,0,0,0.25)';g.beginPath();g.ellipse(4,8,D2.R0*1.3,D2.R0*0.8,0,0,TAU);g.fill();dishDraw(g,D2.kind,D2.R0,1.25);for(const q of D2.sp)dishGrime(g,q,1.25);
+    /* wet sheen, soap gel, suds: painted where your thumb went */
+    for(const c of D2.cells){if(c.w>0.05&&D2.stage!=='dunk'){g.fillStyle=`rgba(140,200,255,${0.28*Math.min(1,c.w)})`;g.fillRect(c.x-3,c.y-3,6,6);}}
+    for(const c of D2.cells){if(c.s>0.05){g.fillStyle=`rgba(90,220,190,${0.75*Math.min(1,c.s)})`;g.beginPath();g.arc(c.x,c.y,3.2,0,TAU);g.fill();g.fillStyle=`rgba(220,255,245,${0.8*Math.min(1,c.s)})`;g.fillRect(c.x-1.6,c.y-1.6,1.2,1.2);}
+      if(c.u>0.05){g.globalAlpha=Math.min(1,c.u);const h=kitHash(c.x*3.1+c.y);g.fillStyle='#ffffff';g.beginPath();g.arc(c.x+h*2-1,c.y+Math.sin(M.t*3+c.x)*0.5,2.2+h*1.4,0,TAU);g.fill();g.beginPath();g.arc(c.x-2+h,c.y+2,1.4+h,0,TAU);g.fill();g.fillStyle='rgba(160,210,255,0.55)';g.beginPath();g.arc(c.x+h*2-0.4,c.y+0.6,0.8,0,TAU);g.fill();g.globalAlpha=1;}}
     if(D2.suds>0){g.globalAlpha=D2.suds;for(let i=0;i<30;i++){const a=i*2.39,r=Math.sqrt((i+0.5)/30)*D2.R0*1.05;const xx=Math.cos(a)*r,yy=Math.sin(a)*r*0.66+Math.sin(M.t*3+i)*0.6;g.fillStyle='#ffffff';g.beginPath();g.arc(xx,yy,1.6+kitHash(i)*2.4,0,TAU);g.fill();g.fillStyle='rgba(160,210,255,0.55)';g.beginPath();g.arc(xx+0.7,yy+0.7,0.8,0,TAU);g.fill();}g.globalAlpha=1;}
-    if(D2.stage==='rack'){for(let i=0;i<4;i++){const a=M.t*2.6+i*1.6,rx=Math.cos(a)*D2.R0*0.7,ry=Math.sin(a)*D2.R0*0.4;g.fillStyle='#ffffff';g.fillRect(rx-0.4,ry-2.4,0.8,4.8);g.fillRect(rx-2.4,ry-0.4,4.8,0.8);}}
+    if(D2.stage==='dunk'||D2.stage==='rack'){for(let i=0;i<4;i++){const a=M.t*2.6+i*1.6,rx=Math.cos(a)*D2.R0*0.7,ry=Math.sin(a)*D2.R0*0.4;g.fillStyle='#ffffff';g.fillRect(rx-0.4,ry-2.4,0.8,4.8);g.fillRect(rx-2.4,ry-0.4,4.8,0.8);}}
     g.restore();}
   /* step tracker */
-  {const[x,y,w,h]=L.STEPS;R(x-1,y-1,w+2,h+2,O);R(x,y,w,h,'#24161c');R(x,y,w,1,'#5a3a44');const st=['soap','scrub','rinse','rack'],cur=st.indexOf(D2.stage);['1 SOAP','2 SCRUB','3 RINSE','4 RACK IT'].forEach((t,i)=>{const yy=y+9+i*11;g.font='bold 5.4px Silkscreen, monospace';g.textAlign='left';g.fillStyle=i<cur?'#5ee08a':i===cur?'#ffc23d':'#6a5a64';g.fillText((i<cur?'✓ ':i===cur?'▸ ':'  ')+t,x+5,yy);});}
+  {const[x,y,w,h]=L.STEPS;R(x-1,y-1,w+2,h+2,O);R(x,y,w,h,'#24161c');R(x,y,w,1,'#5a3a44');const st=['soak','scrub','rinse','dunk'],cur=D2.stage==='rack'?4:st.indexOf(D2.stage);const pc=D2.stage==='soak'?dishCov(D2,'w'):D2.stage==='scrub'?Math.min(dishCov(D2,'u'),D2.sp.filter(q=>q.hp<=0).length/Math.max(1,D2.sp.length)):D2.stage==='rinse'?1-dishCov(D2,'u'):1;['1 SOAK','2 SOAP+SCRUB','3 RINSE','4 DUNK IT'].forEach((t,i)=>{const yy=y+9+i*11;if(i===cur&&cur<3){R(x+5,yy+2,w-10,2,'#3a2a30');R(x+5,yy+2,(w-10)*Math.min(1,pc),2,'#ffc23d');}g.font='bold 5.4px Silkscreen, monospace';g.textAlign='left';g.fillStyle=i<cur?'#5ee08a':i===cur?'#ffc23d':'#6a5a64';g.fillText((i<cur?'✓ ':i===cur?'▸ ':'  ')+t,x+5,yy);});}
   /* drying rack */
   {const[x,y,w,h]=L.RACK;R(x-1,y-1,w+2,h+2,O);R(x,y,w,h,'#5a3a2a');R(x,y,w,2,'#8a5a3a');for(let i=0;i<10;i++)R(x+5+i*(w-10)/9,y+6,1.6,h-12,'#c8ccd4');R(x+3,y+h-8,w-6,2,'#c8ccd4');
     M.rack.forEach((k,i)=>{const xx=x+8+i*(w-16)/8;R(xx-2.4,y+9,4.8,h-18,O);R(xx-1.6,y+10,3.2,h-20,k==='pan'?'#4a4a54':k==='mug'?'#d84a3a':k==='tray'?'#c8ccd4':'#f4f6fa');R(xx-1.6,y+10,1,h-20,'rgba(255,255,255,0.5)');});
-    const ready=D2.stage==='rack'&&D2.slide<0;g.fillStyle=ready?'#ffc23d':'#e8e2da';g.font='bold 5.4px Silkscreen, monospace';g.textAlign='center';g.fillText(ready?'TAP TO RACK IT ▸':'DRYING RACK',x+w/2,y-3);if(ready){g.strokeStyle=`rgba(255,194,61,${0.5+Math.sin(M.t*8)*0.4})`;g.lineWidth=1.4;g.strokeRect(x-2.5,y-2.5,w+5,h+5);}}
+    const ready=false;g.fillStyle='#e8e2da';g.font='bold 5.4px Silkscreen, monospace';g.textAlign='center';g.fillText('DRYING RACK',x+w/2,y-3);if(ready){g.strokeStyle=`rgba(255,194,61,${0.5+Math.sin(M.t*8)*0.4})`;g.lineWidth=1.4;g.strokeRect(x-2.5,y-2.5,w+5,h+5);}}
   /* tool bins */
-  {const B=L.BINS;R(B[0]-3,B[1]-3,B[2]+6,B[3]+6,'#d8a030');R(B[0]-2,B[1]-2,B[2]+4,B[3]+4,'#14101a');const bw=B[2]/4,need=D2.stage==='soap'?'soap':D2.stage==='rinse'?'spray':D2.stage==='scrub'?null:null;
-    DSH_TOOLS.forEach(([t,n],i)=>{const bx=B[0]+i*bw,sel=M.tool===t&&(t==='sponge'||t==='brush'),hint=t===need||(D2.stage==='scrub'&&D2.sp.some(q=>q.hp>0&&DSH_GRIME[q.type].tool===t)&&M.tool!==t);R(bx+1.5,B[1]+1.5,bw-3,B[3]-3,sel?'#4a2a14':'#2a1a1e');R(bx+1.5,B[1]+1.5,bw-3,2,sel?'#8a5a2a':'#3a2a30');
-      dishTool(g,t,bx+bw/2,B[1]+B[3]*0.44,2.2,t==='spray'&&D2.rinse>=0);g.fillStyle=sel?'#ffc23d':'#e8e2da';g.font='bold 5px Silkscreen, monospace';g.textAlign='center';g.fillText(n,bx+bw/2,B[1]+B[3]-7);
+  {const B=L.BINS;R(B[0]-3,B[1]-3,B[2]+6,B[3]+6,'#d8a030');R(B[0]-2,B[1]-2,B[2]+4,B[3]+4,'#14101a');const bw=B[2]/4,need=D2.stage==='soak'||D2.stage==='rinse'?'spray':D2.stage==='scrub'&&dishCov(D2,'u')<0.85&&D2.load<0.05&&D2.cells.every(c=>c.s<0.05)?'soap':D2.stage==='scrub'&&dishCov(D2,'u')<0.85?'sponge':null;
+    DSH_TOOLS.forEach(([t,n],i)=>{const bx=B[0]+i*bw,sel=M.tool===t,hint=t===need||(D2.stage==='scrub'&&D2.sp.some(q=>q.hp>0&&DSH_GRIME[q.type].tool===t)&&M.tool!==t);R(bx+1.5,B[1]+1.5,bw-3,B[3]-3,sel?'#4a2a14':'#2a1a1e');R(bx+1.5,B[1]+1.5,bw-3,2,sel?'#8a5a2a':'#3a2a30');
+      dishTool(g,t,bx+bw/2,B[1]+B[3]*0.44,2.2,t==='spray'&&D2.spraying);g.fillStyle=sel?'#ffc23d':'#e8e2da';g.font='bold 5px Silkscreen, monospace';g.textAlign='center';g.fillText(n,bx+bw/2,B[1]+B[3]-7);
       if(sel||hint){g.strokeStyle=sel?'#ffc23d':`rgba(94,224,138,${0.5+Math.sin(M.t*8)*0.4})`;g.lineWidth=1.6;g.strokeRect(bx+2,B[1]+2,bw-4,B[3]-4);}});}
-  kitBanner(g,L.BANNER,'SOAP · SCRUB · [BRUSH] FOR BURNT · RINSE · RACK IT');
-  /* tool in hand while scrubbing */
-  if(M.drag&&D2.stage==='scrub')dishTool(g,M.tool,M.px,M.py,1.8);
+  kitBanner(g,L.BANNER,'SPRAY · SOAP · SPONGE · [BRUSH] BURNT · RINSE · TAP TO DUNK');
+  /* the tool follows your thumb */
+  if(M.drag)dishTool(g,M.tool,M.px,M.py,1.8,M.tool==='spray'&&D2.spraying);
   for(const f of M.fx){f.t-=dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.vy+=120*dt;g.globalAlpha=Math.max(0,f.t*2);g.fillStyle=f.c;g.beginPath();g.arc(f.x,f.y,1.3,0,TAU);g.fill();}g.globalAlpha=1;M.fx=M.fx.filter(f=>f.t>0);
-  if(M.msgT>0){M.msgT-=dt;g.font='bold 8px Silkscreen, monospace';g.textAlign='center';g.fillStyle='#000';g.fillText(M.msg,L.W/2+1,L.SINK[1]+12);g.fillStyle=/RINSE|SPARK|SCRUB|\+\$/.test(M.msg)?'#5ee08a':'#ff6a6a';g.fillText(M.msg,L.W/2,L.SINK[1]+11);}
+  if(M.msgT>0){M.msgT-=dt;g.font='bold 8px Silkscreen, monospace';g.textAlign='center';g.fillStyle='#000';g.fillText(M.msg,L.W/2+1,L.SINK[1]+12);g.fillStyle=/RINSE|SPARK|SCRUB|SOAKED|CLEAN|\+\$/.test(M.msg)?'#5ee08a':'#ff6a6a';g.fillText(M.msg,L.W/2,L.SINK[1]+11);}
   if(M.over){R(X0,Y0,LW,LH,'rgba(0,0,0,0.7)');g.fillStyle='#ffd23d';g.font='bold 14px Silkscreen, monospace';g.textAlign='center';g.fillText('SHIFT DONE',L.W/2,L.H*0.42);g.fillStyle='#fff';g.font='8px Silkscreen, monospace';g.fillText(M.done+' DISHES · +$'+(M.done*6),L.W/2,L.H*0.42+20);g.fillText('TAP TO CLOCK OUT',L.W/2,L.H*0.42+36);}
   g.restore();}
 /* ---------- Pizza: build from recipe tickets ---------- */
