@@ -5648,7 +5648,7 @@ function missionFrame(dt){for(const m of missions){if(m.done){m.rmT-=dt;continue
   if(m.def.id==='dist'){m.prog=Math.min(m.need,Math.floor((player.dist-m.d0)/100));if(m.prog>=m.need)completeMission(m);}
   if(m.def.id==='reach'&&D(player.x,player.y,m.place.x,m.place.y)<40)completeMission(m);}
   missions=missions.filter(m=>!m.done||m.rmT>0);}
-function markers(){const out=[];const twStory=gameMode==='story'&&storyRun&&storyStep()&&storyStep().t==='tw';const twMis=missions.find(m=>!m.done&&m.def.id==='tw');if(twStory||twMis){const hit=twStory?storyRun.twHit:(twMis.hit||[]);for(const b of buildings)if(b.tw&&!hit.includes(b))out.push({x:b.doorOut.x,y:b.doorOut.y,c:'#ff9a3a',icon:twStory?'tw':null});}if(gameMode==='story'&&storyRun){const m=storyMarker();if(m)out.push(m);hwMarkers(out);hauntMarkers(out);try{moonQMarker(out);}catch(e){}}for(const m of missions){if(m.done)continue;const id=m.def.id;
+function markers(){const out=[];const twStory=gameMode==='story'&&storyRun&&storyStep()&&storyStep().t==='tw';const twMis=missions.find(m=>!m.done&&m.def.id==='tw');if(twStory||twMis){const hit=twStory?storyRun.twHit:(twMis.hit||[]);for(const b of buildings)if(b.tw&&!hit.includes(b))out.push({x:b.doorOut.x,y:b.doorOut.y,c:'#ff9a3a',icon:twStory?'tw':null});}if(gameMode==='story'&&storyRun){const m=storyMarker();if(m)out.push(m);hwMarkers(out);hauntMarkers(out);try{moonQMarker(out);}catch(e){}try{nskMarker(out);}catch(e){}}for(const m of missions){if(m.done)continue;const id=m.def.id;
   if(id==='reach')out.push({x:m.place.x,y:m.place.y,c:'#4fc3f7'});
   if(id==='tag')for(const s of m.spots)if(!s.done)out.push({x:s.x,y:s.y,c:'#4fc3f7'});
   if(id==='deliver'){if(m.stage==='pickup')out.push({x:BEAST.x,y:BEAST.y,c:'#4fc3f7'});else{const g=m.giver;out.push(g&&g.cowtown?{x:COW.spot.x,y:COW.spot.y,c:'#4fc3f7'}:{x:g.x,y:g.y,c:'#4fc3f7'});}}}
@@ -5963,7 +5963,7 @@ const ROM={gf:null,n:-1,who:null,save:{}};
  const dy=store.get('tsr_rom_dylan',{})||{};let ch=false;for(const k of ['max','bill','dre','zach','lucas']){const sv=store.get('tsr_rom_'+k,null);if(!sv)continue;let mv=false;for(const id of ['zoey','zoey_sk']){if(sv[id]){if(!dy.zoey)dy.zoey=Object.assign({},sv[id],{zoey:true});delete sv[id];mv=true;}}if(mv){store.set('tsr_rom_'+k,sv);ch=true;}}if(ch)store.set('tsr_rom_dylan',dy);}
 function romKey(){return 'tsr_rom_'+(typeof meK==='function'?meK():'dylan');}
 function romFlowers(){return store.get('tsr_flw',0)||0;}function romFlowersAdd(k){store.set('tsr_flw',Math.max(0,romFlowers()+k));}
-function romSave(){const o={};for(const n of npcs)if(n.rom&&n.P&&n.rom.st!=='none')o[(n.Pw||n.P).id]={st:n.rom.st==='fight'?'mad':n.rom.st,a:n.rom.a||0,w:!!n.rom.wait,P:n.rom.st==='gf'||n.rom.st==='fight'?(n.Pw||n.P):undefined,C:n.chat?{name:n.chat.name,ty:n.chat.ty,nick:n.chat.nick,mood:n.chat.mood,drink:n.chat.drink,interest:n.chat.interest,lines:n.chat.lines,pref:n.chat.pref,grp:n.chat.grp,tk:n.chat.tk,girl:true}:undefined,zoey:!!n.zoey,h:[Math.round((n.home0||n).x),Math.round((n.home0||n).y)]};store.set(romKey(),o);ROM.save=o;}
+function romSave(){const o={};for(const n of npcs)if(n.rom&&n.P&&n.rom.st!=='none')o[(n.Pw||n.P).id]={st:n.rom.st==='fight'?'mad':n.rom.st,a:n.rom.a||0,w:!!n.rom.wait,ig:Math.round(n.rom.ig||0),igS:n.rom.igS||0,P:n.rom.st==='gf'||n.rom.st==='fight'?(n.Pw||n.P):undefined,C:n.chat?{name:n.chat.name,ty:n.chat.ty,nick:n.chat.nick,mood:n.chat.mood,drink:n.chat.drink,interest:n.chat.interest,lines:n.chat.lines,pref:n.chat.pref,grp:n.chat.grp,tk:n.chat.tk,girl:true}:undefined,zoey:!!n.zoey,h:[Math.round((n.home0||n).x),Math.round((n.home0||n).y)]};store.set(romKey(),o);ROM.save=o;}
 /* Moonbeam stargazing date: once you're dating her, at night she asks to go up A Mountain; hints she's an alien */
 const MOONQ={x:1262,y:665};
 function moonQSt(){return +store.get('tsr_moonq_'+meK(),0)||0;}
@@ -5974,9 +5974,31 @@ function moonQTick(n,dt){if(gameMode!=='story'||!storyRun||storyRun.dlg||!moonFr
   if(st===1&&!tripOf(player)&&D(player.x,player.y,MOONQ.x,MOONQ.y)<44&&D(n.x,n.y,player.x,player.y)<120){moonQSet(2);n.vx=n.vy=0;
     storyDialog([['MOONBEAM','Okay, look. See that little red one? Third from the left?'],['@ME','The blinky one?'],['MOONBEAM','That\'s home. I mean, that\'s my star sign. Astrology. Totally normal.'],['MOONBEAM','It\'s so far. Light takes forever to get here. I would know.'],['@ME','You would know?'],['MOONBEAM','From a podcast! A podcast I heard. Shh, just look.'],['MOONBEAM','Hey. If a big light ever lands in the desert, don\'t freak out. It\'s probably just my mom.'],['@ME','...Your mom?'],['MOONBEAM','Kidding! Mostly. Shabakaloo provides.']],()=>{n.rom.a=6;try{romReact(n,'happy',4);}catch(e){}banner('STARGAZING DATE','Moonbeam loves you ❤',2.4);sfx('pick',0.6);romSave();});}}
 {const _ruMQ=romUpdate;romUpdate=function(n,dt){const r=_ruMQ(n,dt);try{if(n===ROM.gf)moonQTick(n,dt);}catch(e){}return r;};}
+/* girlfriend texts + breakup if you leave her waiting too long */
+const GFT_MISS=['Where are you?','I miss you already.','Come find me, babe.','You still skating? Send me a clip.','Thinking about you.'];
+function gfText(n,s){const nm=chatMeta(n).name;toast('📱 '+nm.toUpperCase()+': "'+s+'"');sfx('pick',0.35);}
+function gfNeglectTick(n,dt){const r=n.rom;if(gameMode!=='story'||!player||!player.alive||r.st!=='gf')return;if((storyRun&&storyRun.dlg)||!sheet.hidden)return;
+  const away=r.wait&&(tripOf(player)!==tripOf(n)||D(n.x,n.y,player.x,player.y)>150);
+  if(!away){if(!r.wait||D(n.x,n.y,player.x,player.y)<120){r.ig=0;r.igS=0;r.txT=90;}return;}
+  r.ig=(r.ig||0)+dt;r.txT=(r.txT==null?90:r.txT)-dt;
+  if(r.ig>=600&&r.igS<3){r.igS=3;const NM=chatMeta(n).name.toUpperCase();
+    storyDialog([[NM,'You know what? Forget it. You clearly don\'t care.'],['@ME','Wait, what?'],[NM,'We\'re done. Lose my number.']],()=>{r.st='mad';r.wait=false;r.a=0;r.ig=0;if(ROM.gf===n)ROM.gf=null;n.hx=n.x;n.hy=n.y;sfx('deny',0.6);toast(NM+' DUMPED YOU 💔');romSave();});return;}
+  if(r.ig>=420&&(r.igS||0)<2){r.igS=2;r.a=Math.max(0,(r.a||0)-1);gfText(n,'Seriously. If you don\'t come back soon, we\'re done.');romSave();return;}
+  if(r.ig>=240&&(r.igS||0)<1){r.igS=1;r.a=Math.max(0,(r.a||0)-1);gfText(n,'Hello?? Are you ignoring me?');romSave();return;}
+  if(r.ig<240&&r.txT<=0){r.txT=150;let s=pick(GFT_MISS);try{const e=ndbOf(n);if(e&&e.nm!=='Moonbeam'&&Math.random()<0.4){const b=buildings.find(b=>b.name&&e.x>b.x&&e.x<b.x+b.w&&e.y>b.y&&e.y<b.y+b.h);if(b)s='Come by '+b.name+'. I\'ll hook you up.';}}catch(e){}gfText(n,s);}}
+/* night skate meetup: at night, take your girlfriend to Tempe Skate Park and land tricks for bonus rep */
+const NSK={x:220,y:2000,on:false,t:0,cnt:0,cd:0};
+function nskOk(){const g=ROM.gf;return gameMode==='story'&&storyRun&&g&&g.alive&&g.rom&&g.rom.st==='gf'&&!g.rom.wait&&tod()>=0.7;}
+function nskMarker(out){if(!NSK.on&&NSK.cd<=0&&nskOk())out.push({x:NSK.x,y:NSK.y,c:'#ff4a8a',icon:'go'});}
+function nskEnd(){NSK.on=false;NSK.cd=300;const g=ROM.gf;const nm=g?chatMeta(g).name:'She';if(g&&g.rom){g.rom.a=Math.min(6,(g.rom.a||0)+1);try{romReact(g,'happy',3);}catch(e){}romSave();}banner('NIGHT SKATE DONE','+'+NSK.cnt*2+' rep · '+nm+' had a blast ❤',2.6);sfx('pick',0.6);}
+function nskTick(n,dt){if(NSK.cd>0)NSK.cd-=dt;if(!player||(storyRun&&storyRun.dlg))return;
+  if(NSK.on){if(!nskOk()||D(player.x,player.y,NSK.x,NSK.y)>320){nskEnd();return;}NSK.t-=dt;if(NSK.t<=0)nskEnd();return;}
+  if(NSK.cd<=0&&nskOk()&&!tripOf(player)&&D(player.x,player.y,NSK.x,NSK.y)<50&&D(n.x,n.y,player.x,player.y)<120){NSK.on=true;NSK.t=60;NSK.cnt=0;banner('NIGHT SKATE','Land tricks with '+chatMeta(n).name+' for bonus rep · 60 sec',2.6);sfx('pick',0.6);}}
+{const _meNS=mEvent;mEvent=function(type,amt){try{if(NSK.on&&(type==='ollie'||type==='grind')&&ROM.gf&&D(ROM.gf.x,ROM.gf.y,player.x,player.y)<150){NSK.cnt++;store.set('tsr_rep',store.get('tsr_rep',0)+2);floatText(player.x,player.y-62,'+2 REP ❤','#ff6a9a');}}catch(e){}return _meNS(type,amt);};}
+{const _ruGF=romUpdate;romUpdate=function(n,dt){const r=_ruGF(n,dt);try{if(n===ROM.gf){gfNeglectTick(n,dt);nskTick(n,dt);}}catch(e){}return r;};}
 function romIdEq(a,b){const f=x=>String(x).replace(/_hip$/,'');return f(a)===f(b);}
 function romRestore(){ROM.gf=null;ROM.who=meK();ROM.save=store.get(romKey(),{})||{};for(const n of npcs){if(n.rom){if(n.Pw&&!n.zoey)n.P=n.Pw;n.rom=null;n.chat&&(n.chat.li=0);}}for(const id in ROM.save){const sv=ROM.save[id];if(sv.st==='gf'&&sv.P&&!sv.zoey&&!npcs.some(n=>n.P&&(romIdEq(n.P.id,id)||(n.Pw&&romIdEq(n.Pw.id,id))))&&player&&!tripOf(player)){const q=freeNear(player.x+20,player.y);const z={x:q.x,y:q.y,hx:q.x,hy:q.y,P:Object.assign({},sv.P),name:'Local',offer:null,given:true,done:false,anim:0,face:1,t:0,dir:0,vx:0,vy:0,hp:60,alive:true,fleeT:0,fx:0,fy:0,flash:0,deadT:0,civ:true,romSpawn:true};if(sv.C)z.chat=Object.assign({li:0},sv.C);npcs.push(z);ROM.n=npcs.length;}}
-  for(const n of npcs){if(!n.P)continue;const s=ROM.save[n.P.id]||ROM.save[n.P.id+'_hip']||ROM.save[String(n.P.id).replace(/_hip$/,'')]||(n.zoey?ROM.save.zoey||ROM.save.zoey_sk:null);if(!s)continue;if(n.zoey&&meK()!=='dylan')continue;n.rom={st:s.st,a:s.a||0,cd:0,wait:!!s.w};if(s.st==='gf'){if(ROM.gf){if(ndbCouple(ROM.gf,n))n.rom.wait=true;else n.rom.st='friend';}else{ROM.gf=n;romDeck(n);if(!n.rom.wait)romSnap(n);}}}ogfLoad();}
+  for(const n of npcs){if(!n.P)continue;const s=ROM.save[n.P.id]||ROM.save[n.P.id+'_hip']||ROM.save[String(n.P.id).replace(/_hip$/,'')]||(n.zoey?ROM.save.zoey||ROM.save.zoey_sk:null);if(!s)continue;if(n.zoey&&meK()!=='dylan')continue;n.rom={st:s.st,a:s.a||0,cd:0,wait:!!s.w,ig:s.ig||0,igS:s.igS||0};if(s.st==='gf'){if(ROM.gf){if(ndbCouple(ROM.gf,n))n.rom.wait=true;else n.rom.st='friend';}else{ROM.gf=n;romDeck(n);if(!n.rom.wait)romSnap(n);}}}ogfLoad();}
 const OGF={},EOS_LOT=[1596,2072];
 function ogfLoad(){for(const b of CREW.slice())if(b.gfN)gfDismiss(b,true);for(const id in OGF)delete OGF[id];const me=meK();
   for(const k of ['dylan','max','bill','dre','zach','lucas']){if(k===me)continue;const sv=store.get('tsr_rom_'+k,null);if(!sv)continue;for(const id in sv){const e=sv[id];if(e&&e.st==='gf')OGF[(e.zoey||/^zoey/.test(id))?'zoey':id]={k,e};}}
