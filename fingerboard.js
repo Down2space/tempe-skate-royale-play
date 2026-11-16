@@ -532,38 +532,36 @@ function makeTex(){const L=CFG.boardLen,W=CFG.boardWid,H=W+2*PAD,tU=Math.round(C
 const OUTLINE=(()=>{const L=CFG.boardLen,W=CFG.boardWid,R=W/2,a=L/2-R,p=[];for(let i=0;i<=10;i++){const t=-Math.PI/2+Math.PI*i/10;p.push([a+Math.cos(t)*R,Math.sin(t)*R]);}
   for(let i=0;i<=10;i++){const t=Math.PI/2+Math.PI*i/10;p.push([-a+Math.cos(t)*R,Math.sin(t)*R]);}return p;})();
 
-/* procedural plaza: concrete slabs, brick bands, gum, cracks, skate marks, palm shadows */
+/* procedural skatepark floor: big smooth poured-concrete slabs, saw-cut joints, cracks, wheel and wax marks */
 const Plaza={
   C:128,cache:new Map(),
   hash(a,b,s){let h=(a*73856093^b*19349663^s*83492791)|0;h=Math.imul(h^(h>>>15),2246822519);h=Math.imul(h^(h>>>13),3266489917);return((h^(h>>>16))>>>0)/4294967296;},
   rng(seed){let s=(seed>>>0)||1;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};},
   chunk(cx,cy){const key=cx+','+cy;let c=this.cache.get(key);if(c){this.cache.delete(key);this.cache.set(key,c);return c;}
     c=this.gen(cx,cy);this.cache.set(key,c);if(this.cache.size>48)this.cache.delete(this.cache.keys().next().value);return c;},
-  gen(cx,cy){const C=this.C,c=mk(C,C),g=c.getContext('2d'),id=g.createImageData(C,C),d=id.data;const md=(v,m)=>((v%m)+m)%m;
-    for(let y=0;y<C;y++)for(let x=0;x<C;x++){const wx=cx*C+x,wy=cy*C+y,i=(y*C+x)*4;let col;
-      const bandY=md(Math.floor(wy/32),7)===3,bandX=md(Math.floor(wx/32),9)===4;
-      if(bandY||bandX){const lx=bandY?wx:wy,ly=md(bandY?wy:wx,32),row=Math.floor(ly/8),bx=md(lx+(row%2)*8,16);
-        if(ly%8===0||bx===0)col=[118,96,84];else{const hb=this.hash(Math.floor((lx+(row%2)*8)/16),Math.floor((bandY?wy:wx)/8),5);col=hb<0.33?[168,92,70]:hb<0.66?[152,80,60]:[180,102,78];if(this.hash(wx,wy,9)<0.12)col=col.map(v=>v-14);}}
-      else{const jx=md(wx,32),jy=md(wy,32);if(jx===0||jy===0)col=[138,130,118];else if(jx===1||jy===1)col=[204,197,184];
-        else{const h=this.hash(wx,wy,3);col=h<0.14?[198,190,177]:h<0.3?[172,164,151]:h<0.33?[160,152,140]:[186,178,165];}}
-      d[i]=col[0];d[i+1]=col[1];d[i+2]=col[2];d[i+3]=255;}
+  vn(x,y,sz,s){const gx=Math.floor(x/sz),gy=Math.floor(y/sz),fx=x/sz-gx,fy=y/sz-gy,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);
+    const a=this.hash(gx,gy,s),b=this.hash(gx+1,gy,s),c=this.hash(gx,gy+1,s),d=this.hash(gx+1,gy+1,s);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;},
+  gen(cx,cy){const C=this.C,c=mk(C,C),g=c.getContext('2d'),id=g.createImageData(C,C),d=id.data;
+    /* one big slab per chunk; each slab poured a touch lighter or darker than its neighbours */
+    const tint=(this.hash(cx,cy,11)-0.5)*14;
+    for(let y=0;y<C;y++)for(let x=0;x<C;x++){const wx=cx*C+x,wy=cy*C+y,i=(y*C+x)*4;let v;
+      if(x===0||y===0)v=128;else if(x===1||y===1)v=150;else if(x===C-1||y===C-1)v=200;
+      else{const m=this.vn(wx,wy,40,21)*0.6+this.vn(wx,wy,12,22)*0.4;const h=this.hash(wx,wy,3);v=176+tint+(m-0.5)*22+(h<0.05?-12:h<0.12?7:h<0.2?-5:0);}
+      d[i]=v+6;d[i+1]=v+3;d[i+2]=v-3;d[i+3]=255;}
     g.putImageData(id,0,0);
     const R=this.rng((cx*928371+cy*12345701)^0x5bd1e995),px=(x,y,cl)=>{g.fillStyle=cl;g.fillRect(x|0,y|0,1,1);},ri=(a,b)=>a+Math.floor(R()*(b-a+1));
     if(R()<0.4){const ox=ri(20,108),oy=ri(20,108),rr=ri(6,12);g.fillStyle='rgba(40,34,30,0.10)';for(let k=0;k<5;k++){g.beginPath();g.ellipse(ox+ri(-3,3),oy+ri(-2,2),rr*(0.5+R()*0.6),rr*(0.35+R()*0.4),R()*3,0,TAU);g.fill();}}
-    for(let k=0;k<26;k++){const x=ri(2,125),y=ri(2,125);px(x,y,R()<0.5?'#6e6962':'#57524c');if(R()<0.3)px(x+1,y,'#6e6962');}
+    for(let k=0;k<10;k++){const x=ri(2,125),y=ri(2,125);px(x,y,R()<0.5?'#6e6962':'#57524c');if(R()<0.3)px(x+1,y,'#6e6962');}
     for(let k=0;k<ri(0,2);k++){let x=ri(10,118),y=ri(10,118);const n=ri(10,34);let ang=R()*TAU;for(let s=0;s<n;s++){px(x,y,'#7c756b');ang+=(R()-0.5)*0.9;x=clamp(x+Math.cos(ang),3,124);y=clamp(y+Math.sin(ang),3,124);}}
     if(R()<0.55){const x0=ri(10,90),y0=ri(10,118),n=ri(14,30),dy=(R()-0.5)*0.4;g.globalAlpha=0.35;for(let s=0;s<n;s++){px(x0+s,y0+s*dy,'#3e3834');px(x0+s,y0+s*dy+3,'#3e3834');}g.globalAlpha=1;}
     if(R()<0.4){const x0=ri(10,100),y0=ri(10,118),n=ri(8,18);for(let s=0;s<n;s++)px(x0+s,y0,'#d6d0c5');}
     for(let k=0;k<ri(1,4);k++){const x=ri(4,122),y=ri(4,122);const lc=['#8a9a3a','#b8862e','#6d7d2e','#c8a040'][ri(0,3)];px(x,y,lc);px(x+1,y,lc);if(R()<0.6)px(x,y+1,lc);}
-    if(R()<0.15){const gx=ri(1,2)*32+8,gy=ri(1,2)*32+12;g.fillStyle='#9a948a';g.fillRect(gx-1,gy-1,16,8);g.fillStyle='#3a3530';g.fillRect(gx,gy,14,6);g.fillStyle='#211d1a';for(let k=0;k<14;k+=2)g.fillRect(gx+k,gy,1,6);}
+    R();
     if(R()<0.08){const GL={T:['111','010','010','010','010'],S:['111','100','111','001','111'],R:['110','101','110','101','101']};let gx=ri(16,80);const gy=ri(16,100);
       for(const ch of'TSR'){const gl=GL[ch];for(let yy=0;yy<5;yy++)for(let xx=0;xx<3;xx++)if(gl[yy][xx]==='1'&&R()>0.15){g.fillStyle='rgba(232,184,48,0.75)';g.fillRect(gx+xx*3,gy+yy*3,3,3);}gx+=12;}}
-    if(R()<0.3){const ox=ri(46,82),oy=ri(46,82),n=ri(7,9),a0=R()*TAU;g.strokeStyle='rgba(40,28,52,0.16)';g.lineCap='round';
-      g.fillStyle='rgba(40,28,52,0.13)';
-      for(let k=0;k<n;k++){const a=a0+k*TAU/n+(R()-0.5)*0.3,len=ri(28,42),bend=(R()-0.5)*0.5;
-        for(let s=4;s<len;s+=2){const q=s/len,an=a+bend*q*q,x=ox+Math.cos(an)*s,y=oy+Math.sin(an)*s,lf=Math.max(1,(1-q)*7*Math.sin(Math.PI*Math.min(1,q*1.3)));
-          const nx=-Math.sin(an),ny=Math.cos(an);for(const sd of[-1,1]){g.beginPath();g.moveTo(x,y);g.lineTo(x+nx*sd*lf+Math.cos(an)*lf*0.6,y+ny*sd*lf+Math.sin(an)*lf*0.6);g.lineTo(x+Math.cos(an)*1.5,y+Math.sin(an)*1.5);g.fill();}}}
-      g.beginPath();g.arc(ox,oy,4,0,TAU);g.fill();}
+    /* black wheel marks and a waxed strip here and there */
+    if(R()<0.5){const x0=ri(8,70),y0=ri(10,110),n=ri(30,56),a=(R()-0.5)*1.2;g.globalAlpha=0.22;for(let k=0;k<n;k++){const x=x0+Math.cos(a)*k,y=y0+Math.sin(a)*k+Math.sin(k*0.08)*3;g.fillStyle='#2a2522';g.fillRect(x|0,y|0,1,1);g.fillRect(x|0,(y+5)|0,1,1);}g.globalAlpha=1;}
+    if(R()<0.25){const x0=ri(10,80),y0=ri(10,110);g.fillStyle='rgba(90,80,70,0.12)';g.fillRect(x0,y0,ri(20,40),ri(3,6));}
     return c;},
   draw(lg,ox,oy,W,H){const C=this.C;const x0=Math.floor(ox/C),y0=Math.floor(oy/C),x1=Math.floor((ox+W)/C),y1=Math.floor((oy+H)/C);
     for(let cy=y0;cy<=y1;cy++)for(let cx=x0;cx<=x1;cx++)lg.drawImage(this.chunk(cx,cy),cx*C-ox,cy*C-oy);}
