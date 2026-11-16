@@ -5981,20 +5981,26 @@ function gfNeglectTick(n,dt){const r=n.rom;if(gameMode!=='story'||!player||!play
   const away=r.wait&&(tripOf(player)!==tripOf(n)||D(n.x,n.y,player.x,player.y)>150);
   if(!away){if(!r.wait||D(n.x,n.y,player.x,player.y)<120){r.ig=0;r.igS=0;r.txT=90;}return;}
   r.ig=(r.ig||0)+dt;r.txT=(r.txT==null?90:r.txT)-dt;
-  if(r.ig>=600&&r.igS<3){r.igS=3;const NM=chatMeta(n).name.toUpperCase();
+  if(r.ig>=2700&&r.igS<3){r.igS=3;const NM=chatMeta(n).name.toUpperCase();
     storyDialog([[NM,'You know what? Forget it. You clearly don\'t care.'],['@ME','Wait, what?'],[NM,'We\'re done. Lose my number.']],()=>{r.st='mad';r.wait=false;r.a=0;r.ig=0;if(ROM.gf===n)ROM.gf=null;n.hx=n.x;n.hy=n.y;sfx('deny',0.6);toast(NM+' DUMPED YOU 💔');romSave();});return;}
-  if(r.ig>=420&&(r.igS||0)<2){r.igS=2;r.a=Math.max(0,(r.a||0)-1);gfText(n,'Seriously. If you don\'t come back soon, we\'re done.');romSave();return;}
-  if(r.ig>=240&&(r.igS||0)<1){r.igS=1;r.a=Math.max(0,(r.a||0)-1);gfText(n,'Hello?? Are you ignoring me?');romSave();return;}
-  if(r.ig<240&&r.txT<=0){r.txT=150;let s=pick(GFT_MISS);try{const e=ndbOf(n);if(e&&e.nm!=='Moonbeam'&&Math.random()<0.4){const b=buildings.find(b=>b.name&&e.x>b.x&&e.x<b.x+b.w&&e.y>b.y&&e.y<b.y+b.h);if(b)s='Come by '+b.name+'. I\'ll hook you up.';}}catch(e){}gfText(n,s);}}
+  if(r.ig>=1800&&(r.igS||0)<2){r.igS=2;r.a=Math.max(0,(r.a||0)-1);gfText(n,'Seriously. If you don\'t come back soon, we\'re done.');romSave();return;}
+  if(r.ig>=900&&(r.igS||0)<1){r.igS=1;r.a=Math.max(0,(r.a||0)-1);gfText(n,'Hello?? Are you ignoring me?');romSave();return;}
+  if(r.ig<900&&r.txT<=0){r.txT=150;let s=pick(GFT_MISS);try{const e=ndbOf(n);if(e&&e.nm!=='Moonbeam'&&Math.random()<0.4){const b=buildings.find(b=>b.name&&e.x>b.x&&e.x<b.x+b.w&&e.y>b.y&&e.y<b.y+b.h);if(b)s='Come by '+b.name+'. I\'ll hook you up.';}}catch(e){}gfText(n,s);}}
 /* night skate meetup: at night, take your girlfriend to Tempe Skate Park and land tricks for bonus rep */
 const NSK={x:220,y:2000,on:false,t:0,cnt:0,cd:0};
 function nskOk(){const g=ROM.gf;return gameMode==='story'&&storyRun&&g&&g.alive&&g.rom&&g.rom.st==='gf'&&!g.rom.wait&&tod()>=0.7;}
 function nskMarker(out){if(!NSK.on&&NSK.cd<=0&&nskOk())out.push({x:NSK.x,y:NSK.y,c:'#ff4a8a',icon:'go'});}
-function nskEnd(){NSK.on=false;NSK.cd=300;const g=ROM.gf;const nm=g?chatMeta(g).name:'She';if(g&&g.rom){g.rom.a=Math.min(6,(g.rom.a||0)+1);try{romReact(g,'happy',3);}catch(e){}romSave();}banner('NIGHT SKATE DONE','+'+NSK.cnt*2+' rep · '+nm+' had a blast ❤',2.6);sfx('pick',0.6);}
+function nskEnd(){NSK.on=false;NSK.cd=300;const g=ROM.gf;const nm=g?chatMeta(g).name:'She';if(g&&g.rom){g.rom.a=Math.min(6,(g.rom.a||0)+1);try{romReact(g,'happy',3);}catch(e){}romSave();}banner('NIGHT SKATE DONE','+'+NSK.cnt*5+' rep · '+nm+' had a blast ❤',2.6);sfx('pick',0.6);}
 function nskTick(n,dt){if(NSK.cd>0)NSK.cd-=dt;if(!player||(storyRun&&storyRun.dlg))return;
-  if(NSK.on){if(!nskOk()||D(player.x,player.y,NSK.x,NSK.y)>320){nskEnd();return;}NSK.t-=dt;if(NSK.t<=0)nskEnd();return;}
-  if(NSK.cd<=0&&nskOk()&&!tripOf(player)&&D(player.x,player.y,NSK.x,NSK.y)<50&&D(n.x,n.y,player.x,player.y)<120){NSK.on=true;NSK.t=60;NSK.cnt=0;banner('NIGHT SKATE','Land tricks with '+chatMeta(n).name+' for bonus rep · 60 sec',2.6);sfx('pick',0.6);}}
-{const _meNS=mEvent;mEvent=function(type,amt){try{if(NSK.on&&(type==='ollie'||type==='grind')&&ROM.gf&&D(ROM.gf.x,ROM.gf.y,player.x,player.y)<150){NSK.cnt++;store.set('tsr_rep',store.get('tsr_rep',0)+2);floatText(player.x,player.y-62,'+2 REP ❤','#ff6a9a');}}catch(e){}return _meNS(type,amt);};}
+  if(NSK.on){if(!nskOk()||D(player.x,player.y,NSK.x,NSK.y)>320){nskEnd();return;}nskCoinTick();if(!NSK.on)return;NSK.t-=dt;if(NSK.t<=0)nskEnd();return;}
+  if(NSK.cd<=0&&nskOk()&&!tripOf(player)&&D(player.x,player.y,NSK.x,NSK.y)<50&&D(n.x,n.y,player.x,player.y)<120){NSK.on=true;NSK.t=60;NSK.cnt=0;NSK.c=NSK_C.map(a=>({x:a[0],y:a[1],k:a[2],got:0}));banner('NIGHT SKATE','Grab the hearts on the rails and jumps · 60 sec',2.6);sfx('pick',0.6);}}
+/* pink heart coins on the park's rails and over its kickers; each one is +5 rep */
+const NSK_C=[[171,1934,'rail'],[274,1934,'rail'],[132,2008,'rail'],[357,2002,'rail'],[229,2066,'rail'],[250,1987,'rail'],[354,1934,'air'],[157,2075,'air'],[329,2065,'air']];
+function nskCoinTick(){if(!NSK.on||!NSK.c)return;for(const c of NSK.c){if(c.got)continue;const d=D(player.x,player.y,c.x,c.y);if((c.k==='rail'&&player.grind&&d<14)||(c.k==='air'&&player.z>6&&d<26)){c.got=1;NSK.cnt++;store.set('tsr_rep',store.get('tsr_rep',0)+5);floatText(c.x,c.y-40,'+5 REP ❤','#ff6a9a');sfx('pick',0.5);for(let i=0;i<8;i++)parts.push({x:c.x+rnd(-4,4),y:c.y,z:c.k==='air'?28:12,vx:rnd(-20,20),vy:rnd(-8,8),vz:rnd(10,30),life:0.8,max:0.8,col:'heart',size:1});}}if(NSK.c.every(c=>c.got))nskEnd();}
+function nskDraw(g){if(!NSK.on||!NSK.c)return;const P=[[1,0],[2,0],[4,0],[5,0],[0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[6,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[1,3],[2,3],[3,3],[4,3],[5,3],[2,4],[3,4],[4,4],[3,5]];
+  for(const c of NSK.c){if(c.got)continue;const z=(c.k==='air'?28:12)+Math.sin(matchT*3+c.x)*1.5,x=Math.round(c.x),y=Math.round(c.y-z);g.save();g.globalCompositeOperation='lighter';const gr=g.createRadialGradient(x,y,0,x,y,14);gr.addColorStop(0,'rgba(255,90,160,0.55)');gr.addColorStop(1,'rgba(255,90,160,0)');g.fillStyle=gr;g.fillRect(x-14,y-14,28,28);g.restore();
+    g.fillStyle='#ff4a9a';for(const q of P)g.fillRect(x-7+q[0]*2,y-6+q[1]*2,2,2);g.fillStyle='#ffc0dc';g.fillRect(x-5,y-4,2,2);}}
+{const _fwDW=fwDrawWorld;fwDrawWorld=function(g){_fwDW(g);try{nskDraw(g);}catch(e){}};}
 {const _ruGF=romUpdate;romUpdate=function(n,dt){const r=_ruGF(n,dt);try{if(n===ROM.gf){gfNeglectTick(n,dt);nskTick(n,dt);}}catch(e){}return r;};}
 function romIdEq(a,b){const f=x=>String(x).replace(/_hip$/,'');return f(a)===f(b);}
 function romRestore(){ROM.gf=null;ROM.who=meK();ROM.save=store.get(romKey(),{})||{};for(const n of npcs){if(n.rom){if(n.Pw&&!n.zoey)n.P=n.Pw;n.rom=null;n.chat&&(n.chat.li=0);}}for(const id in ROM.save){const sv=ROM.save[id];if(sv.st==='gf'&&sv.P&&!sv.zoey&&!npcs.some(n=>n.P&&(romIdEq(n.P.id,id)||(n.Pw&&romIdEq(n.Pw.id,id))))&&player&&!tripOf(player)){const q=freeNear(player.x+20,player.y);const z={x:q.x,y:q.y,hx:q.x,hy:q.y,P:Object.assign({},sv.P),name:'Local',offer:null,given:true,done:false,anim:0,face:1,t:0,dir:0,vx:0,vy:0,hp:60,alive:true,fleeT:0,fx:0,fy:0,flash:0,deadT:0,civ:true,romSpawn:true};if(sv.C)z.chat=Object.assign({li:0},sv.C);npcs.push(z);ROM.n=npcs.length;}}
