@@ -13893,7 +13893,7 @@ function climbInput(x,y,down,id){const M=MGM;if(!M)return;const sx=x==null?null:
   if(M.phase==='start'){if(down===true){M.phase='play';M.t=0;M.msg='TAP ROCK TO THROW YOUR HOOK · LET GO TO FLING';M.msgT=2.4;}return;}
   if(M.phase==='over'||M.phase==='win'){if(down!==true||M.t<0.6)return;const B=climbBtns(M);const inB=b=>sx>=b.x&&sx<=b.x+b.w&&sy>=b.y&&sy<=b.y+b.h;
     if(key||inB(B.again)){climbPay(M);climbReset(M);M.phase='play';}else if(inB(B.exit)){const pay=climbPay(M);const h=Math.floor(M.best/10);mgClose();banner(M.phase==='win'?'SUMMIT!':'NICE CLIMB',h+'m · +$'+pay,2.2);}return;}
-  if(down===true&&!key&&sx!=null&&M.dbgBox&&sx<158&&sy>M.LH-M.dbgBox-8){M.dbgOn=!M.dbgOn;return;}
+  if(down===true&&!key&&sx!=null&&M.dbgOn&&M.dbgBox&&sx<158&&sy>M.LH-M.dbgBox-8){M.dbgOn=false;return;}
   if(down===null){if(M.hold&&id===M.ptr&&sy!=null&&M.dragY0!=null)M.dragY=sy-M.dragY0;return;}
   if(down===true){M.started=true;M.hold=true;M.ptr=id;M.dragY0=sy;M.dragY=0;let t;if(key||sx===null){const a=clAuto(M);if(!a){tone(300,200,0.05,'square',0.03);return;}t={x:a.hx,y:a.hy};}else t=clAim(M,sx-M.ox,sy+M.camY);if(!t){tone(260,180,0.06,'square',0.03);M.blockFx={x:sx-M.ox,y:sy+M.camY,t:0.4};return;}clFire(M,t.x,t.y);}
   else if(down===false){if(id!==undefined&&M.ptr!==undefined&&id!==M.ptr)return;M.hold=false;M.ptr=undefined;M.dragY=0;clDetach(M);}}
@@ -13920,11 +13920,11 @@ function clDrawClimber(g,M,x,y){const A=M.anim,C=clChar(M),p=M.p;let anim,fi=0;
   if(M.rope){anim='hang';const vs=p.vx*Math.cos(A.a)+p.vy*Math.sin(A.a);A.leg=lerp(A.leg||0,clamp(-vs/260,-1,1)*A.face,0.25);fi=Math.round(A.leg*2)+2;}else if(A.bonk>0)anim='stun';else if(M.ground)anim='idle';else anim=p.vy<40?'clfly':'clfall';if(anim==='clfall')fi=Math.floor(A.t*8);if(anim==='idle')fi=Math.floor(A.t*6);
   if(anim==='hang')clDrawSprite(g,C,anim,fi,x,y-CL_HY,A.a,A.face,'hand');else clDrawSprite(g,C,anim,fi,x,y+CLC.R,anim==='idle'?0:A.a*0.7,A.face,'feet');}
 /* ---------- SETUP ---------- */
-function startClimb(map){if(!map){sheetMenu('ROCK CLIMBING','Pick a wall.',[{name:'Climbing Gym',sub:'Indoor rock wall',btn:'CLIMB',fn:()=>{sheetClose();startClimb('gym');}},{name:'Las Cruces Mountains',sub:'Desert rock spires',btn:'CLIMB',fn:()=>{sheetClose();startClimb('cruces');}},{name:'Salt Lake Mountains',sub:'Granite and pines',btn:'CLIMB',fn:()=>{sheetClose();startClimb('slc');}},{name:'Test Chamber',sub:'Three rocks for practicing chained grapples',btn:'TEST',fn:()=>{sheetClose();startClimb('test');}}]);return;}
+function startClimb(map){if(!map){sheetMenu('ROCK CLIMBING','Pick a wall.',[{name:'Climbing Gym',sub:'Indoor rock wall',btn:'CLIMB',fn:()=>{sheetClose();startClimb('gym');}},{name:'Las Cruces Mountains',sub:'Desert rock spires',btn:'CLIMB',fn:()=>{sheetClose();startClimb('cruces');}},{name:'Salt Lake Mountains',sub:'Granite and pines',btn:'CLIMB',fn:()=>{sheetClose();startClimb('slc');}}]);return;}
   initAudio();const CM=CLMAP[map];mgOpen('climb',{title:'CLIMB · '+CM.t,map,LW:320,LH:200,ox:0});climbReset(MGM);}
 function climbReset(M){M.seed=rnd(1,9999);M.phase='start';M.t=0;M.p={x:160,y:178-CLC.R,vx:0,vy:0};M.pp={x:160,y:178-CLC.R};M.rope=null;M.hook=null;M.ground=true;M.started=false;M.lastAnchorY=null;
   M.lives=CLC.LIVES;M.inv=0;M.best=0;M.paid=false;M.fx=[];M.ft=[];M.msg='';M.msgT=0;M.shake=0;M.res=0;M.acc=0;M.cp=null;M.gp=[];M.gpT=0;M.dbg={inside:0,clip:0,land:0};
-  M.dbgOn=true;M.relT=0;M.relV=null;M.hold=false;M.anim={t:0,a:0,av:0,leg:[0,0],knee:[0.2,0.2],arm:[Math.PI-0.3,Math.PI+0.3],land:0};
+  M.dbgOn=false;M.relT=0;M.relV=null;M.hold=false;M.anim={t:0,a:0,av:0,leg:[0,0],knee:[0.2,0.2],arm:[Math.PI-0.3,Math.PI+0.3],land:0};
   M.haz={rocks:[],boulders:[],birds:[],trig:[],av:300,avOn:false};
   M.amb=[];for(let i=0;i<26;i++)M.amb.push({x:Math.random(),y:Math.random(),s:rnd(0.4,1),ph:rnd(0,6)});
   M.ridge=null;M.skyL=null;clGen(M);M.camY=undefined;
