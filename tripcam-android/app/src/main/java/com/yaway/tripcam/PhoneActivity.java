@@ -2,6 +2,13 @@ package com.yaway.tripcam;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.NotificationManager;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -27,6 +34,7 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 
+import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,12 +48,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  * (Bluetooth / the Galaxy Wearable connection). Taps and bezel turns on the watch come
  * back here as "/ctl" messages.
  */
-public class MainActivity extends Activity implements MessageClient.OnMessageReceivedListener {
+public class PhoneActivity extends Activity implements MessageClient.OnMessageReceivedListener {
 
     static final String PATH_FRAME = "/tripcam/frame";
     static final String PATH_STATE = "/tripcam/state";
     static final String PATH_CTL = "/tripcam/ctl";
     private static final String PAGE = "https://appassets.androidplatform.net/assets/tripcam/index.html";
+
+    private static volatile WeakReference<PhoneActivity> current = new WeakReference<>(null);
+    static PhoneActivity current() { return current.get(); }
 
     private WebView web;
     private final List<String> nodes = new CopyOnWriteArrayList<>();
@@ -65,7 +76,12 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        current = new WeakReference<>(this);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // the watch can start us while the phone is locked / screen off
+        if (Build.VERSION.SDK_INT >= 27) { setShowWhenLocked(true); setTurnScreenOn(true); }
+        else getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
@@ -96,17 +112,48 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
         });
         web.addJavascriptInterface(new Bridge(), "TripcamNative");
 
-        if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            load();
-        } else {
-            requestPermissions(new String[]{Manifest.permission.CAMERA}, 1);
-        }
+        List<String> need = new ArrayList<>();
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+            need.add(Manifest.permission.CAMERA);
+        if (Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            need.add(Manifest.permission.POST_NOTIFICATIONS);
+        if (need.isEmpty()) { load(); askOverlayOnce(); }
+        else requestPermissions(need.toArray(new String[0]), 1);
+    }
+
+    /** "Display over other apps" lets the watch pop the camera open on the phone by itself. */
+    private void askOverlayOnce() {
+        if (Settings.canDrawOverlays(this)) return;
+        SharedPreferences prefs = getSharedPreferences("tripcam", MODE_PRIVATE);
+        if (prefs.getBoolean("askedOverlay", false)) return;
+        prefs.edit().putBoolean("askedOverlay", true).apply();
+        new AlertDialog.Builder(this)
+                .setTitle("Let your watch start TRIPCAM")
+                .setMessage("Turn on \"Display over other apps\" for TRIPCAM so opening it on your "
+                        + "watch opens the camera here automatically.\n\nWithout it you'll get a "
+                        + "notification to tap instead.")
+                .setPositiveButton("Turn on", (d, w) -> {
+                    try {
+                        startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:" + getPackageName())));
+                    } catch (Exception ignored) { }
+                })
+                .setNegativeButton("Not now", null)
+                .show();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        load(); // without permission the page still offers Photo/video and Demo
+        load(); // without camera permission the page still offers Photo/video and Demo
+        askOverlayOnce();
     }
 
     private void load() {
@@ -119,6 +166,7 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
     protected void onResume() {
         super.onResume();
         web.onResume();
+        try { getSystemService(NotificationManager.class).cancel(LaunchService.NOTIFY_ID); } catch (Exception ignored) { }
         Wearable.getMessageClient(this).addListener(this);
         handler.post(nodePoll);
     }
@@ -133,6 +181,7 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
 
     @Override
     protected void onDestroy() {
+        if (current.get() == this) current = new WeakReference<>(null);
         web.destroy();
         super.onDestroy();
     }

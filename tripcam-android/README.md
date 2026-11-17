@@ -1,12 +1,13 @@
-# TRIPCAM — phone + Galaxy Watch
+# TRIPCAM — one app for phone + Galaxy Watch
 
-Two Android apps with the same package (`com.yaway.tripcam`) and the same signing key
-(`tripcam.keystore`), so they can talk over the Wear OS Data Layer (Bluetooth).
+A single APK (`com.yaway.tripcam`) installed on both devices.
+`LauncherActivity` picks the screen: `WatchActivity` on a watch, `PhoneActivity` on a phone.
 
-- `app/` — phone app. Camera + effects (WebGL page in `app/src/main/assets/tripcam/`),
-  streams ~15 fps JPEG frames to the watch, receives watch controls.
-- `wear/` — watch app. Shows the frames full screen. Tap = next effect,
-  long-press = previous, bezel = intensity.
+- Open TRIPCAM on the watch → it sends `/tripcam-launch/start` → `LaunchService` on the phone
+  opens `PhoneActivity` (camera + effects, WebGL page in `assets/tripcam/`), which streams
+  JPEG frames to the watch over the Wear OS Data Layer.
+- Watch tap / long-press / bezel → `/tripcam/ctl` → effect changes on the phone.
+- Swipe TRIPCAM away on the watch → `/tripcam-launch/stop` → phone camera closes.
+- Auto-open needs "Display over other apps" on the phone (asked once); otherwise a tap-to-start notification appears.
 
-GitHub Actions builds both APKs on every push to this branch and attaches them to the
-`tripcam-latest` release.
+GitHub Actions builds the APK on every push to this branch → release `tripcam-latest`.

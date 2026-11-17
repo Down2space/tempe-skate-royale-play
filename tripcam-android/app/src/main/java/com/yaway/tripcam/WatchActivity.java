@@ -40,7 +40,7 @@ import java.util.concurrent.Executors;
  * Shows the trippy video the phone app streams over Bluetooth.
  * Tap = next effect, long-press = previous effect, rotate bezel = intensity.
  */
-public class MainActivity extends Activity implements MessageClient.OnMessageReceivedListener {
+public class WatchActivity extends Activity implements MessageClient.OnMessageReceivedListener {
 
     static final String PATH_FRAME = "/tripcam/frame";
     static final String PATH_STATE = "/tripcam/state";
@@ -57,11 +57,27 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
     private long lastTick = 0;
 
     private final Runnable hideLabel = () -> label.animate().alpha(0f).setDuration(500);
+    private long openedAt = 0;
+    private long lastLaunch = 0;
     private final Runnable watchdog = new Runnable() {
         @Override public void run() {
-            boolean live = SystemClock.uptimeMillis() - lastFrame < 3000;
+            long now = SystemClock.uptimeMillis();
+            boolean live = now - lastFrame < 3000;
             status.setVisibility(live ? View.GONE : View.VISIBLE);
-            if (!live) { findPhones(); send("hello"); }
+            if (!live) {
+                findPhones();
+                if (phones.isEmpty()) {
+                    status.setText(now - openedAt > 6000
+                            ? "TRIPCAM\n\nPhone not connected.\nCheck Bluetooth / Galaxy Wearable."
+                            : "TRIPCAM\n\nLooking for your phone…");
+                } else {
+                    status.setText(now - openedAt > 10000
+                            ? "TRIPCAM\n\nTap the TRIPCAM notification on your phone"
+                            : "TRIPCAM\n\nStarting camera on your phone…");
+                    if (now - lastLaunch > 4000) { lastLaunch = now; launchPhone("start"); }
+                    sendNow("hello");
+                }
+            }
             handler.postDelayed(this, 2000);
         }
     };
@@ -98,7 +114,7 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
         status.setTextSize(14);
         status.setGravity(Gravity.CENTER);
         status.setShadowLayer(6, 0, 0, Color.BLACK);
-        status.setText("TRIPCAM\n\nOpen TRIPCAM on your phone");
+        status.setText("TRIPCAM\n\nStarting camera on your phone…");
         int pad = (int) (getResources().getDisplayMetrics().widthPixels * 0.14f);
         status.setPadding(pad, 0, pad, 0);
         root.addView(status, new FrameLayout.LayoutParams(-1, -1));
@@ -139,9 +155,27 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
     @Override
     protected void onResume() {
         super.onResume();
+        openedAt = SystemClock.uptimeMillis();
+        lastLaunch = 0;
         Wearable.getMessageClient(this).addListener(this);
         findPhones();
         handler.post(watchdog);
+    }
+
+    @Override
+    protected void onStop() {
+        // swiped away / closed on the watch → close the camera on the phone too
+        if (isFinishing()) launchPhone("stop");
+        super.onStop();
+    }
+
+    /** Opens (or closes) TRIPCAM's camera on the phone. */
+    private void launchPhone(String what) {
+        final byte[] none = new byte[0];
+        final String path = "start".equals(what) ? LaunchService.PATH_START : LaunchService.PATH_STOP;
+        Wearable.getNodeClient(this).getConnectedNodes().addOnSuccessListener(list -> {
+            for (Node n : list) Wearable.getMessageClient(this).sendMessage(n.getId(), path, none);
+        });
     }
 
     @Override
@@ -155,7 +189,10 @@ public class MainActivity extends Activity implements MessageClient.OnMessageRec
         Wearable.getNodeClient(this).getConnectedNodes().addOnSuccessListener(list -> {
             phones.clear();
             for (Node n : list) phones.add(n.getId());
-            if (!phones.isEmpty()) sendNow("hello");
+            if (!phones.isEmpty()) {
+                sendNow("hello");
+                if (lastLaunch == 0) { lastLaunch = SystemClock.uptimeMillis(); launchPhone("start"); }
+            }
         });
     }
 
