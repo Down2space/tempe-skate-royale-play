@@ -85,9 +85,10 @@
 </div>
 
 <script src="../peerjs.min.js"></script>
-<script>if(!window.Peer)document.write('<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"><\/script>');</script>
+<script>if(!window.Peer&&!window.TripcamNative)document.write('<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"><\/script>');</script>
 <script>
 (() => {
+const NATIVE = !!window.TripcamNative;   // running inside the TRIPCAM Android app
 const MODES = ['DIMENSION','KALEIDO','GLITCH','MELT','ECHO','ACID','VORTEX'];
 const MODE_IDS = [7,0,1,2,3,4,5]; // shader effect id for each menu slot
 const $ = id => document.getElementById(id);
@@ -245,7 +246,7 @@ const camTex=tex(2,2);
 
 // ---------- state ----------
 let mode=0, k=0, src=0, mirror=0, media=null, isImage=false, imgDirty=false, camScale=[1,1];
-let stream=null, facing='user', running=false, ping=0;
+let stream=null, facing=NATIVE?'environment':'user', running=false, ping=0;
 const video=document.createElement('video');video.muted=true;video.playsInline=true;video.setAttribute('playsinline','');video.loop=true;
 
 // ring dots
@@ -292,7 +293,7 @@ $('file').onchange=e=>{
   e.target.value='';
 };
 function go(){$('menu').style.display='none';running=true;setMode(mode);
-  $('linkBtn').style.display=window.Peer?'block':'none';if(!looping)frame();
+  $('linkBtn').style.display=(window.Peer&&!NATIVE)?'block':'none';if(!looping)frame();
   $('hint').style.opacity=.85;setTimeout(()=>$('hint').style.opacity=0,4000);}
 
 // ---------- phone ⇄ watch link (PeerJS / WebRTC) ----------
@@ -306,7 +307,8 @@ const lsGet=key=>{try{return localStorage.getItem(key)}catch(e){return null}};
 const lsSet=(key,v)=>{try{localStorage.setItem(key,v)}catch(e){}};
 function status(html){const s=$('status');s.innerHTML=html||'';s.style.display=html?'block':'none';}
 function send(o){if(conn&&conn.open)try{conn.send(o)}catch(e){}}
-function sync(){send({t:'s',m:mode,k:k});}
+function sync(){send({t:'s',m:mode,k:k});
+  if(NATIVE)try{TripcamNative.sendState(mode,k,MODES[mode]);}catch(e){}}
 function showCode(){status('WATCH CODE<div class="code">'+watchCode+'</div>On your phone: TRIPCAM → ▶ Live camera → ⌚ → type this code');}
 
 function wireConn(c){
@@ -408,6 +410,26 @@ function pumpJpeg(t){
 }
 if(location.hash==='#watch')setTimeout(startWatch,0);
 
+// --- native app bridge: frames go to the watch app over Bluetooth (Wear Data Layer) ---
+const nc=document.createElement('canvas');nc.width=nc.height=320;const nctx=nc.getContext('2d');let lastN=0;
+function pumpNative(t){
+  if(!NATIVE||!running||t-lastN<.066)return;
+  let ok=false;try{ok=TripcamNative.ready();}catch(e){}
+  if(!ok)return;
+  lastN=t;nctx.drawImage(cv,0,0,320,320);
+  const d=nc.toDataURL('image/jpeg',.6);
+  try{TripcamNative.sendFrame(d.substring(d.indexOf(',')+1));}catch(e){}
+}
+window.tripcamRemote=cmd=>{
+  if(!running)return;
+  if(cmd==='next')setMode(mode+1);else if(cmd==='prev')setMode(mode-1);
+  else if(cmd==='k+')setK(k+.04);else if(cmd==='k-')setK(k-.04);else if(cmd==='hello')sync();
+};
+window.tripcamWatch=on=>{status(on?'⌚ Watch connected':'⌚ Watch disconnected');setTimeout(()=>status(''),2000);if(on)sync();};
+if(NATIVE){$('bWatch').style.display='none';
+  $('hint').innerHTML='tap / swipe = next effect<br>drag the edge = intensity<br>⟲ = switch camera · hold = menu';
+  setTimeout(startCam,300);}
+
 // ---------- input: tap / swipe / bezel drag / hold ----------
 let pd=null, holdT=null;
 function rel(e){const b=face.getBoundingClientRect();return {x:(e.clientX-b.left)/b.width-.5,y:(e.clientY-b.top)/b.height-.5};}
@@ -471,7 +493,7 @@ function frame(){
   gl.useProgram(blit.p);gl.uniform1f(blit.u.gloss,0.);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,a.t);gl.uniform1i(blit.u.img,0);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   ping=1-ping;
-  pumpJpeg(t);
+  pumpJpeg(t);pumpNative(t);
 }
 ui();frame();
 })();
