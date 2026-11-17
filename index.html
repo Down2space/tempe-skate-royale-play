@@ -13581,7 +13581,7 @@ function poolOverlay(g){if(!POOLZ.r&&!POOLZ.f)return;const ents=[...skaters.filt
      Drag your finger down while holding to reel faster, up to let rope out (DRAG_REEL px/s per px of finger travel).
    TAUT_KICK: one-time pull (px/s) toward the anchor the moment the rope first goes tight; upward-weighted. 0 = off.
    Reeling is applied as velocity toward the anchor (not a position snap), so the pull is kept when you let go. */
-const CLC={FIX:1/240,G:650,R:8,REACH:215,HOOK_SPD:2600,REEL_MIN:160,REEL_MAX:420,REEL_ACC:900,DRAG_REEL:3,TAUT_KICK:80,ROPE_MIN:30,VMAX_ROPE:620,DRAG:0.02,VMAX:820,GRIP:1.5,LIVES:3,AV_SPEED:13,REST:0.15,FRICT:9};
+const CLC={FIX:1/240,G:650,R:8,REACH:215,HOOK_SPD:2600,REEL_MIN:45,REEL_MAX:70,REEL_ACC:60,DRAG_REEL:1.5,TAUT_KICK:0,ROPE_MIN:22,VMAX_ROPE:620,K:95,DAMP:7,MAX_STRETCH:0.3,LATCH:95,PUMP:70,FLING:1.1,KICK:75,DRAG:0.02,VMAX:820,GRIP:1.5,LIVES:3,AV_SPEED:13,REST:0.15,FRICT:9};
 const CL_YT=-3400,CL_HY=18;
 const CLMAP={
   test:{t:'TEST CHAMBER',hz:'',crumb:'',ice:'',spark:['#ffffff'],rock:['#2a2228','#433840','#5e4f52','#7a6862','#958274','#b09c8a','#c8b6a2'],crumbR:['#2e2a2c','#4a4446','#66605e','#827a74','#9e958c','#b8afa4','#d0c8bc'],back:['#46546e','#56647e','#6a7a92','#8292aa'],sky:['#d8eefa','#8ac4ee','#4a8ad8','#2a5aa8'],sun:'#fffbe0',far:['#5a6a92','#8a9ac0','#ffffff'],mid:['#2e4a3a','#3e5e46'],dust:'rgba(255,255,255,0.5)'},
@@ -13783,7 +13783,7 @@ function clDetach(M){if(M.rope){M.relT=0.45;M.relV={x:M.p.vx,y:M.p.vy};}M.rope=n
 function clHookStep(M,h){const H=M.hook;if(!H)return;const T=M.T,p=M.p;H.t+=h;
   if(H.state==='fly'){const step=CLC.HOOK_SPD*h;for(let s2=0;s2<step;s2+=1.5){const nx=H.x+H.dx*1.5,ny=H.y+H.dy*1.5;H.dist+=1.5;
       if(clSolid(T,nx,ny)){/* bite: anchor at the exact surface point */const f=clForm(T,nx,ny);const L=Math.hypot(H.x-p.x,H.y-(p.y-CL_HY));
-        M.rope={A:[{x:H.x,y:H.y,hx:nx,hy:ny,f,sg:0}],L,fixed:0,t:0,hit:0};H.state='set';M.lastAnchorY=H.y;M.lastAnchor={x:H.x,y:H.y};
+        M.rope={A:[{x:H.x,y:H.y,hx:nx,hy:ny,f,sg:0}],L:Math.max(CLC.ROPE_MIN,L*0.88),fixed:0,t:0,hit:0};{const ux=(H.x-p.x)/(L||1),uy=(H.y-(p.y-CL_HY))/(L||1);p.vx+=ux*CLC.LATCH;p.vy+=uy*CLC.LATCH;}H.state='set';M.lastAnchorY=H.y;M.lastAnchor={x:H.x,y:H.y};
         if(f&&(f.mat===2||f.mat===3))f.t=0;M.shake=Math.max(M.shake,1.8);clFx(M,H.x,H.y,10,90,M.map==='gym'&&f&&f.col?[f.col,'#ffffff']:CLMAP[M.map].spark);sfx('thud',0.22);
         for(const b of M.haz.boulders)if(b.rest&&Math.hypot(b.x-H.x,b.y-H.y)<26){b.rest=false;b.vx=rnd(-20,20);}return;}
       H.x=nx;H.y=ny;if(H.dist>=CLC.REACH){H.state='back';H.t=0;tone(300,200,0.05,'square',0.02);return;}}}
@@ -13793,15 +13793,13 @@ function clRopeStep(M,h){const R=M.rope;if(!R)return;const T=M.T,p=M.p;R.t+=h;
   /* controllable retraction while the touch is held */
   let reel=0;if(M.hold){R.ht=(R.ht||0)+h;reel=Math.min(CLC.REEL_MAX,CLC.REEL_MIN+CLC.REEL_ACC*R.ht)+(M.dragY||0)*CLC.DRAG_REEL;reel=clamp(reel,-160,CLC.REEL_MAX+120);}R.reel=reel;
   const P=R.A[R.A.length-1],bx=p.x,by=p.y-CL_HY;const dx=bx-P.x,dy=by-P.y,d=Math.hypot(dx,dy)||1;
-  R.L=clamp(R.L-reel*h,R.fixed+CLC.ROPE_MIN,R.fixed+CLC.REACH*1.4);R.L=Math.min(R.L,R.fixed+d+(reel<0?-reel*h:0)+0.5);
+  R.L=clamp(R.L-reel*h,R.fixed+CLC.ROPE_MIN,R.fixed+CLC.REACH*1.4);
   const Lf=R.L-R.fixed;let dv=0;
-  /* inextensible rope: acts only when taut. position goes back onto the circle, outward speed is removed (that is the tension) */
-  if(d>=Lf-0.01){const nx=dx/d,ny=dy/d;if(d>Lf){p.x=P.x+nx*Lf;p.y=P.y+ny*Lf+CL_HY;}let vr=p.vx*nx+p.vy*ny;
-    if(vr>0){p.vx-=vr*nx;p.vy-=vr*ny;dv+=vr;vr=0;}
-    /* reeling: inward speed is real velocity, so it carries into the release */
-    if(reel>0&&vr>-reel){const k=(vr+reel);p.vx-=nx*k;p.vy-=ny*k;dv+=k;}
-    /* first time the rope goes tight: small pull toward the anchor, weighted upward */
-    if(!R.taut){R.taut=true;if(CLC.TAUT_KICK>0){const up=clamp(-ny,0.25,1);p.vx-=nx*CLC.TAUT_KICK*up;p.vy-=ny*CLC.TAUT_KICK*up;}}}
+  /* bungee rope: pulls back in proportion to how far it is stretched, damps the bounce, goes rigid past MAX_STRETCH */
+  if(d>Lf){const nx=dx/d,ny=dy/d,ext=d-Lf;p.vx-=nx*CLC.K*ext*h;p.vy-=ny*CLC.K*ext*h;dv+=CLC.K*ext*h;
+    let vr=p.vx*nx+p.vy*ny;if(vr>0){const k=Math.min(1,CLC.DAMP*h);p.vx-=vr*k*nx;p.vy-=vr*k*ny;}
+    const tx=-ny,ty=nx,vt=p.vx*tx+p.vy*ty;if(Math.abs(vt)>8){p.vx+=tx*Math.sign(vt)*CLC.PUMP*h;p.vy+=ty*Math.sign(vt)*CLC.PUMP*h;}
+    const mx=Lf*(1+CLC.MAX_STRETCH);if(d>mx){p.x=P.x+nx*mx;p.y=P.y+ny*mx+CL_HY;vr=p.vx*nx+p.vy*ny;if(vr>0){p.vx-=vr*nx;p.vy-=vr*ny;}}}
   {const sp=Math.hypot(p.vx,p.vy);if(sp>CLC.VMAX_ROPE){p.vx*=CLC.VMAX_ROPE/sp;p.vy*=CLC.VMAX_ROPE/sp;}}
   R.tension=lerp(R.tension||0,dv/h,0.15);
   /* unstable anchor timers */
@@ -13896,7 +13894,7 @@ function climbInput(x,y,down,id){const M=MGM;if(!M)return;const sx=x==null?null:
   if(down===true&&!key&&sx!=null&&M.dbgOn&&M.dbgBox&&sx<158&&sy>M.LH-M.dbgBox-8){M.dbgOn=false;return;}
   if(down===null){if(M.hold&&id===M.ptr&&sy!=null&&M.dragY0!=null)M.dragY=sy-M.dragY0;return;}
   if(down===true){M.started=true;M.hold=true;M.ptr=id;M.dragY0=sy;M.dragY=0;let t;if(key||sx===null){const a=clAuto(M);if(!a){tone(300,200,0.05,'square',0.03);return;}t={x:a.hx,y:a.hy};}else t=clAim(M,sx-M.ox,sy+M.camY);if(!t){tone(260,180,0.06,'square',0.03);M.blockFx={x:sx-M.ox,y:sy+M.camY,t:0.4};return;}clFire(M,t.x,t.y);}
-  else if(down===false){if(id!==undefined&&M.ptr!==undefined&&id!==M.ptr)return;M.hold=false;M.ptr=undefined;M.dragY=0;clDetach(M);}}
+  else if(down===false){if(id!==undefined&&M.ptr!==undefined&&id!==M.ptr)return;M.hold=false;M.ptr=undefined;M.dragY=0;if(M.rope){M.p.vx*=CLC.FLING;M.p.vy=M.p.vy*CLC.FLING-CLC.KICK;}clDetach(M);}}
 
 /* ---------- 5. CAMERA ---------- */
 function clCamStep(M,dt,px,py){const LH=M.LH,vy=M.p.vy;M.camLead=lerp(M.camLead||0,clamp(-vy*0.45,-40,190),1-Math.exp(-3*dt));let tgt=py-LH*0.55-M.camLead;
