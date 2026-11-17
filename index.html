@@ -13653,6 +13653,19 @@ function clGen(M){const map=M.map,s=Math.floor(M.seed),cols=80,y0=CL_YT-240,rows
     for(let ya=-260;ya>CL_YT+200;ya-=rnd(560,900)){const a=WL(ya),b=WR(ya),xc=(a+b)/2,rx=(b-a)/2+10,ry=rnd(34,52),th=rnd(9,14);
       for(let r=Math.floor((ya-ry-4-y0)/4);r<=Math.floor((ya-y0)/4);r++)for(let c=0;c<cols;c++){const px=cx(c),py=cy(r);const o=((px-xc)/rx)**2+((py-ya)/ry)**2,i=((px-xc)/(rx-th))**2+((py-ya)/(ry-th))**2;if(o<=1&&i>1&&py<ya)put(c,r,1,null);}}
   }
+  /* wild cliff shapes: wavy rock bridges across the canyon, hooked arms curling off the walls, and matching shapes in the background rock */
+  if(!gym){const stamp=(x,y,rad,arr,val,f)=>{for(let r=Math.floor((y-rad-y0)/4);r<=Math.floor((y+rad-y0)/4);r++)for(let c=Math.floor((x-rad)/4);c<=Math.floor((x+rad)/4);c++){if(c<0||c>=cols||r<0||r>=rows)continue;if(Math.hypot(cx(c)-x,cy(r)-y)>rad)continue;const k=id(c,r);if(arr===T.G){if(!T.G[k]){T.G[k]=val;T.F[k]=f?f.id:0;}}else arr[k]=1;}};
+    const bez=(P,t)=>{const u=1-t;return[u*u*u*P[0][0]+3*u*u*t*P[1][0]+3*u*t*t*P[2][0]+t*t*t*P[3][0],u*u*u*P[0][1]+3*u*u*t*P[1][1]+3*u*t*t*P[2][1]+t*t*t*P[3][1]];};
+    /* wavy bridges */
+    for(let y=-170;y>CL_YT+220;y-=rnd(420,620)){const A=rnd(18,46),k=rnd(1.2,2.4),ph=rnd(0,6),th=rnd(9,14);const a=WL(y)-10,b=WR(y)+10;
+      for(let x=a;x<=b;x+=2){const t=(x-a)/(b-a),yy=y+Math.sin(t*Math.PI*k+ph)*A;stamp(x,yy,th*(0.75+0.35*clFbm(x/20,y/20,s+101)),T.G,1,null);if(clHash(x|0,y|0,s)<0.05)for(let d=0;d<rnd(6,16);d+=3)stamp(x,yy+th*0.5+d,Math.max(1.5,4-d*0.25),T.G,1,null);}}
+    /* hooked arms curling off the walls */
+    let hs=Math.random()<0.5?-1:1;for(let y=-60;y>CL_YT+220;y-=rnd(260,380)){hs=-hs;const wx=hs<0?WL(y):WR(y),dir=hs<0?1:-1,reach=rnd(90,150),up=rnd(70,120);
+      const P=[[wx-dir*6,y+30],[wx+dir*reach*0.75,y+rnd(10,40)],[wx+dir*reach,y-up],[wx+dir*reach*rnd(0.3,0.55),y-up*rnd(0.55,0.8)]];
+      for(let t=0;t<=1;t+=0.012){const q=bez(P,t);stamp(q[0],q[1],lerp(14,4,t)*(0.85+0.3*clFbm(t*6,y/30,s+107)),T.G,1,null);}}
+    /* background echoes of the same shapes (no collision, just depth) */
+    for(let y=-40;y>CL_YT+120;y-=rnd(240,360)){const A=rnd(20,60),k=rnd(1,2.6),ph=rnd(0,6),th=rnd(12,22);for(let x=0;x<=320;x+=3){const t=x/320;stamp(x,y+Math.sin(t*Math.PI*k+ph)*A,th*(0.7+0.5*clFbm(x/25,y/25,s+111)),T.B,1);}}
+    for(let y=-200;y>CL_YT+160;y-=rnd(300,420)){const side=Math.random()<0.5?-1:1,wx=side<0?WL(y)+20:WR(y)-20,dir=-side,r2=rnd(70,130);const P=[[wx,y+40],[wx+dir*r2,y+20],[wx+dir*r2*1.1,y-r2*0.9],[wx+dir*r2*0.4,y-r2*0.6]];for(let t=0;t<=1;t+=0.015){const q=bez(P,t);stamp(q[0],q[1],lerp(18,6,t),T.B,1);}}}
   /* carve the routes (guaranteed passage) */
   const carve=(W,rad,keepFloor)=>{for(let i=0;i<W.length-1;i++){const a=W[i],b=W[i+1];const minr=Math.floor((Math.min(a.y,b.y)-rad-y0)/4),maxr=Math.ceil((Math.max(a.y,b.y)+rad-y0)/4);
     for(let r=Math.max(0,minr);r<=Math.min(rows-1,maxr);r++)for(let c=1;c<cols-1;c++){const px=cx(c),py=cy(r);if(py>=176)continue;const ex=b.x-a.x,ey=b.y-a.y;const t=clamp(((px-a.x)*ex+(py-a.y)*ey)/(ex*ex+ey*ey),0,1);if(Math.hypot(px-a.x-ex*t,py-a.y-ey*t)<rad){const k=id(c,r);if(gym&&T.G[k]===6)continue;T.G[k]=0;T.F[k]=-1;}}}};
@@ -13890,7 +13903,8 @@ function climbReset(M){M.seed=rnd(1,9999);M.phase='start';M.t=0;M.p={x:160,y:178
   M.anim={t:0,a:0,av:0,leg:[0,0],knee:[0.2,0.2],arm:[Math.PI-0.3,Math.PI+0.3],land:0};
   M.haz={rocks:[],boulders:[],birds:[],trig:[],av:300,avOn:false};
   M.amb=[];for(let i=0;i<26;i++)M.amb.push({x:Math.random(),y:Math.random(),s:rnd(0.4,1),ph:rnd(0,6)});
-  M.ridge=null;clGen(M);M.camY=undefined;}
+  M.ridge=null;M.skyL=null;clGen(M);M.camY=undefined;
+  {const me=clChar(M).id;const H=['zach','wes','lucas','jeo','marco','chris','josh','nickpapa','kat','michael','jhett','aaron','jt','rylan'].filter(id=>CHARS[id]&&id!==me);for(let i=H.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[H[i],H[j]]=[H[j],H[i]];}M.homies=H;}}
 
 /* ---------- FRAME: fixed-step physics + interpolated render ---------- */
 function climbFrame(g,c,dt){const M=MGM,s=Math.min(c.height/200,c.width/320),LW=c.width/s,LH=c.height/s;M.LW=LW;M.LH=LH;M.ox=(LW-320)/2;const p=M.p,CM=CLMAP[M.map],T=M.T;
@@ -13921,7 +13935,7 @@ function climbFrame(g,c,dt){const M=MGM,s=Math.min(c.height/200,c.width/320),LW=
     g.fillStyle=M.map==='gym'?'#4fc3f7':'#e8323a';g.beginPath();g.moveTo(cp.x-14,cp.y);g.lineTo(cp.x-7,cp.y-9);g.lineTo(cp.x,cp.y);g.fill();g.fillStyle='rgba(0,0,0,0.35)';g.fillRect(cp.x-8,cp.y-4,2,4);}
   if(T.y0<bot&&178<bot){g.fillStyle='#5a3a20';g.fillRect(208,166,2,14);g.fillStyle='#8a6a40';g.fillRect(196,160,26,9);g.fillStyle='#f0e0c0';g.font='5px Silkscreen, monospace';g.textAlign='center';g.fillText('BASE',209,167);}
   /* stranded climbers */
-  {const me=clChar(M).id,crew=['dylan','bill','max','dre'].filter(id=>id!==me&&CHARS[id]);M.rescues.forEach((r,i)=>{if(r.done||r.y<top-40||r.y>bot+30)return;const C=CHARS[crew[i%crew.length]];const cx=Math.round(r.x),cy=Math.round(r.y);
+  {const crew=M.homies;M.rescues.forEach((r,i)=>{if(r.done||r.y<top-40||r.y>bot+30)return;const C=CHARS[crew[i%crew.length]];const cx=Math.round(r.x),cy=Math.round(r.y);
     clDrawSprite(g,C,'idle',Math.floor(M.t*6+r.ph),cx,cy,0,1,'feet');
     if(Math.floor(M.t*2+r.ph)%2===0){g.fillStyle='rgba(0,0,0,0.35)';g.fillRect(cx-11,cy-41,24,9);g.fillStyle='#fff';g.fillRect(cx-12,cy-42,24,9);g.fillRect(cx-2,cy-33,3,2);g.fillStyle='#14101a';g.font='5px Silkscreen, monospace';g.textAlign='center';g.fillText('HELP!',cx,cy-35.5);}});}
   /* grapple markers */
@@ -13968,28 +13982,78 @@ function climbFrame(g,c,dt){const M=MGM,s=Math.min(c.height/200,c.width/320),LW=
     for(const [b,t,col] of [[B.again,'RESTART','#7dff6a'],[B.exit,'EXIT','#ffc23d']]){g.fillStyle='rgba(0,0,0,0.4)';g.beginPath();g.roundRect(b.x+1,b.y+2,b.w,b.h,4);g.fill();g.fillStyle=col;g.beginPath();g.roundRect(b.x,b.y,b.w,b.h,4);g.fill();g.fillStyle='rgba(255,255,255,0.3)';g.fillRect(b.x+3,b.y+2,b.w-6,2);g.fillStyle='#14101a';g.font='7px Silkscreen, monospace';g.fillText(t,b.x+b.w/2,b.y+14);}}
   g.restore();}
 
-/* ---------- SKY: drawn at half resolution and scaled up pixelated; layered parallax ---------- */
-function clSky(g,M,LW,LH,dt){const C=CLMAP[M.map],W=Math.ceil(LW/2),H=Math.ceil(LH/2);let cv=M.skyC;if(!cv||cv.width!==W||cv.height!==H){cv=M.skyC=document.createElement('canvas');cv.width=W;cv.height=H;}const k=cv.getContext('2d');
-  const f=clamp((232-LH-M.camY)/(232-LH-CL_YT),0,1),par=(232-LH-M.camY)/2;
-  if(M.map==='gym'){k.fillStyle='#1a1820';k.fillRect(0,0,W,H);const off=(par*0.5)%40;k.fillStyle='#2a2630';for(let y=-40+off;y<H;y+=40){k.fillRect(0,y,W,3);for(let x=0;x<W;x+=40){k.beginPath();k.moveTo(x,y);k.lineTo(x+20,y+20);k.lineTo(x+40,y);k.lineWidth=2;k.strokeStyle='#2a2630';k.stroke();}}
-    g.save();g.imageSmoothingEnabled=false;g.drawImage(cv,0,0,W*2,H*2);g.restore();return;}
-  const S=C.sky;const gr=k.createLinearGradient(0,0,0,H);gr.addColorStop(0,S[3]);gr.addColorStop(0.45-f*0.2,S[2]);gr.addColorStop(0.85,S[1]);gr.addColorStop(1,S[0]);k.fillStyle=gr;k.fillRect(0,0,W,H);
-  const sx=W*(M.map==='cruces'?0.3:0.75),sy=H*(M.map==='cruces'?0.5:0.18)+par*0.02;k.fillStyle='rgba(255,240,200,0.25)';k.beginPath();k.arc(sx,sy,11,0,TAU);k.fill();k.fillStyle=C.sun;k.beginPath();k.arc(sx,sy,7,0,TAU);k.fill();
-  if(!M.ridge||M.ridgeW!==W){M.ridgeW=W;const sd=Math.floor(M.seed);const R=[];
-    /* far range: Organ-style needle spires for Las Cruces, big snowy massifs for Salt Lake */
-    const far=[];for(let x=0;x<=W;x++){let h=0;if(M.map==='cruces'){for(let i=0;i<14;i++){const px=(i+0.5)/14*W+(clHash(i,1,sd)-0.5)*10,ph=18+clHash(i,2,sd)*34,w=4+clHash(i,3,sd)*5;h=Math.max(h,ph-Math.abs(x-px)*ph/w/2.2);}h=Math.max(h,10+clVN(x/9,1,sd)*6);}
-      else{for(let i=0;i<5;i++){const px=(i+0.3)/5*W+(clHash(i,1,sd)-0.5)*30,ph=30+clHash(i,2,sd)*30;h=Math.max(h,ph-Math.abs(x-px)*0.9+clVN(x/4,i,sd)*5);}}far.push(h);}
-    const mid=[];for(let x=0;x<=W;x++)mid.push(8+clVN(x/20,3,sd)*14+clVN(x/6,4,sd)*4);R.push(far,mid);M.ridge=R;}
-  const [far,mid]=M.ridge;const fb=H*0.62+par*0.05,mb=H*0.86+par*0.1;
-  for(let x=0;x<W;x++){const h=far[x];const top=fb-h;k.fillStyle=C.far[0];k.fillRect(x,top,1,H-top);
-    if(M.map==='cruces'){const lit=far[x+1]!==undefined&&far[x+1]>h;if(lit){k.fillStyle=C.far[1];k.fillRect(x,top,1,Math.min(12,h*0.6));}k.fillStyle=C.far[2];k.fillRect(x,top,1,1);}
-    else{const snowL=Math.max(0,h-22);if(snowL>0){k.fillStyle=C.far[2];k.fillRect(x,top,1,snowL*0.8+((x*7)%3));}if(far[x+1]!==undefined&&far[x+1]<h){k.fillStyle=C.far[1];k.fillRect(x,top+snowL*0.8,1,6);}}}
-  k.fillStyle='rgba(255,255,255,0.12)';k.fillRect(0,fb-6,W,H);
-  for(let x=0;x<W;x++){const top=mb-mid[x];k.fillStyle=C.mid[0];k.fillRect(x,top,1,H-top);if(x%3===0){k.fillStyle=C.mid[1];k.fillRect(x,top-(M.map==='slc'?3:1),1,M.map==='slc'?3:1);}}
-  /* clouds */
-  if(!M.clouds){M.clouds=[];for(let i=0;i<6;i++)M.clouds.push({x:Math.random(),y:Math.random()*0.5,w:rnd(14,30),sp:rnd(0.004,0.012)});}
-  for(const c2 of M.clouds){c2.x+=c2.sp*dt;if(c2.x>1.2)c2.x=-0.3;const x=c2.x*W,y=c2.y*H+par*0.03;k.fillStyle=M.map==='cruces'?'#ffd8b8':'#ffffff';k.fillRect(x,y,c2.w,3);k.fillRect(x+c2.w*0.2,y-2,c2.w*0.5,2);k.fillStyle=M.map==='cruces'?'#e8a088':'#c8dcf0';k.fillRect(x+2,y+3,c2.w-4,1);}
-  g.save();g.imageSmoothingEnabled=false;g.drawImage(cv,0,0,W*2,H*2);g.restore();}
+/* ---------- SKY / BACKDROP: painted pixel-art layers, built once per map, parallax while you climb ---------- */
+function clSkyBuild(M,W,H){const sd=Math.floor(M.seed),cru=M.map==='cruces';const L={W,H};
+  const mk=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;};
+  const hex=h=>clRGB(h),mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+  const paint=(w,h,fn)=>{const c=mk(w,h),g=c.getContext('2d'),img=g.createImageData(w,h),D=img.data;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const col=fn(x,y);if(!col)continue;const o=(y*w+x)*4;D[o]=col[0];D[o+1]=col[1];D[o+2]=col[2];D[o+3]=col[3]===undefined?255:col[3];}g.putImageData(img,0,0);return c;};
+  /* far range */
+  const fh=Math.round(H*0.5);const peaks=[];
+  if(cru){for(let i=0;i<22;i++){const x=W*(0.05+0.9*i/21)+(clHash(i,1,sd)-0.5)*14;const mid=1-Math.abs(i/21-0.55)*1.4;peaks.push({x,h:fh*(0.14+0.32*Math.max(0.15,mid)*(0.6+0.4*clHash(i,2,sd))),s:1.5+clHash(i,3,sd)*0.9});}}
+  else{for(let i=0;i<7;i++){const x=W*(i/6)+(clHash(i,1,sd)-0.5)*40;peaks.push({x,h:fh*(0.28+0.3*clHash(i,2,sd)),s:0.85+clHash(i,3,sd)*0.4});}}
+  const ridge=x=>{let h=0;for(const p of peaks)h=Math.max(h,p.h-Math.abs(x-p.x)*p.s);return h+(clFbm(x/9,1,sd)-0.5)*(cru?6:10);};
+  const RH=[];for(let x=-1;x<=W+1;x++)RH[x+1]=ridge(x);
+  const snowL=hex('#f6f9ff'),snowS=hex('#b9c6e6'),rockL=cru?hex('#f2a07a'):hex('#9a9cc0'),rockS=cru?hex('#7a3e62'):hex('#525a86'),rockM=cru?hex('#c46a6a'):hex('#767aa6'),haze=cru?hex('#e0806a'):hex('#a8bedc');
+  L.far=paint(W,fh,(x,y)=>{const h=RH[x+1],top=fh-h;if(y<top)return null;const sl=RH[x+2]-RH[x];const d=y-top,rel=d/Math.max(8,h);
+    const gully=clFbm(x/6+y/14*(sl>0?1:-1),y/22,sd+5);let lit=sl>0.15?1:sl<-0.15?0:0.5;lit+= (gully-0.5)*0.9;
+    let col;if(!cru&&rel<0.42+(clFbm(x/7,y/7,sd+9)-0.5)*0.5+(gully>0.6?0.15:0)){col=lit>0.5?snowL:snowS;if(lit>0.45&&lit<0.6)col=mix(snowL,snowS,0.5);}
+    else{col=lit>0.6?rockL:lit<0.35?rockS:rockM;if(cru&&(x+((y*7)>>3))%5===0&&lit>0.5)col=mix(col,rockS,0.3);}
+    if(d===0)col=mix(col,[255,255,255],cru?0.25:0.15);
+    return mix(col,haze,Math.min(0.55,rel*0.55));});
+  /* mid hills */
+  const mh=Math.round(H*0.32);const mr=x=>mh*0.55+Math.sin(x/W*Math.PI*2.2+sd)*mh*0.16+(clFbm(x/30,3,sd)-0.5)*mh*0.35;
+  const MR=[];for(let x=-1;x<=W+1;x++)MR[x+1]=mr(x);
+  L.mid=paint(W,mh,(x,y)=>{const top=mh-MR[x+1];if(y<top)return null;const sl=MR[x+2]-MR[x],d=y-top;
+    if(cru){const t=Math.min(1,d/(mh*0.7));let c=mix(hex(sl>0?'#9a5a6e':'#6e3e5a'),hex('#c87a6a'),t*0.6);if(((x*13+y*7)%23)===0)c=hex('#5a3a4a');return c;}
+    let c=hex(sl>0.1?'#6aa04e':sl<-0.1?'#2e5e3e':'#4a844a');const n=clHash(x>>1,y>>1,sd);if(n<0.18)c=hex('#244a30');else if(n>0.9)c=hex('#86b866');if(d<2)c=mix(c,[255,255,255],0.15);return mix(c,hex('#9ab4cc'),Math.max(0,0.35-d/mh));});
+  { /* tree line on the hills */const g=L.mid.getContext('2d');if(!cru)for(let x=2;x<W;x+=3+((x*7)%3)){const top=mh-MR[x+1];g.fillStyle='#1e4430';g.fillRect(x,top-4,1,5);g.fillRect(x-1,top-2,3,3);}
+    else for(let x=0;x<W;x+=5){const top=mh-MR[x+1];if(clHash(x,7,sd)<0.4){g.fillStyle='#5a3a4a';g.fillRect(x,top-1,2,1);}}}
+  /* near valley: city / desert floor */
+  const nh=Math.round(H*0.3);
+  L.near=paint(W,nh,(x,y)=>{if(y<6)return null;const n=clHash(x,y,sd+3);
+    if(cru){let c=mix(hex('#b47a5a'),hex('#7a5040'),y/nh);if(n<0.08)c=hex('#6a7a3a');else if(n<0.1)c=hex('#8a9a4a');return c;}
+    let c=mix(hex('#3e7a46'),hex('#2a5a34'),y/nh);if(n<0.25)c=hex('#2a5236');else if(n>0.88)c=hex('#5a9a56');return c;});
+  { const g=L.near.getContext('2d');
+    if(cru){/* distant town: low adobe roofs and warm lights */for(let i=0;i<34;i++){const x=clHash(i,1,sd)*W,y=8+clHash(i,2,sd)*nh*0.6,w=3+clHash(i,3,sd)*6;g.fillStyle=clHash(i,4,sd)<0.5?'#d8a27a':'#c08a6a';g.fillRect(x,y,w,2);g.fillStyle='#8a5a4a';g.fillRect(x,y+2,w,1);if(clHash(i,5,sd)<0.5){g.fillStyle='#ffd27a';g.fillRect(x+1,y+1,1,1);}}
+      for(let i=0;i<60;i++){g.fillStyle='rgba(255,220,140,0.8)';g.fillRect(clHash(i,8,sd)*W,6+clHash(i,9,sd)*nh*0.7,1,1);}}
+    else{/* valley town with towers and trees */for(let i=0;i<16;i++){const x=W*0.1+clHash(i,1,sd)*W*0.8,h=4+clHash(i,2,sd)*16,w=4+clHash(i,3,sd)*7,y=nh*0.45-h;g.fillStyle=clHash(i,4,sd)<0.5?'#d8d2c4':'#b8b4aa';g.fillRect(x,y,w,h);g.fillStyle='#8a8a90';g.fillRect(x+w-1,y,1,h);g.fillStyle='#5a6a8a';for(let wy=y+2;wy<y+h-1;wy+=3)for(let wx=x+1;wx<x+w-2;wx+=2)g.fillRect(wx,wy,1,1);}
+      for(let i=0;i<70;i++){const x=clHash(i,6,sd)*W,y=nh*0.38+clHash(i,7,sd)*nh*0.55;g.fillStyle=clHash(i,8,sd)<0.5?'#2e6a3a':'#3e7e46';g.fillRect(x-2,y-2,5,4);g.fillStyle='#4e9a56';g.fillRect(x-1,y-2,2,1);}}}
+  /* distant canyon walls: a tall tileable strip of cliffs with shelves, scrolled at its own speed for depth */
+  {const Hc=Math.round(H*1.6/24)*24,nb=Hc/24,TP=TAU/Hc;const pal=(cru?['#5e3446','#7a4a5a','#96606a','#b47a76','#d0967e']:['#46546e','#5a6a88','#6e80a0','#8698b6','#a8b8d0']).map(hex);
+    const edge=(y,side)=>{const a=side?1.7:0.4;let e=W*(0.2+0.07*Math.sin(TP*y*2+a)+0.05*Math.sin(TP*y*5+a*3)+0.025*Math.sin(TP*y*13+a*5));const sh=(Math.sin(TP*y*7+a*2)+1)/2;if(sh>0.86)e+=W*0.07*(sh-0.86)/0.14*((y%24)<8?1:0.6);return e;};
+    const vorw=(x,y)=>{const bx=Math.floor(x/24),by=Math.floor(y/24);let d1=1e9,d2=1e9,id=0,py=0;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const wy=(((by+j)%nb)+nb)%nb;const qx=(bx+i+0.15+0.7*clHash(bx+i,wy,sd+31))*24,qy=(by+j+0.15+0.7*clHash(bx+i,wy,sd+37))*24;const d=(x-qx)**2+(y-qy)**2;if(d<d1){d2=d1;d1=d;id=(bx+i)*977+wy;py=qy;}else if(d<d2)d2=d;}return{e:Math.sqrt(d2)-Math.sqrt(d1),id,py};};
+    L.cliffs=paint(W,Hc,(x,y)=>{const eL=edge(y,0),eR=W-edge(y,1);let side=-1;if(x<eL)side=0;else if(x>eR)side=1;if(side<0)return null;const dist=side?x-eR:eL-x;
+      const v=vorw(x,y);let t=2.4+(clHash(v.id,3,sd)-0.5)*1.4-(y-v.py)/24*1.4;if(v.e<1.6)t=0.4;if(dist<3)t+=side?-0.8:1.2;if(dist<1.5)t=0;
+      const up=y>0&&((side===0&&x>=edge(y-2,0))||(side===1&&x<=W-edge(y-2,1)));if(up){t=4;if(!cru)return hex('#e8f0fa');}
+      return pal[clamp(Math.round(t),0,4)];});L.Hc=Hc;}
+  /* puffy pixel clouds */
+  L.clouds=[];for(let i=0;i<5;i++){const w=24+Math.floor(clHash(i,1,sd)*30),h=12;const c=mk(w,h),g=c.getContext('2d');const lit=cru?'#ffd2a0':'#ffffff',sh=cru?'#e07a7a':'#c8d8ee',mid=cru?'#ffb08a':'#e8f0fa';
+    for(let k=0;k<5;k++){const bx=4+k*(w-8)/4,r=3+clHash(i,k+3,sd)*3;g.fillStyle=sh;g.beginPath();g.arc(bx,h-4,r+1,0,TAU);g.fill();}
+    for(let k=0;k<5;k++){const bx=4+k*(w-8)/4,r=3+clHash(i,k+3,sd)*3;g.fillStyle=mid;g.beginPath();g.arc(bx,h-5,r,0,TAU);g.fill();g.fillStyle=lit;g.beginPath();g.arc(bx-1,h-6,r*0.6,0,TAU);g.fill();}
+    g.fillStyle=sh;g.fillRect(2,h-2,w-4,1);L.clouds.push({c,x:clHash(i,9,sd),y:0.08+clHash(i,10,sd)*0.35,sp:0.004+clHash(i,11,sd)*0.006});}
+  return L;}
+function clSky(g,M,LW,LH,dt){const C=CLMAP[M.map],W=Math.ceil(LW),H=Math.ceil(LH);
+  if(M.map==='gym'){g.fillStyle='#1a1820';g.fillRect(0,0,LW,LH);const off=((232-LH-M.camY)*0.25)%40;g.strokeStyle='#2a2630';g.lineWidth=2;for(let y=-40+off;y<LH;y+=40){g.fillStyle='#2a2630';g.fillRect(0,y,LW,3);for(let x=0;x<LW;x+=40){g.beginPath();g.moveTo(x,y);g.lineTo(x+20,y+20);g.lineTo(x+40,y);g.stroke();}}return;}
+  if(!M.skyL||M.skyL.W!==W||M.skyL.H!==H)M.skyL=clSkyBuild(M,W,H);const L=M.skyL,cru=M.map==='cruces';
+  const climb=clamp((232-LH-M.camY)/(232-LH-CL_YT),0,1),par=(232-LH-M.camY);
+  /* sky gradient deepens as you climb */
+  const gr=g.createLinearGradient(0,0,0,LH);
+  if(cru){gr.addColorStop(0,climb>0.5?'#1e1846':'#2e2a6e');gr.addColorStop(0.35,'#6a4a9a');gr.addColorStop(0.6,'#e8705a');gr.addColorStop(0.78,'#ffb060');gr.addColorStop(1,'#ffe0a0');}
+  else{gr.addColorStop(0,climb>0.5?'#1e4a9a':'#2e6ac8');gr.addColorStop(0.55,'#6aaee8');gr.addColorStop(1,'#d6ecfa');}
+  g.fillStyle=gr;g.fillRect(0,0,LW,LH);
+  /* sun */
+  {const sx=LW*(cru?0.24:0.78),sy=LH*(cru?0.6:0.14)+par*0.02;g.fillStyle=cru?'rgba(255,200,120,0.25)':'rgba(255,255,230,0.25)';g.beginPath();g.arc(sx,sy,cru?34:22,0,TAU);g.fill();g.fillStyle=cru?'#ffe27a':'#fffbe0';g.beginPath();g.arc(sx,sy,cru?20:11,0,TAU);g.fill();
+    if(cru){g.fillStyle='#ffb04a';for(let i=0;i<4;i++)g.fillRect(sx-20,sy+6+i*4,40,1);}}
+  /* clouds drift */
+  g.imageSmoothingEnabled=false;
+  for(const c of L.clouds){c.x+=c.sp*dt;if(c.x>1.25)c.x=-0.35;g.drawImage(c.c,Math.round(c.x*LW),Math.round(c.y*LH+par*0.04));}
+  /* parallax layers: far range, hills, valley (each drops away at its own speed as you climb) */
+  const fy=Math.round(LH*0.66-L.far.height+par*0.035),my=Math.round(LH*0.8-L.mid.height+par*0.07),ny=Math.round(LH*0.78+par*0.11);
+  g.drawImage(L.far,0,fy);g.fillStyle=cru?'rgba(224,128,106,0.25)':'rgba(168,190,220,0.3)';g.fillRect(0,fy+L.far.height-6,LW,LH);
+  if(my<LH)g.drawImage(L.mid,0,my);if(my+L.mid.height<LH){g.fillStyle=cru?'#c87a6a':'#2e5e3e';g.fillRect(0,my+L.mid.height,LW,LH);}
+  if(ny<LH){g.drawImage(L.near,0,ny);if(ny+L.near.height<LH){g.fillStyle=cru?'#7a5040':'#2a5a34';g.fillRect(0,ny+L.near.height,LW,LH);}}
+  /* distant canyon walls on top, with a haze so they sit behind the climbable rock */
+  {const Hc=L.Hc,oy=((par*0.35)%Hc+Hc)%Hc;for(let y=oy-Hc;y<LH;y+=Hc)g.drawImage(L.cliffs,0,Math.round(y));g.fillStyle=cru?'rgba(120,70,110,0.18)':'rgba(150,180,220,0.2)';g.fillRect(0,0,LW,LH);}}
 
 
 const BIKE_TH=[{name:'RIO SALADO',seed:2626,sky:['#3a8ad8','#8ac8f0','#ffd8a0','#f0a870'],far:'#9a7ab0',mid:'#b07a7a',near:'#c89a6a',cact:'#4a7a3a',water:['#3a8ac8','#6ac0f0','#2a6ab0'],dirt:['#c08a52','#9a6a3a','#4a2e1a'],grass:['#3a8a3a','#6ac84a'],night:false,amtn:true,jump:0.44},
