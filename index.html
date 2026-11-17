@@ -13555,54 +13555,79 @@ function poolOverlay(g){if(!POOLZ.r&&!POOLZ.f)return;const ents=[...skaters.filt
    G        gravity in px/s². Higher = heavier climber, shorter swings.
    REACH    how far the grappling line can fire (px). Longer = easier.
    ROPE_MIN shortest the rope reels in to (px). REEL is how fast it reels in (px/s).
-   STIFF    rope stiffness 0..1: how hard the rope snaps back each substep. 1 = rigid rope, lower = stretchy/bouncy.
+   K        rope spring stiffness: pull (px/s²) per px the rope is stretched past its length. Higher = stiffer rope, lower = bouncier bungee.
+   DAMP     how quickly the rope stops bouncing (per second). MAX_STRETCH = the most the rope can stretch before it goes rigid (fraction of length).
+   LATCH    tension tug toward the anchor (px/s) the moment the hook bites, for the upward boost.
    PUMP     swing assist (px/s²) added along the swing direction, so pendulums keep their energy.
-   FLING    multiplier on velocity when you let go. >1 = bigger launches.
+   FLING    multiplier on velocity when you let go. KICK = extra upward pop (px/s) on release.
+   GRIP     seconds you can hang on crumbling/icy wall before it gives way.
    DRAG     air drag per second. LIVES = hearts per run. AV_SPEED = how fast the avalanche/rockslide climbs (px/s). */
-const CLCFG={G:520,REACH:165,ROPE_MIN:28,REEL:42,STIFF:1,PUMP:70,FLING:1.12,DRAG:0.12,LIVES:3,AV_SPEED:12,STEPS:4};
-const CLMAP={gym:{t:'CLIMBING GYM',hz:'LOOSE HOLDS',hc:['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff','#ff8a3a'],wall:['#5a6a7a','#52606e','#62727f']},
-  cruces:{t:'LAS CRUCES MOUNTAINS',hz:'ROCKSLIDE',av:'#a8784e',rock:['#b8784e','#a86a44','#c8885a'],dark:'#6a3a24',lite:'#e0a878',hc:['#5a2e1a','#6a3a22','#4a2614'],sky:['#f0a060','#5a8ac8','#1a2a5a'],far:'#7a5a7a',far2:'#5a3a5a',ground:'#d8b888'},
-  slc:{t:'SALT LAKE MOUNTAINS',hz:'AVALANCHE',av:'#f4f8fc',rock:['#9aa0a8','#8a9098','#aab0b8'],dark:'#4a5058',lite:'#d0d4da',hc:['#3a4048','#4a5058','#2e343a'],sky:['#bfe0f5','#5aa0e0','#1a3a7a'],far:'#8aa0b8',far2:'#6a80a0',ground:'#6a5a44'}};
+const CLCFG={G:520,REACH:165,ROPE_MIN:28,REEL:42,K:95,DAMP:7,MAX_STRETCH:0.3,LATCH:95,PUMP:70,FLING:1.1,KICK:75,GRIP:1.5,DRAG:0.12,LIVES:3,AV_SPEED:12,STEPS:4};
+const CLMAP={gym:{t:'CLIMBING GYM',hz:'LOOSE HOLDS',hc:['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff','#ff8a3a'],wall:['#5a6a7a','#52606e','#62727f'],spark:['#e8e2da','#ffffff'],crumb:'LOOSE PANEL'},
+  cruces:{t:'LAS CRUCES MOUNTAINS',hz:'ROCKSLIDE',av:'#a8784e',rock:['#b8784e','#a86a44','#c8885a'],dark:'#6a3a24',lite:'#e0a878',hc:['#5a2e1a','#6a3a22','#4a2614'],sky:['#f0a060','#5a8ac8','#1a2a5a'],far:'#7a5a7a',far2:'#5a3a5a',ground:'#d8b888',spark:['#ffb060','#ffe0a0','#c8885a'],crumb:'IT CRUMBLED!'},
+  slc:{t:'SALT LAKE MOUNTAINS',hz:'AVALANCHE',av:'#f4f8fc',rock:['#9aa0a8','#8a9098','#aab0b8'],dark:'#4a5058',lite:'#d0d4da',hc:['#3a4048','#4a5058','#2e343a'],sky:['#bfe0f5','#5aa0e0','#1a3a7a'],far:'#8aa0b8',far2:'#6a80a0',ground:'#6a5a44',spark:['#f4f8fc','#d8ecfa','#ffffff'],crumb:'LOST GRIP!'}};
 /* cliff walls on both sides; x of the left/right rock face at height y */
 function clWL(M,y){return M.map==='gym'?30:36+Math.sin(y*0.021+M.seed)*9+Math.sin(y*0.057+M.seed*2.1)*5;}
 function clWR(M,y){return M.map==='gym'?290:284+Math.sin(y*0.019+M.seed*1.7)*9+Math.sin(y*0.061+M.seed*0.6)*5;}
 function startClimb(map){if(!map){sheetMenu('ROCK CLIMBING','Pick a wall.',[{name:'Climbing Gym',sub:'Indoor rock wall',btn:'CLIMB',fn:()=>{sheetClose();startClimb('gym');}},{name:'Las Cruces Mountains',sub:'Desert rock spires',btn:'CLIMB',fn:()=>{sheetClose();startClimb('cruces');}},{name:'Salt Lake Mountains',sub:'Granite and pines',btn:'CLIMB',fn:()=>{sheetClose();startClimb('slc');}}]);return;}
   initAudio();const CM=CLMAP[map];mgOpen('climb',{title:'CLIMB · '+CM.t,map,LW:320,LH:200,ox:0});climbReset(MGM);}
 function climbReset(M){const CM=CLMAP[M.map];M.seed=rnd(0,100);M.ridge=null;M.cb=undefined;M.phase='start';M.t=0;M.p={x:160,y:178,vx:0,vy:0};M.att=null;M.lastH=null;M.ground=false;
-  M.lives=CLCFG.LIVES;M.inv=0;M.best=0;M.paid=false;M.rocks=[];M.rt=2.5;M.av=260;M.noGround=false;M.trail=[];M.fx=[];M.msg='';M.msgT=0;
+  M.lives=CLCFG.LIVES;M.inv=0;M.best=0;M.paid=false;M.rocks=[];M.av=260;M.noGround=false;M.trail=[];M.fx=[];M.ft=[];M.msg='';M.msgT=0;M.shake=0;M.tilt=0;M.res=0;
   const A=[],Lg=[];let y=132,side=Math.random()<0.5?-1:1;
   for(let i=0;i<58;i++){y-=rnd(48,70);if(Math.random()<0.75)side=-side;const wl=clWL(M,y),wr=clWR(M,y);const x=clamp(160+side*rnd(20,95),wl+18,wr-18);A.push({x,y,c:pick(CM.hc)});}
   M.top=y-70;
-  let ls=1;for(let ly=-40,i=0;ly>M.top+160;ly-=rnd(180,250),i++){ls=-ls;const w=rnd(38,64),L=ls<0;const wl=clWL(M,ly),wr=clWR(M,ly);const x0=L?wl-12:wr-w,x1=L?wl+w:wr+12;Lg.push({x0,x1,y:ly,sp:i>0&&Math.random()<0.45});}
+  let ls=1;for(let ly=-40,i=0;ly>M.top+160;ly-=rnd(180,250),i++){ls=-ls;const w=rnd(38,64),L=ls<0;const wl=clWL(M,ly),wr=clWR(M,ly);const x0=L?wl-12:wr-w,x1=L?wl+w:wr+12;const sp=i>0&&Math.random()<0.4;Lg.push({x0,x1,y:ly,L,sp,cl:!sp&&i>0&&Math.random()<0.55?{c:pick(['#e8323a','#ffc23d','#4fc3f7','#7dff6a','#ff8a3a']),ph:rnd(0,6)}:null});}
   for(const a of A)for(const l of Lg){if(a.x>l.x0-14&&a.x<l.x1+14&&Math.abs(a.y-l.y)<22){a.x=(l.x0<160)?Math.min(l.x1+30,clWR(M,a.y)-18):Math.max(l.x0-30,clWL(M,a.y)+18);}}
-  M.anchors=A;M.ledges=Lg;}
-function climbHurt(M,why){if(M.inv>0||M.phase!=='play')return;M.lives--;M.inv=1.6;sfx('deny');M.msg=why;M.msgT=1.4;M.att=null;
-  for(let i=0;i<10;i++)M.fx.push({x:M.p.x,y:M.p.y-12,vx:rnd(-80,80),vy:rnd(-120,0),t:0.6,c:'#ff6a6a'});
+  /* crumbling / icy patches on the walls: grab them and they give way after CLCFG.GRIP seconds */
+  const Z=[];for(let zy=-80;zy>M.top+120;zy-=rnd(140,240))Z.push({s:Math.random()<0.5?0:1,y0:zy-rnd(50,90),y1:zy,t:0,broken:false});
+  /* height triggers that drop rocks/icicles when you climb past them */
+  const T=[];for(let ty=-70,i=0;ty>M.top+150;ty-=rnd(200,280),i++)T.push({y:ty,n:1+(i>3?1:0)+(i>9?1:0),done:false});
+  M.anchors=A;M.ledges=Lg;M.zones=Z;M.trig=T;}
+function climbFx(M,x,y,n,sp,cols){for(let i=0;i<n;i++){const a=rnd(0,TAU),v=rnd(30,sp);M.fx.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-30,t:rnd(0.35,0.7),c:pick(cols)});}}
+function climbHurt(M,why){if(M.inv>0||M.phase!=='play')return;M.lives--;M.inv=1.6;sfx('deny');M.msg=why;M.msgT=1.4;M.att=null;M.shake=5;
+  climbFx(M,M.p.x,M.p.y-12,10,120,['#ff6a6a','#ff3d5a']);
   if(M.lives<=0){M.phase='over';M.t=0;return;}}
-function climbRespawn(M,why){climbHurt(M,why);if(M.phase!=='play')return;const h=M.lastH||null;const p=M.p;
-  if(h){p.x=h.x;p.y=h.y+CLCFG.ROPE_MIN+6;p.vx=0;p.vy=0;M.att={h,L:CLCFG.ROPE_MIN+6};}else{p.x=160;p.y=178;p.vx=p.vy=0;}
+function climbRespawn(M,why){climbHurt(M,why);if(M.phase!=='play')return;const h=M.lastH&&!M.lastH.wall?M.lastH:null;const p=M.p;
+  if(h){p.x=h.x;p.y=h.y+CLCFG.ROPE_MIN+6;p.vx=0;p.vy=0;M.att={h,L:CLCFG.ROPE_MIN+6,t:1,hit:1};}else{p.x=160;p.y=Math.min(178,M.av-60);p.vx=p.vy=0;}
   M.av=Math.max(M.av,p.y+200);M.rocks=[];}
-function climbPay(M){if(M.paid)return 0;M.paid=true;const h=Math.floor(M.best/10);const pay=Math.min(60,Math.floor(h/3)+(M.phase==='win'?20:0));if(pay)addCash(pay);
-  const k='tsr_climb_best_'+M.map;if(h>(+store.get(k)||0))store.set(k,h);return pay;}
-function climbBtns(M){const LW=M.LW;return{again:{x:LW/2-74,y:150,w:68,h:22},exit:{x:LW/2+6,y:150,w:68,h:22}};}
-/* grapple: aim at the tapped anchor if it is in reach, else auto-target the best anchor above */
-function climbFire(M,tx,ty){const p=M.p,R=CLCFG.REACH;let best=null,bd=1e9;
-  if(tx!==null){for(const a of M.anchors){if(Math.hypot(a.x-p.x,a.y-(p.y-12))>R)continue;const d=Math.hypot(a.x-tx,a.y-ty);if(d<bd&&d<60){bd=d;best=a;}}}
-  if(!best){bd=1e9;for(const a of M.anchors){const dy=(p.y-12)-a.y;const d=Math.hypot(a.x-p.x,dy);if(d>R||dy<-10||a===M.att?.h)continue;const sc=d-dy*0.6+(M.lastH&&a.y>=M.lastH.y-2?80:0);if(sc<bd){bd=sc;best=a;}}}
+function climbPayAmt(M){const h=Math.floor(M.best/10);return Math.min(60,Math.floor(h/3))+(M.phase==='win'?20:0)+M.res*5;}
+function climbPay(M){if(M.paid)return 0;M.paid=true;const pay=climbPayAmt(M);if(pay)addCash(pay);
+  const k='tsr_climb_best_'+M.map;const h=Math.floor(M.best/10);if(h>(+store.get(k)||0))store.set(k,h);return pay;}
+function climbBtns(M){const LW=M.LW;return{again:{x:LW/2-74,y:158,w:68,h:22},exit:{x:LW/2+6,y:158,w:68,h:22}};}
+/* is world point (x,y) inside rock? returns 'L','R', a ledge, or null */
+function climbSolidAt(M,x,y){if(x<=clWL(M,y))return'L';if(x>=clWR(M,y))return'R';for(const l of M.ledges)if(x>=l.x0&&x<=l.x1&&y>=l.y&&y<=l.y+8)return l;return null;}
+function climbZoneAt(M,side,y){for(const z of M.zones)if(z.s===side&&y>=z.y0&&y<=z.y1)return z;return null;}
+/* march a ray from the hand toward (dx,dy) and return where it bites rock, or null */
+function climbRay(M,x0,y0,dx,dy){const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;for(let d=8;d<=CLCFG.REACH;d+=3){const x=x0+dx*d,y=y0+dy*d;const s=climbSolidAt(M,x,y);if(s){if(s==='L'||s==='R'){const side=s==='L'?0:1;const z=climbZoneAt(M,side,y);if(z&&z.broken)return null;return{x:side?clWR(M,y):clWL(M,y),y,wall:1,side,z};}return{x,y:Math.max(y,s.y+6),wall:1,ledge:s,z:null};}}return null;}
+function climbLatch(M,a){const p=M.p,hx=p.x,hy=p.y-12;const L=Math.hypot(a.x-hx,a.y-hy)||1;
+  /* keep incoming momentum, add a tension tug toward the anchor */
+  p.vx+=(a.x-hx)/L*CLCFG.LATCH;p.vy+=(a.y-hy)/L*CLCFG.LATCH;
+  M.att={h:a,L:Math.max(CLCFG.ROPE_MIN,L*0.88),t:0,hit:0,sx:hx,sy:hy};if(a.z)a.z.t=0;M.lastH=a;M.ground=false;tone(900,1300,0.05,'square',0.04);}
+/* grapple: a ring near the tap, else the wall/ledge in the tap direction, else auto-target */
+function climbFire(M,tx,ty){const p=M.p,R=CLCFG.REACH,hx=p.x,hy=p.y-12;let best=null,bd=1e9;
+  if(tx!==null){for(const a of M.anchors){if(Math.hypot(a.x-hx,a.y-hy)>R)continue;const d=Math.hypot(a.x-tx,a.y-ty);if(d<bd&&d<50){bd=d;best=a;}}
+    if(!best)best=climbRay(M,hx,hy,tx-hx,ty-hy);}
+  if(!best){bd=1e9;for(const a of M.anchors){const dy=hy-a.y;const d=Math.hypot(a.x-hx,dy);if(d>R||dy<-10||a===M.att?.h)continue;const sc=d-dy*0.6+(M.lastH&&a.y>=M.lastH.y-2?80:0);if(sc<bd){bd=sc;best=a;}}}
+  if(!best){const c=[climbRay(M,hx,hy,-0.6,-1),climbRay(M,hx,hy,0.6,-1)].filter(Boolean).sort((a,b)=>a.y-b.y);best=c[0]||null;}
   if(!best){tone(300,200,0.05,'square',0.03);return;}
-  const L=Math.hypot(best.x-p.x,best.y-(p.y-12));M.att={h:best,L:Math.max(CLCFG.ROPE_MIN,L*0.95)};M.lastH=best;M.ground=false;tone(900,1300,0.05,'square',0.04);}
+  climbLatch(M,best);}
 function climbInput(x,y,down){const M=MGM;if(!M)return;const sx=x==null?null:x*M.LW,sy=y==null?null:y*M.LH;const key=(x===0&&y===0);
   if(M.phase==='start'){if(down===true){M.phase='play';M.t=0;M.msg='HOLD TO GRAPPLE · LET GO TO FLING';M.msgT=2.2;}return;}
   if(M.phase==='over'||M.phase==='win'){if(down!==true||M.t<0.6)return;const B=climbBtns(M);const inB=b=>sx>=b.x&&sx<=b.x+b.w&&sy>=b.y&&sy<=b.y+b.h;
     if(key||inB(B.again)){climbPay(M);climbReset(M);M.phase='play';M.msg='HOLD TO GRAPPLE · LET GO TO FLING';M.msgT=1.6;}else if(inB(B.exit)){const pay=climbPay(M);const h=Math.floor(M.best/10);mgClose();banner(M.phase==='win'?'SUMMIT!':'NICE CLIMB',h+'m · +$'+pay,2.2);}return;}
   if(down===true){const tx=key||sx===null?null:sx-M.ox,ty=key||sy===null?null:sy+M.camY;climbFire(M,tx,ty);}
-  else if(down===false&&M.att){M.att=null;M.p.vx*=CLCFG.FLING;M.p.vy=M.p.vy*CLCFG.FLING-30;}}
+  else if(down===false&&M.att){M.att=null;M.p.vx*=CLCFG.FLING;M.p.vy=M.p.vy*CLCFG.FLING-CLCFG.KICK;}}
 function climbStep(M,h,LH){const p=M.p,C=CLCFG;const py0=p.y;
-  p.vy+=C.G*h;const dr=Math.exp(-C.DRAG*h);p.vx*=dr;p.vy*=dr;p.x+=p.vx*h;p.y+=p.vy*h;M.ground=false;
+  p.vy+=C.G*h;const dr=Math.exp(-C.DRAG*h);p.vx*=dr;p.vy*=dr;
   if(M.att){const a=M.att.h;const ax=p.x-a.x,ay=(p.y-12)-a.y,d=Math.hypot(ax,ay)||1;const nx=ax/d,ny=ay/d;
-    if(d>M.att.L){const pull=(d-M.att.L)*C.STIFF;p.x-=nx*pull;p.y-=ny*pull;const vr=p.vx*nx+p.vy*ny;if(vr>0){p.vx-=vr*nx;p.vy-=vr*ny;}
+    /* spring rope: pulls back in proportion to stretch, damps radial bounce, goes rigid past MAX_STRETCH */
+    if(d>M.att.L){const ext=d-M.att.L;p.vx-=nx*C.K*ext*h;p.vy-=ny*C.K*ext*h;const vr=p.vx*nx+p.vy*ny;if(vr>0){const k=Math.min(1,C.DAMP*h);p.vx-=vr*nx*k;p.vy-=vr*ny*k;}
       const tx=-ny,ty=nx,vt=p.vx*tx+p.vy*ty;if(Math.abs(vt)>8){p.vx+=tx*Math.sign(vt)*C.PUMP*h;p.vy+=ty*Math.sign(vt)*C.PUMP*h;}}
+    p.x+=p.vx*h;p.y+=p.vy*h;
+    {const bx=p.x-a.x,by=(p.y-12)-a.y,dd=Math.hypot(bx,by)||1,mx=M.att.L*(1+C.MAX_STRETCH);if(dd>mx){p.x=a.x+bx/dd*mx;p.y=a.y+by/dd*mx+12;const vr=p.vx*bx/dd+p.vy*by/dd;if(vr>0){p.vx-=vr*bx/dd;p.vy-=vr*by/dd;}}}
     if(M.att.L>C.ROPE_MIN)M.att.L=Math.max(C.ROPE_MIN,M.att.L-C.REEL*h);}
+  else{p.x+=p.vx*h;p.y+=p.vy*h;}
+  M.ground=false;
   const wl=clWL(M,p.y-10)+6,wr=clWR(M,p.y-10)-6;if(p.x<wl){p.x=wl;p.vx=Math.abs(p.vx)*0.5;}if(p.x>wr){p.x=wr;p.vx=-Math.abs(p.vx)*0.5;}
   for(const l of M.ledges){if(p.x<l.x0-3||p.x>l.x1+3)continue;
     if(py0<=l.y+0.5&&p.y>=l.y&&p.vy>=0){if(l.sp){p.y=l.y;p.vy=-230;climbHurt(M,'SPIKES!');}else{p.y=l.y;p.vy=0;p.vx*=0.7;M.ground=true;}}
@@ -13613,27 +13638,47 @@ function climbFrame(g,c,dt){const M=MGM,s=Math.min(c.height/200,c.width/320),LW=
   if(M.phase==='play'){const h=Math.min(dt,0.05)/CLCFG.STEPS;for(let i=0;i<CLCFG.STEPS;i++)climbStep(M,h,LH);
     M.inv=Math.max(0,M.inv-dt);M.best=Math.max(M.best,178-p.y);
     const tgt=Math.min(M.cb,p.y-LH*0.55);M.camY=Math.min(M.camY,lerp(M.camY,tgt,1-Math.exp(-4*dt)));
-    /* falling rocks / loose holds: warning at the top edge, then they drop */
-    if(M.lastH){M.rt-=dt;if(M.rt<=0){M.rt=rnd(1.8,3.2);const x=clamp(p.x+rnd(-70,70),clWL(M,p.y)+12,clWR(M,p.y)-12);M.rocks.push({x,y:M.camY-20,vx:rnd(-15,15),vy:0,r:rnd(5,8),warn:0.8,rot:0,c:M.map==='gym'?pick(CM.hc):pick(CM.rock)});}}
-    for(const r of M.rocks){if(r.warn>0){r.warn-=dt;r.y=M.camY-20;continue;}r.vy+=CLCFG.G*0.8*dt;r.x+=r.vx*dt;r.y+=r.vy*dt;r.rot+=dt*4;if(Math.hypot(r.x-p.x,r.y-(p.y-12))<r.r+6){r.hit=1;climbHurt(M,M.map==='gym'?'BONK!':'ROCK!');}}
+    if(M.att){const A=M.att;A.t+=dt;
+      /* hook bites: sparks/snow + a little shake */
+      if(!A.hit&&A.t>=0.09){A.hit=1;M.shake=Math.max(M.shake,A.h.wall?2.5:1.5);climbFx(M,A.h.x,A.h.y,A.h.wall?12:7,90,CM.spark);sfx('thud',0.25);}
+      /* crumbling / icy wall gives way */
+      if(A.h.z){A.h.z.t+=dt;if(A.h.z.t>=CLCFG.GRIP){A.h.z.broken=true;climbFx(M,A.h.x,A.h.y,18,120,M.map==='slc'?CM.spark:M.map==='gym'?['#8a6a4a','#c8c8d0']:CM.rock);M.shake=4;sfx('deny');M.msg=CM.crumb;M.msgT=1.2;M.att=null;M.lastH=null;}}}
+    /* rocks/icicles drop when you climb past trigger heights */
+    for(const T of M.trig){if(T.done||p.y>T.y)continue;T.done=true;for(let k=0;k<T.n;k++){const x=clamp(p.x+(k-(T.n-1)/2)*55+rnd(-25,25),clWL(M,p.y)+12,clWR(M,p.y)-12);M.rocks.push({x,y:M.camY-20,vx:M.map==='slc'?0:rnd(-15,15),vy:0,r:rnd(5,8),warn:0.9+k*0.25,rot:0,ice:M.map==='slc'&&Math.random()<0.6,c:M.map==='gym'?pick(CM.hc):pick(CM.rock)});}}
+    for(const r of M.rocks){if(r.warn>0){r.warn-=dt;r.y=M.camY-20;continue;}r.vy+=CLCFG.G*0.8*dt;r.x+=r.vx*dt;r.y+=r.vy*dt;if(!r.ice)r.rot+=dt*4;if(Math.hypot(r.x-p.x,r.y+(r.ice?8:0)-(p.y-12))<r.r+6){r.hit=1;climbHurt(M,M.map==='gym'?'BONK!':r.ice?'ICICLE!':'ROCK!');}}
     M.rocks=M.rocks.filter(r=>!r.hit&&r.y<M.camY+LH+40);
-    /* avalanche / rockslide climbs from below and speeds up if you fall far behind */
+    /* stranded climbers: swing past to rescue */
+    for(const l of M.ledges){if(!l.cl||l.cl.done)continue;const cx=(l.L?l.x1-14:l.x0+14),cy=l.y-8;if(Math.hypot(p.x-cx,(p.y-10)-cy)<24){l.cl.done=true;M.res++;sfx('ok');climbFx(M,cx,cy,14,100,['#ff3d5a','#ffc23d','#7dff6a']);M.ft.push({x:cx,y:cy-14,t:1.2,txt:'RESCUED! +$5',col:'#7dff6a'});}}
     if(M.av<175)M.noGround=true;if(M.map!=='gym'&&M.lastH&&M.t>3){M.av-=(CLCFG.AV_SPEED+Math.max(0,(M.av-p.y)-380)*0.6)*dt;if(p.y>M.av-4)climbRespawn(M,CM.hz+'!');}
     if(M.phase==='play'&&p.y>M.camY+LH+30&&M.camY<M.cb-20)climbRespawn(M,'FELL!');
     if(M.phase==='play'&&p.y<M.top+24){M.phase='win';M.t=0;sfx('ok');}
     M.trail.push({x:p.x,y:p.y});if(M.trail.length>12)M.trail.shift();}
   for(const f of M.fx){f.t-=dt;f.vy+=300*dt;f.x+=f.vx*dt;f.y+=f.vy*dt;}M.fx=M.fx.filter(f=>f.t>0);
+  for(const f of M.ft){f.t-=dt;f.y-=18*dt;}M.ft=M.ft.filter(f=>f.t>0);
+  /* character tilt follows the rope angle and swing speed */
+  {let tg=clamp(p.vx/400,-0.5,0.5);if(M.att){const a=M.att.h;tg=clamp(Math.atan2(a.x-p.x,(p.y-12)-a.y)*0.7+p.vx/900,-0.9,0.9);}M.tilt=lerp(M.tilt,tg,1-Math.exp(-10*dt));}
+  M.shake=Math.max(0,M.shake-dt*14);const shx=M.shake?rnd(-M.shake,M.shake):0,shy=M.shake?rnd(-M.shake,M.shake):0;
   g.save();g.scale(s,s);g.fillStyle='#1e1a24';g.fillRect(0,0,LW,LH);if(M.map!=='gym')climbSky(g,M,LW,LH);else{g.fillStyle='#262230';g.fillRect(0,0,LW,LH);}
-  g.translate(M.ox,-M.camY);const X0=-M.ox,top=M.camY-10,bot=M.camY+LH+10;
+  g.translate(M.ox+shx,-M.camY+shy);const X0=-M.ox,top=M.camY-10,bot=M.camY+LH+10;
   if(M.map==='gym'){for(let yy=Math.floor(top/140)*140;yy<bot;yy+=140){g.fillStyle='rgba(255,230,170,0.10)';g.fillRect(150,yy+20,20,4);g.fillStyle='rgba(255,230,170,0.04)';g.beginPath();g.moveTo(150,yy+24);g.lineTo(130,yy+90);g.lineTo(190,yy+90);g.lineTo(170,yy+24);g.fill();}}
   climbWalls(g,M,top,bot,X0,LW);
+  /* crumbling / icy patches */
+  for(const z of M.zones){if(z.y1<top||z.y0>bot)continue;const hold=M.att&&M.att.h.z===z,jit=hold?Math.sin(M.t*60)*Math.min(1.5,z.t*1.5):0;
+    for(let y=z.y0;y<z.y1;y+=6){const ex=(z.s?clWR(M,y):clWL(M,y))+jit;const w=z.broken?14:10;const x0=z.s?ex:ex-w;
+      if(z.broken){g.fillStyle='rgba(20,14,20,0.55)';g.fillRect(z.s?ex-2:ex-w+2,y,w,6);}
+      else if(M.map==='slc'){g.fillStyle='rgba(191,231,245,0.75)';g.fillRect(x0,y,w,6);g.fillStyle='rgba(255,255,255,0.8)';g.fillRect(z.s?ex:ex-2,y,2,4);}
+      else{g.fillStyle=M.map==='gym'?'rgba(200,60,60,0.35)':'rgba(70,36,20,0.45)';g.fillRect(x0,y,w,6);g.strokeStyle=M.map==='gym'?'#c83c3c':CM.dark;g.lineWidth=1;g.beginPath();g.moveTo(x0+(y%12?2:7),y);g.lineTo(x0+5,y+3);g.lineTo(x0+(y%12?8:3),y+6);g.stroke();}}}
   /* summit */
   g.fillStyle=M.map==='slc'?'#f4f8fc':M.map==='gym'?'#7a6448':CM.rock[0];g.fillRect(X0,M.top-60,LW,40);g.fillStyle='rgba(0,0,0,0.2)';g.fillRect(X0,M.top-22,LW,2);
   g.fillStyle='#e8e2da';g.fillRect(159,M.top-90,2,30);g.fillStyle='#ffc23d';g.fillRect(161,M.top-90,14,9);g.fillStyle='#e8e2da';g.font='6px Silkscreen, monospace';g.textAlign='center';g.fillText('SUMMIT',160,M.top-10);
-  /* ledges */
-  for(const l of M.ledges){if(l.y<top-10||l.y>bot+10)continue;g.fillStyle='rgba(0,0,0,0.3)';g.fillRect(l.x0+2,l.y+8,l.x1-l.x0,3);g.fillStyle=M.map==='gym'?'#8a6a4a':CM.rock[1];g.fillRect(l.x0,l.y,l.x1-l.x0,8);g.fillStyle=M.map==='gym'?'#a8845c':CM.lite;g.fillRect(l.x0,l.y,l.x1-l.x0,2);
-    if(M.map==='slc'){g.fillStyle='#f4f8fc';g.fillRect(l.x0,l.y-2,l.x1-l.x0,3);}
-    if(l.sp){g.fillStyle=M.map==='slc'?'#bfe7f5':M.map==='cruces'?'#5a8a4a':'#c8c8d0';for(let x=l.x0+3;x<l.x1-3;x+=6){g.beginPath();g.moveTo(x,l.y);g.lineTo(x+3,l.y-8);g.lineTo(x+6,l.y);g.fill();}}}
+  /* ledges + stranded climbers */
+  for(const l of M.ledges){if(l.y<top-30||l.y>bot+10)continue;g.fillStyle='rgba(0,0,0,0.3)';g.fillRect(l.x0+2,l.y+8,l.x1-l.x0,3);g.fillStyle=M.map==='gym'?'#8a6a4a':CM.rock[1];g.fillRect(l.x0,l.y,l.x1-l.x0,8);g.fillStyle=M.map==='gym'?'#a8845c':CM.lite;g.fillRect(l.x0,l.y,l.x1-l.x0,2);
+    if(M.map==='slc'){g.fillStyle='#f4f8fc';g.fillRect(l.x0,l.y-2,l.x1-l.x0,3);g.fillStyle='#bfe7f5';for(let x=l.x0+4;x<l.x1-2;x+=9){g.beginPath();g.moveTo(x,l.y+8);g.lineTo(x+1.5,l.y+13);g.lineTo(x+3,l.y+8);g.fill();}}
+    if(l.sp){g.fillStyle=M.map==='slc'?'#bfe7f5':M.map==='cruces'?'#5a8a4a':'#c8c8d0';for(let x=l.x0+3;x<l.x1-3;x+=6){g.beginPath();g.moveTo(x,l.y);g.lineTo(x+3,l.y-8);g.lineTo(x+6,l.y);g.fill();}}
+    if(l.cl&&!l.cl.done){const cx=Math.round(l.L?l.x1-14:l.x0+14),cy=l.y;const wv=Math.sin(M.t*8+l.cl.ph)>0;
+      g.fillStyle='#2a2430';g.fillRect(cx-2,cy-5,2,5);g.fillRect(cx+1,cy-5,2,5);g.fillStyle=l.cl.c;g.fillRect(cx-3,cy-11,7,6);g.fillStyle='#e8b890';g.fillRect(cx-2,cy-15,5,4);g.fillStyle=l.cl.c;g.fillRect(cx-2,cy-16,5,2);
+      g.fillStyle=l.cl.c;if(wv){g.fillRect(cx+4,cy-15,2,5);}else{g.fillRect(cx+4,cy-12,4,2);}g.fillRect(cx-5,cy-10,2,4);
+      if(Math.floor(M.t*2+l.cl.ph)%2===0){g.fillStyle='#fff';g.fillRect(cx-11,cy-27,22,8);g.fillStyle='#14101a';g.font='5px Silkscreen, monospace';g.textAlign='center';g.fillText('HELP!',cx,cy-21);}}}
   /* ground */
   if(180<bot&&!M.noGround)climbGround(g,M,X0,LW);
   /* anchors */
@@ -13642,27 +13687,35 @@ function climbFrame(g,c,dt){const M=MGM,s=Math.min(c.height/200,c.width/320),LW=
     else{g.fillStyle='rgba(0,0,0,0.3)';g.beginPath();g.ellipse(a.x+2,a.y+3,9,6,0,0,TAU);g.fill();g.fillStyle=CM.rock[2];g.beginPath();g.ellipse(a.x,a.y,9,6,0,0,TAU);g.fill();g.fillStyle=CM.lite;g.fillRect(a.x-6,a.y-5,8,2);if(M.map==='slc'){g.fillStyle='#f4f8fc';g.fillRect(a.x-7,a.y-6,12,2);}}
     g.strokeStyle='#d8dce4';g.lineWidth=1.5;g.beginPath();g.arc(a.x,a.y,3,0,TAU);g.stroke();
     if(inR){g.strokeStyle='rgba(255,255,255,0.45)';g.lineWidth=1;g.beginPath();g.arc(a.x,a.y,11,0,TAU);g.stroke();}}
-  /* rocks */
-  for(const r of M.rocks){if(r.warn>0)continue;g.save();g.translate(r.x,r.y);g.rotate(r.rot);g.fillStyle=r.c;g.beginPath();for(let k=0;k<6;k++){const an=k/6*TAU,rr=r.r*(k%2?0.8:1);g.lineTo(Math.cos(an)*rr,Math.sin(an)*rr);}g.fill();g.fillStyle='rgba(0,0,0,0.25)';g.fillRect(-1,-1,3,3);g.restore();}
+  /* rocks / icicles */
+  for(const r of M.rocks){if(r.warn>0)continue;g.save();g.translate(r.x,r.y);g.rotate(r.rot);
+    if(r.ice){g.fillStyle='#bfe7f5';g.beginPath();g.moveTo(-r.r*0.6,-4);g.lineTo(r.r*0.6,-4);g.lineTo(0,r.r*2.6);g.fill();g.fillStyle='rgba(255,255,255,0.8)';g.fillRect(-1,-3,1.5,r.r*1.4);}
+    else{g.fillStyle=r.c;g.beginPath();for(let k=0;k<6;k++){const an=k/6*TAU,rr=r.r*(k%2?0.8:1);g.lineTo(Math.cos(an)*rr,Math.sin(an)*rr);}g.fill();g.fillStyle='rgba(0,0,0,0.25)';g.fillRect(-1,-1,3,3);}
+    g.restore();}
   /* avalanche / rockslide */
   if(M.map!=='gym'&&M.av<bot+20){const y0=M.av;g.fillStyle=CM.av;g.beginPath();g.moveTo(X0-10,bot+40);for(let x=X0-10;x<=X0+LW+10;x+=10)g.lineTo(x,y0+Math.sin(x*0.15+M.t*6)*4+Math.sin(x*0.05-M.t*3)*5);g.lineTo(X0+LW+10,bot+40);g.fill();
     g.fillStyle=M.map==='slc'?'rgba(220,236,250,0.7)':'rgba(120,80,50,0.6)';for(let i=0;i<14;i++){const x=X0+((i*37+M.t*40)%LW),yy=y0-6-((i*13+M.t*30)%14);g.beginPath();g.arc(x,yy,3+(i%3),0,TAU);g.fill();}}
   for(const f of M.fx){g.fillStyle=f.c;g.fillRect(f.x-1,f.y-1,2,2);}
   for(let i=0;i<M.trail.length;i++){const q=M.trail[i];g.fillStyle=`rgba(232,50,58,${i/M.trail.length*0.5})`;g.fillRect(q.x-1,q.y-14,2,2);}
-  if(M.att){g.strokeStyle='#e8e2da';g.lineWidth=1.2;g.beginPath();g.moveTo(p.x,p.y-12);g.lineTo(M.att.h.x,M.att.h.y);g.stroke();g.fillStyle='#8a8a92';g.beginPath();g.arc(M.att.h.x,M.att.h.y,2.5,0,TAU);g.fill();}
-  if(!(M.inv>0&&Math.floor(M.t*12)%2)){const C=(player&&player.P)||CHARS.dylan;const fr=pframe(C,M.att?'idle':M.ground?'idle':'air',Math.floor(M.t*8),'down');const sc=0.7;g.save();g.translate(p.x,p.y);g.rotate(clamp(p.vx/400,-0.5,0.5));g.drawImage(fr.c,-PCX*PK*sc,-PG*PK*sc,fr.c.width*sc,fr.c.height*sc);g.restore();}
+  /* rope: shoots out, wobbles like a plucked string, then snaps taut */
+  if(M.att){const A=M.att,a=A.h,hx=p.x,hy=p.y-12;const f=Math.min(1,A.t/0.09);const ex=hx+(a.x-hx)*f,ey=hy+(a.y-hy)*f;const dx=ex-hx,dy=ey-hy,dl=Math.hypot(dx,dy)||1,nx=-dy/dl,ny=dx/dl;
+    const slack=Math.max(0,A.L-Math.hypot(a.x-hx,a.y-hy));const amp=6*Math.max(0,1-A.t/0.45)+Math.min(8,slack*0.4);
+    g.strokeStyle='#e8e2da';g.lineWidth=1.2;g.beginPath();g.moveTo(hx,hy);for(let i=1;i<=14;i++){const u=i/14,w=Math.sin(u*Math.PI)*(amp*Math.sin(u*Math.PI*3-A.t*40)*(A.t<0.45?1:0)+(slack?Math.min(8,slack*0.4):0));g.lineTo(hx+dx*u+nx*w,hy+dy*u+ny*w+(slack&&A.t>=0.45?0:0));}g.stroke();
+    if(f>=1){g.fillStyle='#8a8a92';g.beginPath();g.arc(a.x,a.y,2.5,0,TAU);g.fill();if(a.z&&!a.z.broken){g.fillStyle='#ff4a4a';g.fillRect(a.x-6,a.y-12,12*(1-a.z.t/CLCFG.GRIP),2);}}}
+  if(!(M.inv>0&&Math.floor(M.t*12)%2)){const C=(player&&player.P)||CHARS.dylan;const fr=pframe(C,M.att?'idle':M.ground?'idle':'air',Math.floor(M.t*8),'down');const sc=0.7;g.save();g.translate(p.x,p.y-12);g.rotate(M.tilt);g.translate(0,12);g.drawImage(fr.c,-PCX*PK*sc,-PG*PK*sc,fr.c.width*sc,fr.c.height*sc);g.restore();}
+  for(const f of M.ft){g.globalAlpha=Math.min(1,f.t*2);g.fillStyle='#000';g.font='7px Silkscreen, monospace';g.textAlign='center';g.fillText(f.txt,f.x+1,f.y+1);g.fillStyle=f.col;g.fillText(f.txt,f.x,f.y);g.globalAlpha=1;}
   /* rock warnings at the top edge */
   for(const r of M.rocks)if(r.warn>0&&Math.floor(M.t*10)%2){g.fillStyle='#ff4a4a';g.font='10px Silkscreen, monospace';g.textAlign='center';g.fillText('!',r.x,M.camY+14);}
   g.restore();
   /* HUD */
-  g.save();g.scale(s,s);g.fillStyle='rgba(0,0,0,0.6)';g.fillRect(4,4,84,32);g.fillStyle='#ffc23d';g.font='6px Silkscreen, monospace';g.textAlign='left';g.fillText('HEIGHT '+Math.floor(M.best/10)+'m',8,13);
-  g.fillStyle='#b9a3bf';g.fillText('BEST '+(+store.get('tsr_climb_best_'+M.map)||0)+'m',8,22);for(let i=0;i<CLCFG.LIVES;i++){const hx=10+i*11,hy=29;g.fillStyle=i<M.lives?'#ff3d5a':'#4a3a44';g.beginPath();g.arc(hx-2,hy-1,2.5,0,TAU);g.arc(hx+2,hy-1,2.5,0,TAU);g.fill();g.beginPath();g.moveTo(hx-4.5,hy);g.lineTo(hx,hy+4.5);g.lineTo(hx+4.5,hy);g.fill();}
-  if(M.msgT>0){M.msgT-=dt;g.textAlign='center';g.fillStyle='#000';g.font='8px Silkscreen, monospace';g.fillText(M.msg,LW/2+1,51);g.fillStyle='#ffc23d';g.fillText(M.msg,LW/2,50);}
-  if(M.phase==='start'){g.fillStyle='rgba(0,0,0,0.78)';g.fillRect(LW/2-110,48,220,120);g.textAlign='center';g.fillStyle='#7dff6a';g.font='12px Silkscreen, monospace';g.fillText('HANG ON',LW/2,72);g.fillStyle='#e8e2da';g.font='7px Silkscreen, monospace';g.fillText(CM.t,LW/2,88);
-    g.fillStyle='#b9a3bf';g.font='6px Silkscreen, monospace';g.fillText('HOLD ON A HOOK TO GRAPPLE IT',LW/2,106);g.fillText('SWING · LET GO TO FLING UPWARD',LW/2,117);g.fillText(M.map==='gym'?'DODGE LOOSE HOLDS AND SPIKES':'DODGE ROCKS, SPIKES AND THE '+CM.hz,LW/2,128);
-    if(Math.floor(M.t*2)%2===0){g.fillStyle='#ffc23d';g.font='8px Silkscreen, monospace';g.fillText('TAP TO START',LW/2,154);}}
-  if(M.phase==='over'||M.phase==='win'){const B=climbBtns(M),h=Math.floor(M.best/10),pay=Math.min(60,Math.floor(h/3)+(M.phase==='win'?20:0));g.fillStyle='rgba(0,0,0,0.85)';g.fillRect(LW/2-100,70,200,112);g.textAlign='center';g.fillStyle=M.phase==='win'?'#7dff6a':'#ff6a6a';g.font='12px Silkscreen, monospace';g.fillText(M.phase==='win'?'SUMMIT!':'GAME OVER',LW/2,96);
-    g.fillStyle='#e8e2da';g.font='8px Silkscreen, monospace';g.fillText(h+'m · +$'+pay,LW/2,118);g.fillStyle='#b9a3bf';g.font='6px Silkscreen, monospace';g.fillText('BEST '+Math.max(h,+store.get('tsr_climb_best_'+M.map)||0)+'m',LW/2,132);
+  g.save();g.scale(s,s);g.fillStyle='rgba(0,0,0,0.6)';g.fillRect(4,4,84,41);g.fillStyle='#ffc23d';g.font='6px Silkscreen, monospace';g.textAlign='left';g.fillText('HEIGHT '+Math.floor(M.best/10)+'m',8,13);
+  g.fillStyle='#b9a3bf';g.fillText('BEST '+(+store.get('tsr_climb_best_'+M.map)||0)+'m',8,22);g.fillStyle='#7dff6a';g.fillText('RESCUED '+M.res,8,31);for(let i=0;i<CLCFG.LIVES;i++){const hx=10+i*11,hy=38;g.fillStyle=i<M.lives?'#ff3d5a':'#4a3a44';g.beginPath();g.arc(hx-2,hy-1,2.5,0,TAU);g.arc(hx+2,hy-1,2.5,0,TAU);g.fill();g.beginPath();g.moveTo(hx-4.5,hy);g.lineTo(hx,hy+4.5);g.lineTo(hx+4.5,hy);g.fill();}
+  if(M.msgT>0){M.msgT-=dt;g.textAlign='center';g.fillStyle='#000';g.font='8px Silkscreen, monospace';g.fillText(M.msg,LW/2+1,57);g.fillStyle='#ffc23d';g.fillText(M.msg,LW/2,56);}
+  if(M.phase==='start'){g.fillStyle='rgba(0,0,0,0.78)';g.fillRect(LW/2-110,58,220,130);g.textAlign='center';g.fillStyle='#7dff6a';g.font='12px Silkscreen, monospace';g.fillText('HANG ON',LW/2,82);g.fillStyle='#e8e2da';g.font='7px Silkscreen, monospace';g.fillText(CM.t,LW/2,98);
+    g.fillStyle='#b9a3bf';g.font='6px Silkscreen, monospace';g.fillText('HOLD ON A HOOK OR THE WALL TO GRAPPLE',LW/2,114);g.fillText('SWING · LET GO TO FLING UPWARD',LW/2,125);g.fillText(M.map==='gym'?'DODGE LOOSE HOLDS AND SPIKES':'DODGE ROCKS, SPIKES AND THE '+CM.hz,LW/2,136);g.fillText('SWING PAST STRANDED CLIMBERS TO RESCUE THEM',LW/2,147);
+    if(Math.floor(M.t*2)%2===0){g.fillStyle='#ffc23d';g.font='8px Silkscreen, monospace';g.fillText('TAP TO START',LW/2,174);}}
+  if(M.phase==='over'||M.phase==='win'){const B=climbBtns(M),h=Math.floor(M.best/10),pay=climbPayAmt(M);g.fillStyle='rgba(0,0,0,0.85)';g.fillRect(LW/2-100,70,200,120);g.textAlign='center';g.fillStyle=M.phase==='win'?'#7dff6a':'#ff6a6a';g.font='12px Silkscreen, monospace';g.fillText(M.phase==='win'?'SUMMIT!':'GAME OVER',LW/2,96);
+    g.fillStyle='#e8e2da';g.font='8px Silkscreen, monospace';g.fillText(h+'m · +$'+pay,LW/2,118);g.fillStyle='#b9a3bf';g.font='6px Silkscreen, monospace';g.fillText('RESCUED '+M.res+' · BEST '+Math.max(h,+store.get('tsr_climb_best_'+M.map)||0)+'m',LW/2,134);
     for(const [b,t,col] of [[B.again,'RESTART','#7dff6a'],[B.exit,'EXIT','#ffc23d']]){g.fillStyle=col;g.fillRect(b.x,b.y,b.w,b.h);g.fillStyle='#14101a';g.font='7px Silkscreen, monospace';g.fillText(t,b.x+b.w/2,b.y+14);}}
   g.restore();}
 function climbWalls(g,M,top,bot,X0,LW){const CM=CLMAP[M.map];const st=6,y0=Math.floor(top/st)*st,y1=Math.min(bot,190);if(y0>y1)return;
