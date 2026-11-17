@@ -1,0 +1,55 @@
+name: TRIPCAM Android build
+
+on:
+  push:
+    branches: [tripcam-android]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build phone + watch APKs
+        working-directory: tripcam-android
+        run: gradle --no-daemon --stacktrace :app:assembleRelease :wear:assembleRelease
+
+      - name: Collect APKs
+        run: |
+          mkdir out
+          cp tripcam-android/app/build/outputs/apk/release/app-release.apk out/TRIPCAM-phone.apk
+          cp tripcam-android/wear/build/outputs/apk/release/wear-release.apk out/TRIPCAM-watch.apk
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tripcam-apks
+          path: out/
+
+      - name: Publish download (release "tripcam-latest")
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: tripcam-latest
+          name: TRIPCAM — phone + Galaxy Watch apps
+          prerelease: true
+          make_latest: false
+          target_commitish: ${{ github.sha }}
+          files: out/*.apk
+          body: |
+            **TRIPCAM-phone.apk** → install on your phone (films + does the effects)
+            **TRIPCAM-watch.apk** → install on your Galaxy Watch (shows the trippy feed)
+            Install both. Open TRIPCAM on the phone, then on the watch.
+            Watch: tap = next effect · long-press = previous · turn bezel = intensity

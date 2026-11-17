@@ -1,0 +1,35 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.yaway.tripcam'
+    compileSdk 34
+    defaultConfig {
+        // Phone and watch apps MUST share applicationId + signing key so they can talk.
+        applicationId 'com.yaway.tripcam'
+        minSdk 30
+        targetSdk 34
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as Integer)
+        versionName '1.0'
+    }
+    signingConfigs {
+        shared {
+            storeFile rootProject.file('tripcam.keystore')
+            storePassword 'tripcam'
+            keyAlias 'tripcam'
+            keyPassword 'tripcam'
+        }
+    }
+    buildTypes {
+        debug { signingConfig signingConfigs.shared }
+        release { signingConfig signingConfigs.shared; minifyEnabled false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    lint { checkReleaseBuilds false; abortOnError false }
+}
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-wearable:18.2.0'
+}
