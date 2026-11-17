@@ -42,7 +42,7 @@
       <g id="dots"></g>
       <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#00ffd0"/><stop offset=".5" stop-color="#ff3cac"/><stop offset="1" stop-color="#ffe53c"/></linearGradient></defs>
     </svg>
-    <div id="label">SLICES</div>
+    <div id="label">DIMENSION</div>
     <div id="hint">tap / swipe = next effect<br>drag the edge (bezel) = intensity<br>hold = menu</div>
     <button id="flip" title="Switch camera">⟲</button>
     <div id="menu">
@@ -58,8 +58,8 @@
 
 <script>
 (() => {
-const MODES = ['SLICES','DIMENSION','KALEIDO','GLITCH','MELT','ECHO','ACID','VORTEX'];
-const MODE_IDS = [6,7,0,1,2,3,4,5]; // shader effect id for each menu slot
+const MODES = ['DIMENSION','KALEIDO','GLITCH','MELT','ECHO','ACID','VORTEX'];
+const MODE_IDS = [7,0,1,2,3,4,5]; // shader effect id for each menu slot
 const $ = id => document.getElementById(id);
 const cv = $('c'), face = $('face');
 const gl = cv.getContext('webgl', {antialias:false, premultipliedAlpha:false});
@@ -148,24 +148,6 @@ void main(){
     vec3 cm=C(w); float l=L(cm);
     vec3 ac=.5+.5*cos(TAU*(l*(1.5+3.*k)+t*.25+vec3(0.,.33,.67)));
     col=mix(cm,ac,.35+.65*k);
-  } else if(m==6){ // SLICES: camera cut into 6 pizza slices that pull apart
-    float n=6., sa=TAU/n;
-    float idx=floor(mod(a+TAU,TAU)/sa);
-    float mid=(idx+.5)*sa;
-    vec2 dir=vec2(cos(mid),sin(mid));
-    float gap=.07*k*(.7+.3*sin(t*1.6+idx*1.7));
-    vec2 q=c-dir*gap;
-    float aq=atan(q.y,q.x);
-    float rel=mod(aq-idx*sa+TAU,TAU);
-    float rq=length(q);
-    float inside=step(rel,sa)*step(rq,.5);
-    float spin=k*.5*sin(t*.8+idx*2.1);
-    vec2 s2=mat2(cos(spin),-sin(spin),sin(spin),cos(spin))*q;
-    col=C(s2+.5);
-    col=hue(col,idx*1.05*k);
-    float edge=min(rel,sa-rel)*rq;
-    col*=smoothstep(.0,.004+.004*k,edge);
-    col*=inside;
   } else if(m==7){ // DIMENSION: duplicate & rotate — 5 copies per ring, rings counter-spin
     float n=5., sa=TAU/n;
     float rings=1.+floor(k*4.);               // 1 ring at 0%, up to 5 rings at 100%
