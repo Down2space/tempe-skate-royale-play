@@ -97,9 +97,11 @@ void main(){
   vec3 col;
   int m=int(mode+.5);
   if(m==0){ // FRACTAL: kaleidoscope + Kali fold
-    float seg=5.+floor(k*7.);
-    float sa=TAU/seg;
-    float aa=mod(a+t*.15,sa); aa=abs(aa-sa*.5);
+    float n=5.+floor(k*19.);            // visible slices: 5 at 0%, up to 24 at 100%
+    bool ev=mod(n,2.)<.5;
+    float sa=TAU/(ev?n*.5:n);
+    float aa=mod(a+t*.15,sa);
+    if(ev) aa=abs(aa-sa*.5);            // even counts: mirrored pairs
     vec2 z=vec2(cos(aa),sin(aa))*r*(1.6+.4*sin(t*.4));
     float iters=1.+k*4.;
     for(int i=0;i<5;i++){
