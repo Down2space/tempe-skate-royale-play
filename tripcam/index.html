@@ -190,7 +190,7 @@ gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 const camTex=tex(2,2);
 
 // ---------- state ----------
-let mode=0, k=.5, src=0, mirror=0, media=null, isImage=false, imgDirty=false, camScale=[1,1];
+let mode=0, k=0, src=0, mirror=0, media=null, isImage=false, imgDirty=false, camScale=[1,1];
 let stream=null, facing='user', running=false, ping=0;
 const video=document.createElement('video');video.muted=true;video.playsInline=true;video.setAttribute('playsinline','');video.loop=true;
 
