@@ -42,7 +42,7 @@
       <g id="dots"></g>
       <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#00ffd0"/><stop offset=".5" stop-color="#ff3cac"/><stop offset="1" stop-color="#ffe53c"/></linearGradient></defs>
     </svg>
-    <div id="label">FRACTAL</div>
+    <div id="label">SLICES</div>
     <div id="hint">tap / swipe = next effect<br>drag the edge (bezel) = intensity<br>hold = menu</div>
     <button id="flip" title="Switch camera">⟲</button>
     <div id="menu">
@@ -58,7 +58,8 @@
 
 <script>
 (() => {
-const MODES = ['FRACTAL','GLITCH','MELT','ECHO','ACID','VORTEX'];
+const MODES = ['SLICES','KALEIDO','GLITCH','MELT','ECHO','ACID','VORTEX'];
+const MODE_IDS = [6,0,1,2,3,4,5]; // shader effect id for each menu slot
 const $ = id => document.getElementById(id);
 const cv = $('c'), face = $('face');
 const gl = cv.getContext('webgl', {antialias:false, premultipliedAlpha:false});
@@ -147,6 +148,24 @@ void main(){
     vec3 cm=C(w); float l=L(cm);
     vec3 ac=.5+.5*cos(TAU*(l*(1.5+3.*k)+t*.25+vec3(0.,.33,.67)));
     col=mix(cm,ac,.35+.65*k);
+  } else if(m==6){ // SLICES: camera cut into 6 pizza slices that pull apart
+    float n=6., sa=TAU/n;
+    float idx=floor(mod(a+TAU,TAU)/sa);
+    float mid=(idx+.5)*sa;
+    vec2 dir=vec2(cos(mid),sin(mid));
+    float gap=.07*k*(.7+.3*sin(t*1.6+idx*1.7));
+    vec2 q=c-dir*gap;
+    float aq=atan(q.y,q.x);
+    float rel=mod(aq-idx*sa+TAU,TAU);
+    float rq=length(q);
+    float inside=step(rel,sa)*step(rq,.5);
+    float spin=k*.5*sin(t*.8+idx*2.1);
+    vec2 s2=mat2(cos(spin),-sin(spin),sin(spin),cos(spin))*q;
+    col=C(s2+.5);
+    col=hue(col,idx*1.05*k);
+    float edge=min(rel,sa-rel)*rq;
+    col*=smoothstep(.0,.004+.004*k,edge);
+    col*=inside;
   } else { // VORTEX
     float sw=(1.-smoothstep(0.,.55,r))*(1.5+7.*k)*sin(t*.45);
     float aa=a+sw;
@@ -284,7 +303,7 @@ function frame(){
   gl.useProgram(main.p);
   gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,camTex);gl.uniform1i(main.u.cam,0);
   gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,b.t);gl.uniform1i(main.u.prev,1);
-  gl.uniform1f(main.u.t,t);gl.uniform1f(main.u.k,k);gl.uniform1f(main.u.mode,mode);
+  gl.uniform1f(main.u.t,t);gl.uniform1f(main.u.k,k);gl.uniform1f(main.u.mode,MODE_IDS[mode]);
   gl.uniform1f(main.u.src,src);gl.uniform1f(main.u.mirror,mirror);gl.uniform2f(main.u.camScale,camScale[0],camScale[1]);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W,H);
