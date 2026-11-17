@@ -13581,7 +13581,7 @@ function poolOverlay(g){if(!POOLZ.r&&!POOLZ.f)return;const ents=[...skaters.filt
      Drag your finger down while holding to reel faster, up to let rope out (DRAG_REEL px/s per px of finger travel).
    TAUT_KICK: one-time pull (px/s) toward the anchor the moment the rope first goes tight; upward-weighted. 0 = off.
    Reeling is applied as velocity toward the anchor (not a position snap), so the pull is kept when you let go. */
-const CLC={FIX:1/240,G:650,R:8,REACH:215,HOOK_SPD:2600,REEL_MIN:45,REEL_MAX:70,REEL_ACC:60,DRAG_REEL:1.5,TAUT_KICK:0,ROPE_MIN:22,VMAX_ROPE:620,K:95,DAMP:7,MAX_STRETCH:0.3,LATCH:95,PUMP:70,FLING:1.1,KICK:75,DRAG:0.02,VMAX:820,GRIP:1.5,LIVES:3,AV_SPEED:13,REST:0.15,FRICT:9};
+const CLC={FIX:1/240,G:650,R:8,REACH:215,HOOK_SPD:2600,REEL_MIN:60,REEL_MAX:120,REEL_ACC:120,WALL_PUSH:170,DRAG_REEL:1.5,TAUT_KICK:0,ROPE_MIN:22,VMAX_ROPE:620,K:95,DAMP:7,MAX_STRETCH:0.3,LATCH:95,PUMP:70,FLING:1.1,KICK:75,DRAG:0.02,VMAX:820,GRIP:1.5,LIVES:3,AV_SPEED:13,REST:0.15,FRICT:9};
 const CL_YT=-3400,CL_HY=18;
 const CLMAP={
   test:{t:'TEST CHAMBER',hz:'',crumb:'',ice:'',spark:['#ffffff'],rock:['#2a2228','#433840','#5e4f52','#7a6862','#958274','#b09c8a','#c8b6a2'],crumbR:['#2e2a2c','#4a4446','#66605e','#827a74','#9e958c','#b8afa4','#d0c8bc'],back:['#46546e','#56647e','#6a7a92','#8292aa'],sky:['#d8eefa','#8ac4ee','#4a8ad8','#2a5aa8'],sun:'#fffbe0',far:['#5a6a92','#8a9ac0','#ffffff'],mid:['#2e4a3a','#3e5e46'],dust:'rgba(255,255,255,0.5)'},
@@ -13629,7 +13629,6 @@ function clGen(M){const map=M.map,s=Math.floor(M.seed),cols=80,y0=CL_YT-240,rows
   for(let r=0;r<rows;r++){const y=cy(r),a=WL(y),b=WR(y);for(let c=0;c<cols;c++){const x=cx(c);let sol=x<a||x>b||y>=180;
     if(gym){if(x<14||x>306){T.G[id(c,r)]=6;T.F[id(c,r)]=0;}else if(y>=180){T.G[id(c,r)]=8;T.F[id(c,r)]=0;}continue;}
     if(!sol&&y<120&&y>CL_YT+60&&clFbm(x/46,y/46,s+29)>0.71)sol=true;
-    if(sol&&x>8&&x<312&&y<160&&clFbm(x/34,y/34,s+41)>0.7)sol=false;
     if(sol){T.G[id(c,r)]=1;T.F[id(c,r)]=0;}}}
   /* backdrop rock (visual depth only, never collides) */
   for(let r=0;r<rows;r++){const y=cy(r);if(y<CL_YT-20)continue;const a=WL(y),b=WR(y);for(let c=0;c<cols;c++){const x=cx(c);if(gym){T.B[id(c,r)]=1;continue;}
@@ -13681,11 +13680,21 @@ function clGen(M){const map=M.map,s=Math.floor(M.seed),cols=80,y0=CL_YT-240,rows
   for(let r=0;r<rows;r++)for(let c=1;c<cols-1;c++){const px=cx(c),py=cy(r);if(py<176&&py>100&&Math.abs(px-160)<70){const k=id(c,r);if(!gym||T.G[k]!==6){T.G[k]=0;T.F[k]=-1;}}}
   /* every waypoint must see rock above within reach: if not, grow a ledge (or hold) toward it */
   const anchorsOK=(x,y)=>{let n=0;for(let a=-2.88;a<=-0.26;a+=0.218){const h=clRay(T,x,y,Math.cos(a),Math.sin(a),CLC.REACH*0.85);if(h&&h.y<y-25)n++;}return n>=2;};
-  for(const w of R1){if(w.y>150||w.y<CL_YT+30)continue;for(let tries=0;tries<3&&!anchorsOK(w.x,w.y);tries++){const y=w.y-rnd(70,110);
+  for(const w of R1){if(w.y>172||w.y<CL_YT+30)continue;for(let tries=0;tries<3&&!anchorsOK(w.x,w.y);tries++){const y=w.y-rnd(70,110);
     if(gym){const x=clamp(w.x+rnd(-50,50),24,296);const f=newForm(5,{fixed:true,col:pick(CLMAP.gym.hc),el:[x,y,8.5,6.5,rnd(-0.5,0.5)]});for(let r=Math.floor((y-5-y0)/4);r<=Math.floor((y+5-y0)/4);r++)for(let c=Math.floor((x-7)/4);c<=Math.floor((x+7)/4);c++)put(c,r,5,f);continue;}
     const side=w.x<160?-1:1,wx=side<0?WL(y):WR(y),L=Math.max(24,Math.abs(w.x-wx)-12),th=rnd(9,13);const f=newForm(1,{fixed:true});
     for(let r=Math.floor((y-th-y0)/4);r<=Math.floor((y+th-y0)/4);r++)for(let c=0;c<cols;c++){const px=cx(c),py=cy(r);const t=side<0?px-wx:wx-px;if(t<-14||t>L)continue;const u=clamp(t/L,0,1);if(py>=y-th*0.5&&py<=y+th*(1.1-1.2*u))put(c,r,1,f);}}}
   carve(R1,gym?6:11);
+  /* gym: flat rest volumes near the route every ~520px so the gym has checkpoints too */
+  if(gym)for(let y=-360;y>CL_YT+150;y-=520){let w=R1[0];for(const q of R1)if(Math.abs(q.y-y)<Math.abs(w.y-y))w=q;const x=clamp(w.x+(w.x<160?55:-55),46,274),f=newForm(7,{fixed:true,col:pick(CLMAP.gym.vol)});const W=46,H=18;
+    f.tri=[[x-W/2,y],[x+W/2,y],[x+W/4,y-H],[x-W/4,y-H]];f.apex=[x,y-H*0.45];for(let r=Math.floor((y-H-y0)/4);r<=Math.floor((y-y0)/4);r++)for(let c=Math.floor((x-W/2)/4);c<=Math.floor((x+W/2)/4);c++){const px=cx(c),py=cy(r),v=(y-py)/H,u=(px-(x-W/2))/W;if(v>=0&&v<=1&&Math.abs(u-0.5)<0.5-v*0.25){const k=id(c,r);T.G[k]=7;T.F[k]=f.id;}}
+    for(let r=Math.floor((y-H-40-y0)/4);r<Math.floor((y-H-y0)/4);r++)for(let c=Math.floor((x-W/4)/4);c<=Math.floor((x+W/4)/4);c++){const k=id(c,r);if(T.G[k]===5||T.G[k]===2){T.G[k]=0;T.F[k]=-1;}}}
+  /* tidy the rock: fill cracks and pinholes the climber could wedge into, shave off one-cell specks and slivers */
+  if(!gym){const G=T.G,n8=(c,r)=>{let n=0;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(!dr&&!dc)continue;const cc=c+dc,rr=r+dr;if(cc<0||cc>=cols||rr<0||rr>=rows||G[id(cc,rr)])n++;}return n;};
+    for(let pass=0;pass<2;pass++){const add=[],del=[];for(let r=1;r<rows-1;r++)for(let c=0;c<cols;c++){const k=id(c,r),py=cy(r);if(py>=176)continue;const n=n8(c,r);
+      if(!G[k]){const lr=(c===0||G[k-1])&&(c===cols-1||G[k+1]),ud=G[k-cols]&&G[k+cols];if(n>=6||lr||ud&&n>=4)add.push(k);}
+      else if(n<=2&&T.F[k]<=0)del.push(k);}
+      for(const k of add){G[k]=1;T.F[k]=0;}for(const k of del){G[k]=0;T.F[k]=-1;}}}
   /* no floating rock: keep only terrain connected to the mountain (gym holds are bolted to the wall, so they stay) */
   if(!gym){const seen=new Uint8Array(cols*rows),st=[];for(let r=0;r<rows;r++)for(const c of[0,cols-1]){const k=id(c,r);if(T.G[k]){seen[k]=1;st.push(k);}}for(let c=0;c<cols;c++){const k=id(c,rows-1);if(T.G[k]&&!seen[k]){seen[k]=1;st.push(k);}}
     while(st.length){const k=st.pop(),c=k%cols,r=(k/cols)|0;for(const[dc,dr]of[[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+dc,nr=r+dr;if(nc<0||nc>=cols||nr<0||nr>=rows)continue;const n=id(nc,nr);if(T.G[n]&&!seen[n]){seen[n]=1;st.push(n);}}}
@@ -13809,7 +13818,7 @@ function clRopeWrap(M){const R=M.rope;if(!R)return;const T=M.T,p=M.p,bx=p.x,by=p
   for(let guard=0;guard<3;guard++){const P=R.A[R.A.length-1];const d=Math.hypot(bx-P.x,by-P.y);if(d<6)break;
     const n=Math.ceil(d/1.5),sx=(bx-P.x)/n,sy=(by-P.y)/n;let hit=-1;for(let i=5;i<n-3;i++){if(clSolid(T,P.x+sx*i,P.y+sy*i)&&clSolid(T,P.x+sx*(i+1),P.y+sy*(i+1))){hit=i;break;}}if(hit<0)break;
     let wx=P.x+sx*(hit-1),wy=P.y+sy*(hit-1);let best=null,bf=-1;for(let a=0;a<8;a++){const ox=Math.cos(a*Math.PI/4),oy=Math.sin(a*Math.PI/4);let free=0;for(let k=1;k<=3;k++)if(!clSolid(T,wx+ox*k,wy+oy*k))free++;if(free>bf){bf=free;best=[ox,oy];}}
-    wx+=best[0]*1;wy+=best[1]*1;const seg=Math.hypot(wx-P.x,wy-P.y);if(seg<6||R.L-R.fixed-seg<4)break;
+    wx+=best[0]*1;wy+=best[1]*1;const seg=Math.hypot(wx-P.x,wy-P.y);if(seg<6)break;if(R.L-R.fixed-seg<10)R.L=R.fixed+seg+10;
     R.A.push({x:wx,y:wy,sg:Math.sign((wx-P.x)*(by-wy)-(wy-P.y)*(bx-wx))||1});R.fixed+=seg;}
   while(R.A.length>1){const P=R.A[R.A.length-1],Q=R.A[R.A.length-2];const cr=(P.x-Q.x)*(by-P.y)-(P.y-Q.y)*(bx-P.x);if(Math.sign(cr)===P.sg||cr===0)break;if(!clLineClear(T,bx,by,Q.x,Q.y,4,8))break;R.fixed-=Math.hypot(P.x-Q.x,P.y-Q.y);R.A.pop();}}
 
@@ -13822,13 +13831,14 @@ function clCollide(M,o,rad,rest,onHit){const T=M.T;let grounded=false,gn=null;
       else{pen=rad-d;dx/=d;dy/=d;}
       if(pen>bp){bp=pen;best={nx:dx,ny:dy,m,c,r};}}
     if(!best)break;o.x+=best.nx*bp;o.y+=best.ny*bp;const vn=o.vx*best.nx+o.vy*best.ny;if(vn<0){o.vx-=(1+rest)*vn*best.nx;o.vy-=(1+rest)*vn*best.ny;}
-    if(best.ny<-0.65){grounded=true;gn=best;}if(onHit)onHit(best,vn);}
+    if(best.ny<-0.65){grounded=true;gn=best;}if(Math.abs(best.nx)>0.6)o.wallN=best.nx;if(onHit)onHit(best,vn);}
   return{grounded,gn};}
 function clBodyStep(M,h){const p=M.p,C=CLC;
   p.vy+=C.G*h;const dr=Math.exp(-C.DRAG*h);p.vx*=dr;p.vy*=dr;const sp=Math.hypot(p.vx,p.vy);if(sp>C.VMAX){p.vx*=C.VMAX/sp;p.vy*=C.VMAX/sp;}
   p.x+=p.vx*h;p.y+=p.vy*h;
   clRopeStep(M,h);
-  let hitV=0;const res=clCollide(M,p,C.R,C.REST,(b,vn)=>{hitV=Math.max(hitV,-vn);if(b.m===4&&b.ny<-0.5)M.spiked=true;});
+  p.wallN=0;let hitV=0;const res=clCollide(M,p,C.R,C.REST,(b,vn)=>{hitV=Math.max(hitV,-vn);if(b.m===4&&b.ny<-0.5)M.spiked=true;});
+  if(p.wallN){M.wallT=0.25;M.wallN=p.wallN;}else M.wallT=Math.max(0,(M.wallT||0)-h);
   if(M.spiked){M.spiked=false;if(M.inv<=0){p.vy=-260;clHurt(M,'SPIKES!');}}
   const was=M.ground;M.ground=res.grounded;
   if(M.ground){if(!M.rope)p.vx*=Math.exp(-C.FRICT*h);if(!was&&M.started){M.dbg.land++;M.dbg.landAt=[Math.round(p.x),Math.round(p.y),!!M.rope];M.anim.land=Math.min(1,hitV/400);}
@@ -13894,7 +13904,7 @@ function climbInput(x,y,down,id){const M=MGM;if(!M)return;const sx=x==null?null:
   if(down===true&&!key&&sx!=null&&M.dbgOn&&M.dbgBox&&sx<158&&sy>M.LH-M.dbgBox-8){M.dbgOn=false;return;}
   if(down===null){if(M.hold&&id===M.ptr&&sy!=null&&M.dragY0!=null)M.dragY=sy-M.dragY0;return;}
   if(down===true){M.started=true;M.hold=true;M.ptr=id;M.dragY0=sy;M.dragY=0;let t;if(key||sx===null){const a=clAuto(M);if(!a){tone(300,200,0.05,'square',0.03);return;}t={x:a.hx,y:a.hy};}else t=clAim(M,sx-M.ox,sy+M.camY);if(!t){tone(260,180,0.06,'square',0.03);M.blockFx={x:sx-M.ox,y:sy+M.camY,t:0.4};return;}clFire(M,t.x,t.y);}
-  else if(down===false){if(id!==undefined&&M.ptr!==undefined&&id!==M.ptr)return;M.hold=false;M.ptr=undefined;M.dragY=0;if(M.rope){M.p.vx*=CLC.FLING;M.p.vy=M.p.vy*CLC.FLING-CLC.KICK;}clDetach(M);}}
+  else if(down===false){if(id!==undefined&&M.ptr!==undefined&&id!==M.ptr)return;M.hold=false;M.ptr=undefined;M.dragY=0;if(M.rope){M.p.vx*=CLC.FLING;M.p.vy=M.p.vy*CLC.FLING-CLC.KICK;if(M.wallT>0){M.p.vx+=M.wallN*CLC.WALL_PUSH;M.p.vy-=CLC.WALL_PUSH*0.45;clFx(M,M.p.x-M.wallN*CLC.R,M.p.y,6,60,CLMAP[M.map].spark||['#fff']);}}clDetach(M);}}
 
 /* ---------- 5. CAMERA ---------- */
 function clCamStep(M,dt,px,py){const LH=M.LH,vy=M.p.vy;M.camLead=lerp(M.camLead||0,clamp(-vy*0.45,-40,190),1-Math.exp(-3*dt));let tgt=py-LH*0.55-M.camLead;
