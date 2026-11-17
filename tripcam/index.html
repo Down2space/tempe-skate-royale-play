@@ -137,8 +137,6 @@ void main(){
     float fresh=mix(.12,.018,k)+smoothstep(.25,.6,diff)*mix(.35,.06,k);
     fresh+=smoothstep(.82,1.,u.y)*.35;                        // top keeps refilling
     col=mix(pr,cm,clamp(fresh,0.,1.));
-    col=hue(col,.006*k);
-    col=mix(col,col*col*1.25,.04*k);                          // slowly richer, waxy colors
   } else if(m==3){ // ECHO: zoom/rotate feedback tunnel
     float rot=.004+.03*k*sin(t*.2+1.);
     float zr=.985-.05*k;
@@ -324,7 +322,7 @@ function frame(){
   gl.uniform1f(main.u.src,src);gl.uniform1f(main.u.mirror,mirror);gl.uniform2f(main.u.camScale,camScale[0],camScale[1]);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W,H);
-  gl.useProgram(blit.p);gl.uniform1f(blit.u.gloss,MODE_IDS[mode]===2?.4+.6*k:0.);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,a.t);gl.uniform1i(blit.u.img,0);
+  gl.useProgram(blit.p);gl.uniform1f(blit.u.gloss,0.);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,a.t);gl.uniform1i(blit.u.img,0);
   gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   ping=1-ping;
 }
