@@ -58,8 +58,8 @@
 
 <script>
 (() => {
-const MODES = ['SLICES','KALEIDO','GLITCH','MELT','ECHO','ACID','VORTEX'];
-const MODE_IDS = [6,0,1,2,3,4,5]; // shader effect id for each menu slot
+const MODES = ['SLICES','DIMENSION','KALEIDO','GLITCH','MELT','ECHO','ACID','VORTEX'];
+const MODE_IDS = [6,7,0,1,2,3,4,5]; // shader effect id for each menu slot
 const $ = id => document.getElementById(id);
 const cv = $('c'), face = $('face');
 const gl = cv.getContext('webgl', {antialias:false, premultipliedAlpha:false});
@@ -166,6 +166,25 @@ void main(){
     float edge=min(rel,sa-rel)*rq;
     col*=smoothstep(.0,.004+.004*k,edge);
     col*=inside;
+  } else if(m==7){ // DIMENSION: duplicate & rotate — 5 copies per ring, rings counter-spin
+    float n=5., sa=TAU/n;
+    float rings=1.+floor(k*4.);               // 1 ring at 0%, up to 5 rings at 100%
+    float rw=.5/rings;
+    float ri=min(floor(r/rw),rings-1.);
+    float dirS=mod(ri,2.)<.5?1.:-1.;
+    float ang=a+dirS*t*(.12+.3*k)*(1.+ri*.35)+ri*sa*.5;
+    float A=mod(ang+TAU*8.,TAU);
+    float idx=floor(A/sa);
+    float la=A-idx*sa;                        // angle inside this copy
+    float rr=clamp((r-ri*rw)/rw,0.,1.);       // radius inside this ring
+    float base=TAU*.25-sa*.5;                 // every copy shows the same top wedge of the camera
+    vec2 q=vec2(cos(base+la),sin(base+la))*(rings>1.?rr*.5:r);
+    col=C(q+.5);
+    col=hue(col,idx*.35*k+ri*.9*k);
+    float edge=min(la,sa-la)*max(r,.02);
+    col*=.35+.65*smoothstep(0.,.005,edge);    // outline between duplicates
+    if(rings>1.) col*=.4+.6*smoothstep(0.,.08,min(rr,1.-rr)*2.+.02);
+    col*=step(r,.5);
   } else { // VORTEX
     float sw=(1.-smoothstep(0.,.55,r))*(1.5+7.*k)*sin(t*.45);
     float aa=a+sw;
