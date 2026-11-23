@@ -13925,7 +13925,7 @@ function clDrawSprite(g,C,anim,fi,x,y,rot,face,pivot){const fr=pframe(C,anim,fi,
   const sr=fr.c.sr||1;/* sprite canvases are hi-res: the game's drawImage divides sizes by .sr */
   if(pivot==='hand')g.drawImage(fr.c,-W*170/180,-H*96/287,W*sr,H*sr);else g.drawImage(fr.c,-W*0.5,-H*284/287,W*sr,H*sr);g.restore();}
 function clDrawClimber(g,M,x,y){const A=M.anim,C=clChar(M),p=M.p;let anim,fi=0;
-  if(M.rope){anim='hang';const vs=p.vx*Math.cos(A.a)+p.vy*Math.sin(A.a);A.leg=lerp(A.leg||0,clamp(-vs/260,-1,1)*A.face,0.25);fi=Math.round(A.leg*2)+2;}else if(A.bonk>0)anim='stun';else if(M.ground)anim='idle';else anim=p.vy<40?'clfly':'clfall';if(anim==='clfall')fi=Math.floor(A.t*8);if(anim==='idle')fi=Math.floor(A.t*6);
+  if(M.rope){anim='hang';const vs=p.vx*Math.cos(A.a)+p.vy*Math.sin(A.a);A.legT=lerp(+A.legT||0,clamp(-vs/260,-1,1)*A.face,0.25);if(!isFinite(A.legT))A.legT=0;fi=Math.round(A.legT*2)+2;}else if(A.bonk>0)anim='stun';else if(M.ground)anim='idle';else anim=p.vy<40?'clfly':'clfall';if(anim==='clfall')fi=Math.floor(A.t*8);if(anim==='idle')fi=Math.floor(A.t*6);
   if(anim==='hang')clDrawSprite(g,C,anim,fi,x,y-CL_HY,A.a,A.face,'hand');else clDrawSprite(g,C,anim,fi,x,y+CLC.R,anim==='idle'?0:A.a*0.7,A.face,'feet');}
 /* ---------- SETUP ---------- */
 function startClimb(map){if(!map){sheetMenu('ROCK CLIMBING','Pick a wall.',[{name:'Climbing Gym',sub:'Indoor rock wall',btn:'CLIMB',fn:()=>{sheetClose();startClimb('gym');}},{name:'Las Cruces Mountains',sub:'Desert rock spires',btn:'CLIMB',fn:()=>{sheetClose();startClimb('cruces');}},{name:'Salt Lake Mountains',sub:'Granite and pines',btn:'CLIMB',fn:()=>{sheetClose();startClimb('slc');}}]);return;}
