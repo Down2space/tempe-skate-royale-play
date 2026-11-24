@@ -3898,19 +3898,26 @@ const FEST_WF={curtain:[964,196,30,20,404]};
 /* waterfall motion: bright streaks sliding down the curtain, foam at its foot, ripples in the creek */
 /* ===== owner: walk in the water. Shallow around the edges and the island, deeper in between; the creek is ankle deep ===== */
 let FEST_WADE_CELLS=new Set();
-function festWadeDepth(x,y){const PX=860,PY=520,RX=140,RY=80,IR=44,IRY=28;
-  const t=((x-PX)/RX)**2+((y-PY)/RY)**2;
-  if(t<1){if((x>PX-12&&x<PX+12&&y<PY)||(y>PY-10&&y<PY+10&&x<PX))return 0;/* bridges */
-    const isl=Math.sqrt(((x-PX)/IR)**2+((y-PY)/IRY)**2)-1;if(isl<0)return 0;
-    return Math.max(0.12,Math.min(1,Math.min((1-Math.sqrt(t))*2.6,isl*1.4)));}
+/* depth: an even ring between the island shore and the pond shore (shallow at both, deepest halfway) */
+const FEST_BRIDGES=[[845,403,30,95],[711,509,112,22]];
+function festOnBridgeZone(x,y){for(const b of FEST_BRIDGES)if(x>b[0]+3&&x<b[0]+b[2]-3&&y>b[1]&&y<b[1]+b[3])return true;return false;}
+function festWadeDepth(x,y,under){const PX=860,PY=520,RX=140,RY=80,IR=44,IRY=28;const dx=x-PX,dy=y-PY,dist=Math.hypot(dx,dy);
+  const t=(dx/RX)**2+(dy/RY)**2;
+  if(t<1){if(!under&&festOnBridgeZone(x,y))return 0;
+    const a=Math.atan2(dy,dx),c=Math.cos(a),sn=Math.sin(a),ri=1/Math.sqrt((c/IR)**2+(sn/IRY)**2),ro=1/Math.sqrt((c/RX)**2+(sn/RY)**2),u=(dist-ri)/(ro-ri);if(u<0)return 0;
+    return 0.14+0.72*Math.sin(Math.PI*Math.min(1,u));}
   if(FEST_WADE_CELLS.has((Math.floor(x/4)*4)+','+(Math.floor(y/4)*4)))return 0.22;return 0;}
-function festWadeAt(e){const T=TRIPS.fest;if(!T||!e||e.roof||(e.z||0)>1)return 0;const x=e.x-T.x0,y=e.y-T.y0;if(x<700||x>T.w||y<380||y>620)return 0;return festWadeDepth(x,y);}
+/* under the bridge: if you were already in the water when you reached a bridge, you wade under it; from dry land you walk over it */
+let FEST_UNDER=false,FEST_LASTD=0;
+function festWadeAt(e){const T=TRIPS.fest;if(!T||!e||e.roof||(e.z||0)>1)return 0;const x=e.x-T.x0,y=e.y-T.y0;if(x<700||x>T.w||y<380||y>620)return 0;
+  if(e.isPlayer){const zb=festOnBridgeZone(x,y);if(!zb)FEST_UNDER=false;else if(!FEST_UNDER&&FEST_LASTD>0.05)FEST_UNDER=true;const d=festWadeDepth(x,y,FEST_UNDER);return d;}
+  return festWadeDepth(x,y);}
 {const _mE=moveE;moveE=function(e,dx,dy){if(e&&e.isPlayer&&!e.swim){const d=festWadeAt(e);if(d>0){const k=1-0.6*d;dx*=k;dy*=k;if(d>0.3){e.skating=false;e.grind=null;e.pushing=false;}
   if(Math.random()<0.06+d*0.1)part(e.x+rnd(-5,5),e.y+rnd(-2,2),2,rnd(-30,30),rnd(-15,15),rnd(20,50),0.5,Math.random()<0.5?'#cfefff':'#ffffff',1.2);}}return _mE(e,dx,dy);};}
-function festWadeCover(g,p,tm){const d=festWadeAt(p);if(d<=0)return;const x=Math.round(p.x),y=Math.round(p.y),wl=Math.round(y-2-d*20+Math.sin(tm*3)*0.6),x0=x-13,h=y+5-wl;
+function festWadeCover(g,p,tm){const d=festWadeAt(p);FEST_LASTD=d;if(d<=0)return;const x=Math.round(p.x),y=Math.round(p.y),wl=Math.round(y-2-d*20+Math.sin(tm*3)*0.6),x0=x-13,h=y+5-wl;
   g.drawImage(ground,x0,wl,26,h,x0,wl,26,h);
-  g.strokeStyle='rgba(232,250,255,0.8)';g.lineWidth=1;g.beginPath();g.ellipse(x,wl+0.5,8+d*4+Math.sin(tm*4)*1.2,2+d,0,0,TAU);g.stroke();g.strokeStyle='rgba(232,250,255,0.3)';g.beginPath();g.ellipse(x,wl+1,12+d*4+((tm*6)%4),3+d,0,0,TAU);g.stroke();}
-{const _sL=swimList;swimList=function(list,inV,tm){_sL(list,inV,tm);const p=player;if(p&&p.alive&&!p.swim&&festWadeAt(p)>0)list.push({y:p.y+0.4,k:11,o:{draw:g=>festWadeCover(g,p,tm)}});};}
+  g.strokeStyle='rgba(232,250,255,0.8)';g.lineWidth=1;g.beginPath();g.ellipse(x,wl+0.5,8+d*4+Math.sin(tm*4)*1.2,2+d,0,0,TAU);g.stroke();g.strokeStyle='rgba(232,250,255,0.3)';g.beginPath();g.ellipse(x,wl+1,12+d*4+((tm*6)%4),3+d,0,0,TAU);g.stroke();if(FEST_UNDER){const T=TRIPS.fest;for(const bb of FEST_BRIDGES){const bx=T.x0+bb[0],by=T.y0+bb[1];if(p.x>bx-14&&p.x<bx+bb[2]+14&&p.y-44<by+bb[3]&&p.y+6>by)g.drawImage(ground,bx,by,bb[2],bb[3],bx,by,bb[2],bb[3]);}}}
+{const _sL=swimList;swimList=function(list,inV,tm){_sL(list,inV,tm);const p=player;if(p&&p.alive&&!p.swim&&(FEST_LASTD=festWadeAt(p))>0)list.push({y:p.y+0.4,k:11,o:{draw:g=>festWadeCover(g,p,tm)}});};}
 /* flowing water: streaks ride the traced water from the cave lip, down the falls, along the creek into the pond */
 let FEST_WMASK=null;const FEST_FLOW=[];let FEST_FLOW_T=0;
 function festWaterMask(){if(FEST_WMASK||!FEST_WF_CV)return FEST_WMASK;const A=FEST_WF_ART,d=FEST_WF_CV.getContext('2d').getImageData(0,0,A.w,A.h).data,M=new Uint8Array(A.w*A.h);for(let i=0;i<A.w*A.h;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2];if(d[i*4+3]>0&&b>150&&b>r+60)M[i]=1;}return FEST_WMASK=M;}
