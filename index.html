@@ -544,7 +544,7 @@ function outline(c){const g=c.getContext('2d');const w=c.width,h=c.height;const 
 /* 24x36 sprites, facing right; feet on row 34 */
 /* ---------------- puppet characters v2: side / front / back views, shared style ---------------- */
 const PW=80,PHH=128,PG=122,PCX=40,HS=1.06;
-const ANIM_N={hang:5,clfly:1,clfall:4,hump:8,spank:8,scratch:8,flex:8,sneeze:10,rap:8,fart:6,tuck:1,idle:8,walk:12,walkF:12,walkB:12,skate:6,push:12,air:3,kick:8,punch:3,stun:2};
+const ANIM_N={spot:4,hang:5,clfly:1,clfall:4,hump:8,spank:8,scratch:8,flex:8,sneeze:10,rap:8,fart:6,tuck:1,idle:8,walk:12,walkF:12,walkB:12,skate:6,push:12,air:3,kick:8,punch:3,stun:2};
 function rrect(g,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.quadraticCurveTo(x+w,y,x+w,y+r);g.lineTo(x+w,y+h-r);g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);g.lineTo(x+r,y+h);g.quadraticCurveTo(x,y+h,x,y+h-r);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.closePath();}
 function ell(g,x,y,rx,ry,col){g.fillStyle=col;g.beginPath();g.ellipse(x,y,Math.max(0.1,rx),Math.max(0.1,ry),0,0,TAU);g.fill();}
 function pcap(g,x,y,r,col){ell(g,x,y,r,r,col);}
@@ -1402,6 +1402,8 @@ function puppetPose(anim,t,arm,C){if(anim.indexOf(':')>0){const P0={hipX:PCX-1,h
   else if(anim==='tuck'){P.feet=[{x:PCX-3,y:PG-24},{x:PCX+7,y:PG-26}];P.hipY=PG-38;P.lean=0.32;P.arms=[{a:1.3,e:0.9},{a:1.5,e:0.8}];P.tilt=0.2;}
   else if(anim==='hump'){const k=Math.sin(S);P.feet=[{x:PCX-10,y:PG-4},{x:PCX+8,y:PG-4}];P.hipX=PCX-1+k*6.2;P.hipY=PG-38.8+Math.abs(k)*0.9;P.lean=-0.12-k*0.24;P.tilt=-0.08-k*0.12;P.arms=[{a:1.05-k*0.35,e:0.9+k*0.3},{a:1.25-k*0.35,e:0.8+k*0.3}];}
   else if(anim==='spank'){const u=t<0.5?t/0.5:1-(t-0.5)/0.5,sw=u*u*(3-2*u);P.feet=[{x:PCX-9,y:PG-4},{x:PCX+9,y:PG-4}];P.hipX=PCX-1-sw*1.6;P.hipY=PG-39.6-Math.max(0,0.5-Math.abs(t-0.5))*1.2;P.lean=0.18+sw*0.08;P.tilt=0.08;P.arms=[{a:-0.35,e:1.6},{a:lerp(2.7,0.75,sw),e:lerp(0.35,0.55,sw)}];}
+  /* cartwheel spotting: arms out under her, shuffling along */
+  if(anim==='spot'){const k=Math.sin(S);P.feet=[{x:PCX-9+k*5,y:PG-4-Math.max(0,k)*3},{x:PCX+8-k*5,y:PG-4-Math.max(0,-k)*3}];P.hipY=PG-38;P.lean=0.18;P.tilt=0;P.arms=[{a:1.95,e:0.25},{a:2.25,e:0.15}];}
   /* climbing poses: hanging from the rope, launching, falling */
   if(anim==='hang'){const k=(Math.round(t*5)-2)/2;P.feet=[{x:PCX-4+k*17,y:PG-2-Math.abs(k)*10},{x:PCX+5+k*14,y:PG-1-Math.abs(k)*7}];P.hipX=PCX-1+k*2;P.hipY=PG-41;P.lean=-k*0.08;P.tilt=0;P.arms=[{a:2.3,e:-0.25},{a:2.1,e:-0.15}];}
   if(anim==='clfly'){P.feet=[{x:PCX-5,y:PG-18},{x:PCX+8,y:PG-21}];P.hipY=PG-39;P.lean=0.12;P.tilt=0;P.arms=[{a:2.2,e:0.2},{a:1.85,e:0.4}];}
@@ -8017,7 +8019,26 @@ const JOKES=[
   ['My bank account is basically ____.',['a slow-motion slam on a loop','a kickflip it never lands','not great']],
   ['The trap house couch smells like ____.',['wet dog, nacho cheese and regret','old pizza','a couch']],
   ['My mom thinks skating is a phase. So is ____.',['her boyfriend with the jet ski','her yoga thing','everything, I guess']],
-  ['The Devil and Jesus play chess in the park. The Devil keeps ____.',['betting souls. Jesus keeps paying in bread','cheating','losing']]];
+  ['The Devil and Jesus play chess in the park. The Devil keeps ____.',['betting souls. Jesus keeps paying in bread','cheating','losing']],
+  ['My Tinder bio just says ____.',['"Can fix your bearings, not your heart."','"Skater. Looking for a ride."','"Hi."']],
+  ['The worst thing to hear mid-grind is ____.',['"Is that a wax or a bird?"','"Hey, you can\'t skate here!"','a loud noise']],
+  ['My grandma\'s only advice about skating was ____.',['"Fall on the side you like less."','"Wear a helmet, dummy."','"Be careful."']],
+  ['The new Tempe city slogan should be ____.',['"Hot. Like, legally concerning."','"Come for ASU, stay for the light rail."','"A nice place."']],
+  ['Dylan\'s rap name is ____.',['Lil Prescott Valley Chamber of Commerce','DJ Heelflip','Dylan']],
+  ['I got kicked out of the Half Foods for ____.',['taste-testing the kombucha with a straw','riding the cart down the cereal aisle','being loud']],
+  ['My dentist said I grind my teeth like ____.',['I\'m trying to fifty-fifty my own jaw','a skater on a ledge','a lot']],
+  ['Halloween costume idea: ____.',['"Rent Is Due" — it\'s just me, screaming','a broken skateboard','a ghost']],
+  ['What\'s in Bill\'s glovebox?',['Forty napkins, a tarot deck and a rubber chicken','Old receipts','The car manual']],
+  ['The best way to end a first date is ____.',['an ollie off her porch to show commitment','a high five','saying goodnight']],
+  ['If my board could talk, it would say ____.',['"Please. Land. One. Time."','"Wax me, coward."','"Hello."']],
+  ['Nick Papa\'s house rules: no shoes, no drama, no ____.',['skating on the cat','cereal after midnight','loud music']],
+  ['At the DMV they asked my occupation. I said ____.',['"Professional falling-down guy."','"Skater, I guess."','"Unemployed."']],
+  ['The Half Foods sample lady gave me ____.',['a cracker and a look of deep disappointment','a tiny cheese cube','a sample']],
+  ['A cop pulled me over on my skateboard for ____.',['going too slow in the fast lane of life','not signaling my ollie','skating']],
+  ['Max says the secret to art is ____.',['stealing from yourself so nobody can sue','drawing what you feel','practice']],
+  ['My uncle\'s idea of a skate trick is ____.',['standing on it and saying "Look, I\'m a surfer"','rolling down the driveway','none']],
+  ['The ghost at the Abandoned House just wants ____.',['someone to finally land the window gap','his house back','peace']],
+  ['My fortune cookie said ____.',['"Rent is a social construct. Pay it anyway."','"You will find a new board."','"Good luck."']]];
 function startComedy(){initAudio();const sel=shuffle(JOKES).slice(0,5).map(j=>{const opts=j[1].map((t,i)=>({t,v:[3,1,0][i]}));return{setup:j[0],opts:shuffle(opts)};});
   mgOpen('comedy',{title:'COMEDY TENT',P:CHARS.dre,jokes:sel,ji:0,phase:'setup',pt:2.2,pick:null,laughs:0,meter:0.4,react:'',rt:0,cur:0,dir:1,over:false,LW:320,cards:[]});}
 function comedyInput(x,y,down){const M=MGM;if(!down)return;if(M.over){if(M.t>0.8){const pay=10+M.laughs*3;addCash(pay);mgClose();banner(M.laughs>=18?'DRE KILLED IT':M.laughs>=9?'SOLID SET':'TOUGH CROWD',M.laughs+' LAUGHS · +$'+pay,2.4);}return;}
@@ -14523,8 +14544,11 @@ function cartFrame(g,c,dt){const M=MGM,port=c.height/c.width>1.2,s=port?c.width/
     const cw=LW*0.36,cxx=LW*0.06,cyy=floorY-14;g.fillStyle='#6a2a2a';g.fillRect(cxx,cyy-12,cw,12);g.fillStyle='#8a3a3a';g.fillRect(cxx,cyy,cw,18);g.fillStyle='#5a2020';g.fillRect(cxx-4,cyy-6,6,24);g.fillRect(cxx+cw-2,cyy-6,6,24);}
   const dr=(P,an,fi,px,py,rot,sc2,flip)=>{const fr=pframe(P,an,fi,'down');g.save();g.translate(px,py);if(rot)g.rotate(rot);if(flip)g.scale(-1,1);g.drawImage(fr.c,-PCX*PK*sc2,-PG*PK*sc2,fr.c.width*sc2,fr.c.height*sc2);g.restore();};
   const shadow=(x,y,w)=>{g.fillStyle='rgba(0,0,0,0.25)';g.beginPath();g.ellipse(x,y,w,w*0.25,0,0,TAU);g.fill();};
-  const lx=LW*0.17,tx0=LW*0.5,tx1=LW*0.84;shadow(lx,feetY,14*sc);dr(CHARS.lucas,'idle',Math.floor(M.t*4),lx,feetY,0,sc,false);
-  const hh=40*sc;if(M.anim>0){const k=1-M.anim;const x=tx0+(tx1-tx0)*k,y=feetY-Math.sin(k*Math.PI)*hh*0.9;shadow(x,feetY,14*sc);g.save();g.translate(x,y-hh*0.5);g.rotate(k*TAU);g.translate(-x,-(y-hh*0.5));dr(TRIX_P,'air',0,x,y,0,sc,false);g.restore();}
+  const tx0=LW*0.46,tx1=LW*0.84,gapL=24*sc;let lx=tx0-gapL,lan='idle',lfi=Math.floor(M.t*4);
+  /* Lucas spots her: hands out, shuffling alongside through the flip; lunges when she flops */
+  if(M.anim>0){const k=1-M.anim;lx=tx0-gapL+(tx1-tx0)*k*0.9;lan='spot';lfi=Math.floor(M.t*10);}else if(M.anim<0){lx=tx0-gapL+18;lan='spot';lfi=1;}else if(M.reps>0&&M.t%3<0.6){lan='flex';}
+  shadow(lx,feetY,14*sc);dr(CHARS.lucas,lan,lfi,lx,feetY,0,sc,false);
+  const hh=40*sc;if(M.anim>0){const k=1-M.anim;const x=tx0+(tx1-tx0)*k,y=feetY-Math.sin(k*Math.PI)*hh*0.9;shadow(x,feetY,14*sc);g.save();g.translate(x,y-hh*0.5);g.rotate(k*TAU);g.translate(-x,-(y-hh*0.5));dr(TRIX_P,'clfly',0,x,y,0,sc,false);g.restore();}
   else if(M.anim<0){shadow(tx0+30,feetY,18*sc);dr(TRIX_P,'stun',0,tx0+30,feetY-6,Math.PI/2,sc,false);}
   else{shadow(tx0,feetY,14*sc);dr(TRIX_P,'idle',Math.floor(M.t*6),tx0,feetY-Math.abs(Math.sin(M.t*8))*4,0,sc,false);}
   /* timing bar */
