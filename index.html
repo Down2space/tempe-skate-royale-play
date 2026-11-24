@@ -3910,7 +3910,12 @@ function festLabWallCanvas(){if(FEST_LAB_CV||!FEST_WF_CV)return FEST_LAB_CV;cons
   {const cx=1019.5,top=144,bot=178,rx=8;g.fillStyle='#b8c2cc';g.beginPath();g.moveTo(cx-rx-3-ox,bot-oy);g.lineTo(cx-rx-3-ox,top+rx-oy);g.arc(cx-ox,top+rx-oy,rx+3,Math.PI,TAU);g.lineTo(cx+rx+3-ox,bot-oy);g.closePath();g.fill();g.fillStyle='#0a0a0e';g.beginPath();g.moveTo(cx-rx-ox,bot-oy);g.lineTo(cx-rx-ox,top+rx-oy);g.arc(cx-ox,top+rx-oy,rx,Math.PI,TAU);g.lineTo(cx+rx-ox,bot-oy);g.closePath();g.fill();for(let y=top+6;y<bot;y+=4)F(cx-rx,y,rx*2,1,'#3a4450');}
   /* platform on the right half of the cave door, out to the ladder: metal grating with a rail on its open side */F(1009,177,31,15,'#1d1d24');F(1010,178,29,13,'#5a6470');for(let x=1011;x<1039;x+=3)F(x,179,1,11,'#3a4450');F(1010,178,29,1,'#a8b2bc');F(1009,190,31,3,'#2a3440');F(1028,170,2,8,'#8a96a2');F(1028,170,12,2,'#c8d0d8');
   /* ladder from the floor up to the platform */for(const lx of[1026,1035])F(lx,191,2,115,'#1d1d24'),F(lx,191,1,115,'#c8d0d8');for(let y=195;y<305;y+=6){F(1026,y,11,2,'#1d1d24');F(1027,y,9,1,'#a8b2bc');}
-  g.restore();g.globalCompositeOperation='destination-in';g.drawImage(FEST_WF_CV,0,0);return FEST_LAB_CV=c;}
+  g.restore();/* owner: leave a rock border around the wall: trim it 6px in from the cliff/waterfall edge */
+  {const M=FEST_WF_MASK,W=A.w,H=A.h,B=6,er=document.createElement('canvas');er.width=W;er.height=H;const ex=er.getContext('2d'),id=ex.createImageData(W,H);
+    const row=new Uint8Array(W*H);for(let y=0;y<H;y++){let run=0;for(let x=0;x<W;x++){run=M[y*W+x]?run+1:0;row[y*W+x]=run;}let r2=0;for(let x=W-1;x>=0;x--){r2=M[y*W+x]?r2+1:0;row[y*W+x]=Math.min(row[y*W+x],r2);}}
+    for(let x=0;x<W;x++){let run=0;const col=new Uint8Array(H);for(let y=0;y<H;y++){run=row[y*W+x]>B&&M[y*W+x]?run+1:0;col[y]=run;}let r2=0;for(let y=H-1;y>=0;y--){r2=row[y*W+x]>B&&M[y*W+x]?r2+1:0;if(Math.min(col[y],r2)>B||(y+A.y>=FEST_WF_BASE-B&&row[y*W+x]>B))id.data[(y*W+x)*4+3]=255;}}
+    ex.putImageData(id,0,0);g.globalCompositeOperation='destination-in';g.drawImage(er,0,0);}
+  return FEST_LAB_CV=c;}
 /* the lab robot is the MECH_P character drawn big (5.2x), side view facing left, standing pose */
 function festRobot(g,X,Y,tm){const fr=pframe(MECH_P,'walk',3,'down',12),k=5.2;g.save();g.translate(X+1004,Y+366-2*k);g.scale(-1,1);g.drawImage(fr.c,-PCX*PK/2*k,-PG*PK/2*k,fr.c.width/2*k,fr.c.height/2*k);g.restore();}
 function festScaffold(g,X,Y){const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
