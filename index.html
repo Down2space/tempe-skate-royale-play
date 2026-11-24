@@ -3841,16 +3841,19 @@ function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+980,Y+30
   g.fillStyle='rgba(235,250,255,0.85)';for(let i=0;i<24;i++){const y=y0+((tm*0.55+i*0.137)%1)*(y1-y0),w=w0+(w1-w0)*(y-y0)/(y1-y0);g.fillRect(X+x0+(((i*7)%13)/13)*w,Y+y,1,6);}
   g.fillStyle='#ffffff';for(let i=0;i<7;i++){const a=(tm*1.5+i/7)%1;g.globalAlpha=0.85*(1-a);g.beginPath();g.ellipse(X+x0+2+i*3.6,Y+y1-1-a*5,1.5+a*3,1+a*2,0,0,TAU);g.fill();}g.globalAlpha=1;
   g.fillStyle='rgba(200,240,255,0.7)';for(let i=0;i<8;i++){const t=(tm*0.25+i/8)%1,x=984-t*84,y=410+t*30+((i*5)%9);g.fillRect(X+x,Y+y,4,1);}}
-/* waterfall upper half: drawn over people; it fades away while the player is behind it, leaving only the base with a capped top and a RESTRICTED ACCESS sign */
+/* waterfall upper half: drawn over people; it fades away while the player is behind it, and the whole base shows as one RESTRICTED ACCESS panel */
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 function festWfOver(g,inV,tm,T){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;FEST_WF_FADE+=((festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
   g.save();g.beginPath();g.rect(X+A.x,Y+FEST_WF_BASE,A.w,A.h);g.clip();festFalls(g,inV,tm);g.restore();
   if(f>0.02){g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive)drawNpc(g,mb);g.restore();}
-  if(f<0.98){g.save();g.globalAlpha=1-f;const r=Math.round(hh),M=FEST_WF_MASK;let x0=-1,x1=-1;for(let x=0;x<A.w;x++)if(M[r*A.w+x]){if(x0<0)x0=x;x1=x;}
-      if(x0>=0){const cx0=X+A.x+x0,cw=x1-x0+1,cy=Y+FEST_WF_BASE;g.fillStyle='#755d58';g.fillRect(cx0,cy-3,cw,4);g.fillStyle='#ab8374';g.fillRect(cx0+1,cy-4,cw-2,2);g.fillStyle='#c39a88';for(let x=cx0+3;x<cx0+cw-3;x+=7)g.fillRect(x,cy-4,3,1);g.fillStyle='#1e56c0';g.fillRect(X+964,cy-3,30,4);g.fillStyle='#3a7ae0';g.fillRect(X+966,cy-3,26,2);
-        const sx=X+996,sy=Y+FEST_WF_BASE+14;g.fillStyle='#4a2a10';g.fillRect(sx+20,sy+14,2,8);g.fillStyle='#14101a';g.fillRect(sx-1,sy-1,44,17);g.fillStyle='#ffd23d';g.fillRect(sx,sy,42,15);g.fillStyle='#14101a';for(let k=0;k<42;k+=4){g.fillRect(sx+k,sy,2,2);g.fillRect(sx+k+2,sy+13,2,2);}
-        g.fillStyle='#d8202a';g.beginPath();g.arc(sx+6,sy+7.5,4,0,TAU);g.fill();g.fillStyle='#ffffff';g.fillRect(sx+3.5,sy+6.5,5,2);
-        g.fillStyle='#14101a';g.font='4px Silkscreen, monospace';g.textAlign='left';g.textBaseline='middle';g.fillText('RESTRICTED',sx+11,sy+5.5);g.fillText('ACCESS',sx+11,sy+10);}
+  if(f<0.98){g.save();g.globalAlpha=1-f;const M=FEST_WF_MASK;let x0=A.w;for(let r=hh;r<hh+76&&r<A.h;r++)for(let x=0;x<A.w;x++)if(M[r*A.w+x]){if(x<x0)x0=x;break;}
+    /* the whole base becomes one RESTRICTED ACCESS panel */
+    const bx=X+A.x+x0-1,by=Y+FEST_WF_BASE,bw=X+T.w-bx,bh=82;
+    g.fillStyle='#14101a';g.fillRect(bx,by,bw,bh);g.fillStyle='#ffd23d';g.fillRect(bx+2,by+2,bw-4,bh-4);
+    g.save();g.beginPath();g.rect(bx+2,by+2,bw-4,bh-4);g.rect(bx+8,by+8,bw-16,bh-16);g.clip('evenodd');g.fillStyle='#14101a';for(let k=-bh;k<bw+bh;k+=10){g.beginPath();g.moveTo(bx+k,by);g.lineTo(bx+k+5,by);g.lineTo(bx+k+5-bh,by+bh);g.lineTo(bx+k-bh,by+bh);g.closePath();g.fill();}g.restore();
+    g.fillStyle='#14101a';g.fillRect(bx+8,by+8,bw-16,1);g.fillRect(bx+8,by+bh-9,bw-16,1);
+    const cx=bx+bw/2,cy=by+30;g.fillStyle='#14101a';g.beginPath();g.arc(cx,cy,11,0,TAU);g.fill();g.fillStyle='#d8202a';g.beginPath();g.arc(cx,cy,10,0,TAU);g.fill();g.fillStyle='#ffffff';g.fillRect(cx-7,cy-2,14,4);
+    g.fillStyle='#14101a';g.font='7px Silkscreen, monospace';g.textAlign='center';g.textBaseline='middle';g.fillText('RESTRICTED',cx,by+52);g.fillText('ACCESS',cx,by+62);
     g.restore();}}
 function festStageFx(g,inV,tm,phase){const T=TRIPS.fest;if(!T)return;if(phase==='over'&&FEST_WF_CV&&inV(T.x0+980,T.y0+240,220))festWfOver(g,inV,tm,T);if(phase==='under'){festWheel(g,inV,tm);}const X=T.x0,Y=T.y0,cols=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff'];const beat=Math.floor(tm*2.2);
   const scr=[[406,120,228,36,0,['#ff3d9a','#ff7ad8','#c46bff','#ffb4e8','#ff9ac8']],[766,246,128,36,0,['#4fc3f7','#8ad0ff','#3a8aff','#bff0ff','#2a6ad8']],[24,384,30,172,1,['#ffd23d','#ff8a3a','#ff4a6a','#d83a8a','#ffb43a']]];
