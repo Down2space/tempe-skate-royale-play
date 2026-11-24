@@ -3647,7 +3647,7 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   let WFCV=null;{const A=FEST_WF_ART,c=document.createElement('canvas');c.width=A.w;c.height=A.h;const cx=c.getContext('2d'),id=cx.createImageData(A.w,A.h),d=id.data,raw=atob(A.rle);let p=0;
     for(let i=0;i<raw.length;i+=2){const n=raw.charCodeAt(i),v=raw.charCodeAt(i+1);if(v){const o=(v-1)*6,cr=parseInt(A.pal.substr(o,2),16),cg=parseInt(A.pal.substr(o+2,2),16),cb=parseInt(A.pal.substr(o+4,2),16);for(let k=0;k<n;k++){const j=(p+k)*4;d[j]=cr;d[j+1]=cg;d[j+2]=cb;d[j+3]=255;}}p+=n;}
     cx.putImageData(id,0,0);WFCV=c;FEST_WF_CV=c;FEST_WF_MASK=new Uint8Array(A.w*A.h);for(let i=0;i<A.w*A.h;i++)FEST_WF_MASK[i]=d[i*4+3]>0?1:0;{const hb=FEST_WF_BASE-A.y;g.drawImage(c,0,hb,A.w,A.h-hb,X+A.x,Y+FEST_WF_BASE,A.w,A.h-hb);}
-    for(const[x,y,w]of A.sol)S(x,y,w,4);for(const[x,y,w]of A.wat)S(x,y,w,4,{water:1});S(982,352,36,12);S(968,FEST_ROOM.y+10,12,26);S(1018,FEST_ROOM.y+FEST_ROOM.h-26,22,14);{const R=FEST_ROOM;S(R.x,R.y,1026-R.x,4);S(1036,R.y,R.x+R.w-1036,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
+    for(const[x,y,w]of A.sol)S(x,y,w,4);FEST_WADE_CELLS=new Set();for(const[x,y,w]of A.wat)for(let k=0;k<w;k+=4)FEST_WADE_CELLS.add((x+k)+','+y);S(982,352,36,12);S(968,FEST_ROOM.y+10,12,26);S(1018,FEST_ROOM.y+FEST_ROOM.h-26,22,14);{const R=FEST_ROOM;S(R.x,R.y,1026-R.x,4);S(1036,R.y,R.x+R.w-1036,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
   /* river stage deck over the water */
   {f(712,316,244,90,'#4a2a10');f(714,318,240,86,'#9a6a3a');for(let k=0;k<240;k+=6)f(714+k,318,1,86,'#7a4e26');for(let k=0;k<86;k+=18)f(714,318+k,240,1,'#7a4e26');
     for(let x=714;x<954;x+=10){f(x,402,2,6,'#5a3418');}f(714,404,240,2,'#6a3e1e');occ(706,308,256,104);}
@@ -3702,7 +3702,7 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
     const bridge=(x,y,w,h,vert)=>{f(x-3,y-1,w+6,h+2,'rgba(0,0,0,0.25)');f(x,y,w,h,'#9a6a3a');if(vert)for(let k=0;k<h;k+=5)f(x,y+k,w,1,'#6a3e1e');else for(let k=0;k<w;k+=5)f(x+k,y,1,h,'#6a3e1e');
       if(vert){f(x-2,y,2,h,'#5a3418');f(x+w,y,2,h,'#5a3418');for(let k=0;k<=h;k+=12){f(x-3,y+k-2,4,4,'#4a2a10');f(x+w-1,y+k-2,4,4,'#4a2a10');}}else{f(x,y-2,w,2,'#5a3418');f(x,y+h,w,2,'#5a3418');for(let k=0;k<=w;k+=12){f(x+k-2,y-3,4,4,'#4a2a10');f(x+k-2,y+h-1,4,4,'#4a2a10');}}};
     bridge(PX-12,404,24,PY-IRY+4-404,true);bridge(PX-RX-6,PY-10,RX-IR+10,20,false);
-    for(let y=PY-RY;y<=PY+RY;y+=4){const t=(y-PY)/RY,w=RX*Math.sqrt(Math.max(0,1-t*t));for(let x=Math.floor(PX-w);x<PX+w;x+=4){const isl=((x+2-IX)/(IR-2))**2+((y+2-IY)/(IRY-2))**2<1;const onB=(x+4>PX-12&&x<PX+12&&y<PY)||(y+4>PY-10&&y<PY+10&&x<PX);if(!isl&&!onB)S(x,y,4,4,{water:1});}}
+    for(let y=PY-RY;y<=PY+RY;y+=4){const t=(y-PY)/RY,w=RX*Math.sqrt(Math.max(0,1-t*t));for(let x=Math.floor(PX-w);x<PX+w;x+=4){const isl=((x+2-IX)/(IR-2))**2+((y+2-IY)/(IRY-2))**2<1;const onB=(x+4>PX-12&&x<PX+12&&y<PY)||(y+4>PY-10&&y<PY+10&&x<PX);/* owner: the pond is wadeable (depth from festWadeDepth) */}}
     occ(PX-RX-26,PY-RY-24,RX*2+52,RY*2+48);
     /* creek mouth: redraw the traced creek over the sidewalk ring (clipped below the deck, outside the pond water) */
     {g.save();g.beginPath();g.rect(X+876,Y+409,170,90);g.ellipse(X+PX,Y+PY,RX-1,RY-1,0,0,TAU);g.clip('evenodd');g.drawImage(WFCV,X+FEST_WF_ART.x,Y+FEST_WF_ART.y);g.restore();}
@@ -3896,11 +3896,41 @@ function festInRoom(T){return FEST_LAB.m==='room'||FEST_LAB.m==='climb';}
 function festInRoom0(T){const p=player,R=FEST_ROOM;if(!p||!T)return false;const x=p.x-T.x0,y=p.y-T.y0;return x>R.x&&x<R.x+R.w&&y>R.y&&y<R.y+R.h+2;}const FEST_WF_BASE=305;/* above this map row the cliff and falls are scenery you walk behind */
 const FEST_WF={curtain:[964,196,30,20,404]};
 /* waterfall motion: bright streaks sliding down the curtain, foam at its foot, ripples in the creek */
-function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+980,Y+300,260))return;const[x0,y0,w0,w1,y1]=FEST_WF.curtain;
-  g.fillStyle='rgba(235,250,255,0.85)';for(let i=0;i<24;i++){const y=y0+((tm*0.55+i*0.137)%1)*(y1-y0),w=w0+(w1-w0)*(y-y0)/(y1-y0);g.fillRect(X+x0+(((i*7)%13)/13)*w,Y+y,1,6);}
-  g.fillStyle='#ffffff';for(let i=0;i<7;i++){const a=(tm*1.5+i/7)%1;g.globalAlpha=0.85*(1-a);g.beginPath();g.ellipse(X+x0+2+i*3.6,Y+y1-1-a*5,1.5+a*3,1+a*2,0,0,TAU);g.fill();}g.globalAlpha=1;
-  g.fillStyle='rgba(200,240,255,0.7)';for(let i=0;i<8;i++){const t=(tm*0.25+i/8)%1,x=984-t*84,y=410+t*30+((i*5)%9);g.fillRect(X+x,Y+y,4,1);}}
-/* waterfall upper half: drawn over people; it fades away while the player is behind it, and the whole base shows as one RESTRICTED ACCESS panel */
+/* ===== owner: walk in the water. Shallow around the edges and the island, deeper in between; the creek is ankle deep ===== */
+let FEST_WADE_CELLS=new Set();
+function festWadeDepth(x,y){const PX=860,PY=520,RX=140,RY=80,IR=44,IRY=28;
+  const t=((x-PX)/RX)**2+((y-PY)/RY)**2;
+  if(t<1){if((x>PX-12&&x<PX+12&&y<PY)||(y>PY-10&&y<PY+10&&x<PX))return 0;/* bridges */
+    const isl=Math.sqrt(((x-PX)/IR)**2+((y-PY)/IRY)**2)-1;if(isl<0)return 0;
+    return Math.max(0.12,Math.min(1,Math.min((1-Math.sqrt(t))*2.6,isl*1.4)));}
+  if(FEST_WADE_CELLS.has((Math.floor(x/4)*4)+','+(Math.floor(y/4)*4)))return 0.22;return 0;}
+function festWadeAt(e){const T=TRIPS.fest;if(!T||!e||e.roof||(e.z||0)>1)return 0;const x=e.x-T.x0,y=e.y-T.y0;if(x<700||x>T.w||y<380||y>620)return 0;return festWadeDepth(x,y);}
+{const _mE=moveE;moveE=function(e,dx,dy){if(e&&e.isPlayer&&!e.swim){const d=festWadeAt(e);if(d>0){const k=1-0.6*d;dx*=k;dy*=k;if(d>0.3){e.skating=false;e.grind=null;e.pushing=false;}
+  if(Math.random()<0.06+d*0.1)part(e.x+rnd(-5,5),e.y+rnd(-2,2),2,rnd(-30,30),rnd(-15,15),rnd(20,50),0.5,Math.random()<0.5?'#cfefff':'#ffffff',1.2);}}return _mE(e,dx,dy);};}
+function festWadeCover(g,p,tm){const d=festWadeAt(p);if(d<=0)return;const x=Math.round(p.x),y=Math.round(p.y),wl=Math.round(y-2-d*20+Math.sin(tm*3)*0.6),x0=x-13,h=y+5-wl;
+  g.drawImage(ground,x0,wl,26,h,x0,wl,26,h);
+  g.strokeStyle='rgba(232,250,255,0.8)';g.lineWidth=1;g.beginPath();g.ellipse(x,wl+0.5,8+d*4+Math.sin(tm*4)*1.2,2+d,0,0,TAU);g.stroke();g.strokeStyle='rgba(232,250,255,0.3)';g.beginPath();g.ellipse(x,wl+1,12+d*4+((tm*6)%4),3+d,0,0,TAU);g.stroke();}
+{const _sL=swimList;swimList=function(list,inV,tm){_sL(list,inV,tm);const p=player;if(p&&p.alive&&!p.swim&&festWadeAt(p)>0)list.push({y:p.y+0.4,k:11,o:{draw:g=>festWadeCover(g,p,tm)}});};}
+/* flowing water: streaks ride the traced water from the cave lip, down the falls, along the creek into the pond */
+let FEST_WMASK=null;const FEST_FLOW=[];let FEST_FLOW_T=0;
+function festWaterMask(){if(FEST_WMASK||!FEST_WF_CV)return FEST_WMASK;const A=FEST_WF_ART,d=FEST_WF_CV.getContext('2d').getImageData(0,0,A.w,A.h).data,M=new Uint8Array(A.w*A.h);for(let i=0;i<A.w*A.h;i++){const r=d[i*4],gg=d[i*4+1],b=d[i*4+2];if(d[i*4+3]>0&&b>150&&b>r+60)M[i]=1;}return FEST_WMASK=M;}
+function festFlowV(x,y){if(y<196)return[-26,16];if(y<402)return[0,95];return[-30,15];}
+function festWet(x,y){const A=FEST_WF_ART,M=festWaterMask();if(!M)return false;const ax=Math.round(x-A.x),ay=Math.round(y-A.y);return ax>=0&&ay>=0&&ax<A.w&&ay<A.h&&M[ay*A.w+ax]===1;}
+function festFlowSpawn(f){for(let k=0;k<40;k++){const x=900+Math.random()*135,y=165+Math.random()*300;if(festWet(x,y)){f.x=x;f.y=y;f.a=0;f.l=0.6+Math.random()*1.6;f.c=Math.random()<0.55?'#ffffff':'#bfe8ff';return;}}f.l=0;}
+function festFlowTick(tm){const dt=Math.min(0.05,Math.max(0,tm-FEST_FLOW_T));FEST_FLOW_T=tm;if(!festWaterMask())return;while(FEST_FLOW.length<150){const f={};festFlowSpawn(f);FEST_FLOW.push(f);}
+  for(const f of FEST_FLOW){const[vx,vy]=festFlowV(f.x,f.y);f.x+=vx*dt;f.y+=vy*dt;f.a+=dt;if(f.a>f.l||!festWet(f.x,f.y))festFlowSpawn(f);}}
+function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+980,Y+300,260))return;
+  for(const f of FEST_FLOW){if(!f.l)continue;const[vx,vy]=festFlowV(f.x,f.y),sp=Math.hypot(vx,vy),len=vy>60?5+(f.l*2|0):3,ux=vx/sp,uy=vy/sp;g.globalAlpha=Math.min(1,f.a*4,(f.l-f.a)*4)*0.85;g.fillStyle=f.c;
+    if(vy>60)g.fillRect(Math.round(X+f.x),Math.round(Y+f.y),1,len);else{for(let k=0;k<len;k++)g.fillRect(Math.round(X+f.x-ux*k),Math.round(Y+f.y-uy*k),1,1);}}
+  g.globalAlpha=1;
+  /* foam where the cave water tips over and at the foot of the falls */
+  g.fillStyle='#ffffff';for(let i=0;i<9;i++){const a=(tm*1.6+i/9)%1;g.globalAlpha=0.8*(1-a);g.beginPath();g.ellipse(X+966+i*3.4,Y+403-a*6,1.4+a*3,1+a*1.8,0,0,TAU);g.fill();}
+  for(let i=0;i<5;i++){const a=(tm*1.2+i/5)%1;g.globalAlpha=0.6*(1-a);g.beginPath();g.ellipse(X+968+i*5,Y+196+a*3,1+a*2,0.8+a,0,0,TAU);g.fill();}g.globalAlpha=1;}
+/* gentle shimmer and drifting ripples on the pond */
+function festPondFx(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+860,Y+520,200))return;
+  for(let i=0;i<46;i++){const h=(i*7919)%1000/1000,h2=(i*104729)%1000/1000,ph=(tm*0.35+h)%1;const a=h*TAU,r=0.25+h2*0.7;let x=860+Math.cos(a)*140*r+ph*10,y=520+Math.sin(a)*80*r;if(festWadeDepth(x,y)<=0)continue;
+    g.globalAlpha=Math.sin(ph*Math.PI)*0.7;g.fillStyle=i%3?'#bfe8ff':'#ffffff';g.fillRect(Math.round(X+x),Math.round(Y+y),3+(i%3),1);}
+  g.globalAlpha=1;}
 function festRoomDraw(g,T,tm){const R=FEST_ROOM,X=T.x0+R.x,Y=T.y0+R.y,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
   F(0,0,R.w,R.h,'#a8b0ba');for(let y=0;y<R.h;y+=8)for(let x=0;x<R.w;x+=8){F(x,y,7,7,((x+y)/8)%2?'#c8ced6':'#bcc4cc');F(x,y,7,1,'#dde2e8');}
   F(0,0,R.w,2,'#5a6470');
@@ -3943,7 +3973,7 @@ function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X
     const cx=bx+bw/2,cy=by+30;g.fillStyle='#14101a';g.beginPath();g.arc(cx,cy,11,0,TAU);g.fill();g.fillStyle='#d8202a';g.beginPath();g.arc(cx,cy,10,0,TAU);g.fill();g.fillStyle='#ffffff';g.fillRect(cx-7,cy-2,14,4);
     g.fillStyle='#14101a';g.font='7px Silkscreen, monospace';g.textAlign='center';g.textBaseline='middle';g.fillText('RESTRICTED',cx,by+52);g.fillText('ACCESS',cx,by+62);
     g.restore();}}
-function festStageFx(g,inV,tm,phase){const T=TRIPS.fest;if(!T)return;if(phase==='under'){festLabTick(T);if(FEST_LAB.m!=='none')FEST_MB_VIS=false;else if(!FEST_MB_VIS&&!inV(T.x0+1010,T.y0+177,30))FEST_MB_VIS=true;}if(phase==='over'&&FEST_WF_CV&&inV(T.x0+980,T.y0+240,220))festWfOver(g,inV,tm,T,festInRoom(T));if(phase==='under'){festWheel(g,inV,tm);if(festInRoom(T))festRoomDraw(g,T,tm);}const X=T.x0,Y=T.y0,cols=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff'];const beat=Math.floor(tm*2.2);
+function festStageFx(g,inV,tm,phase){const T=TRIPS.fest;if(!T)return;if(phase==='under'){festLabTick(T);festFlowTick(tm);festPondFx(g,inV,tm);if(FEST_LAB.m!=='none')FEST_MB_VIS=false;else if(!FEST_MB_VIS&&!inV(T.x0+1010,T.y0+177,30))FEST_MB_VIS=true;}if(phase==='over'&&FEST_WF_CV&&inV(T.x0+980,T.y0+240,220))festWfOver(g,inV,tm,T,festInRoom(T));if(phase==='under'){festWheel(g,inV,tm);if(festInRoom(T))festRoomDraw(g,T,tm);}const X=T.x0,Y=T.y0,cols=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff'];const beat=Math.floor(tm*2.2);
   const scr=[[406,120,228,36,0,['#ff3d9a','#ff7ad8','#c46bff','#ffb4e8','#ff9ac8']],[766,246,128,36,0,['#4fc3f7','#8ad0ff','#3a8aff','#bff0ff','#2a6ad8']],[24,384,30,172,1,['#ffd23d','#ff8a3a','#ff4a6a','#d83a8a','#ffb43a']]];
   if(phase==='under'){for(const[sx,sy,sw,sh,vert,pal]of scr){if(!inV(X+sx+sw/2,Y+sy+sh/2,200))continue;g.fillStyle='#0a0612';g.fillRect(X+sx,Y+sy,sw,sh);const n=vert?Math.floor(sh/6):Math.floor(sw/6);
       for(let i=0;i<n;i++){const v=0.25+0.75*Math.abs(Math.sin(tm*3.1+i*0.7)*Math.cos(tm*1.3+i*0.31));const c=pal[(i+beat)%5];g.fillStyle=c;if(vert){const L=sw*v;g.fillRect(X+sx+(sw-L)/2,Y+sy+i*6+1,L,4);}else{const L=sh*v;g.fillRect(X+sx+i*6+1,Y+sy+sh-L,4,L);}}
