@@ -3622,7 +3622,7 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   let WFCV=null;{const A=FEST_WF_ART,c=document.createElement('canvas');c.width=A.w;c.height=A.h;const cx=c.getContext('2d'),id=cx.createImageData(A.w,A.h),d=id.data,raw=atob(A.rle);let p=0;
     for(let i=0;i<raw.length;i+=2){const n=raw.charCodeAt(i),v=raw.charCodeAt(i+1);if(v){const o=(v-1)*6,cr=parseInt(A.pal.substr(o,2),16),cg=parseInt(A.pal.substr(o+2,2),16),cb=parseInt(A.pal.substr(o+4,2),16);for(let k=0;k<n;k++){const j=(p+k)*4;d[j]=cr;d[j+1]=cg;d[j+2]=cb;d[j+3]=255;}}p+=n;}
     cx.putImageData(id,0,0);WFCV=c;FEST_WF_CV=c;FEST_WF_MASK=new Uint8Array(A.w*A.h);for(let i=0;i<A.w*A.h;i++)FEST_WF_MASK[i]=d[i*4+3]>0?1:0;{const hb=FEST_WF_BASE-A.y;g.drawImage(c,0,hb,A.w,A.h-hb,X+A.x,Y+FEST_WF_BASE,A.w,A.h-hb);}
-    for(const[x,y,w]of A.sol)S(x,y,w,4);for(const[x,y,w]of A.wat)S(x,y,w,4,{water:1});{const R=FEST_ROOM;S(R.x,R.y,R.w,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
+    for(const[x,y,w]of A.sol)S(x,y,w,4);for(const[x,y,w]of A.wat)S(x,y,w,4,{water:1});S(982,352,36,12);S(968,FEST_ROOM.y+10,12,26);S(1018,FEST_ROOM.y+FEST_ROOM.h-26,22,14);{const R=FEST_ROOM;S(R.x,R.y,R.w,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
   /* river stage deck over the water */
   {f(712,316,244,90,'#4a2a10');f(714,318,240,86,'#9a6a3a');for(let k=0;k<240;k+=6)f(714+k,318,1,86,'#7a4e26');for(let k=0;k<86;k+=18)f(714,318+k,240,1,'#7a4e26');
     for(let x=714;x<954;x+=10){f(x,402,2,6,'#5a3418');}f(714,404,240,2,'#6a3e1e');occ(706,308,256,104);}
@@ -3846,17 +3846,37 @@ function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+980,Y+30
   g.fillStyle='rgba(200,240,255,0.7)';for(let i=0;i<8;i++){const t=(tm*0.25+i/8)%1,x=984-t*84,y=410+t*30+((i*5)%9);g.fillRect(X+x,Y+y,4,1);}}
 /* waterfall upper half: drawn over people; it fades away while the player is behind it, and the whole base shows as one RESTRICTED ACCESS panel */
 function festRoomDraw(g,T,tm){const R=FEST_ROOM,X=T.x0+R.x,Y=T.y0+R.y,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
-  F(0,0,R.w,R.h,'#2e2a30');for(let y=1;y<R.h;y+=8)for(let x=((y>>3)%2)*6-6;x<R.w;x+=12)F(Math.max(0,x),y,Math.min(11,x+11)-Math.max(0,x)+Math.min(0,0),7,'#383238');
+  F(0,0,R.w,R.h,'#a8b0ba');for(let y=0;y<R.h;y+=8)for(let x=0;x<R.w;x+=8){F(x,y,7,7,((x+y)/8)%2?'#c8ced6':'#bcc4cc');F(x,y,7,1,'#dde2e8');}
+  F(0,0,R.w,2,'#5a6470');
+  /* specimen tube, top left */{const x=4,y=10;F(x,y,12,26,'#1d1d24');F(x+1,y+3,10,20,'#2a8a5a');g.globalAlpha=0.6+0.2*Math.sin(tm*2);F(x+2,y+4,8,18,'#5aff9a');g.globalAlpha=1;for(let k=0;k<3;k++)F(x+3+k*3,y+20-((tm*10+k*7)%16),1,1,'#e8fff0');F(x,y,12,3,'#8a96a2');F(x,y+23,12,3,'#8a96a2');}
+  /* console, bottom right */{const x=R.w-22,y=R.h-26;F(x,y,20,14,'#1d1d24');F(x+1,y+1,18,12,'#5a6470');F(x+2,y+2,16,6,'#0e2a3a');F(x+3,y+4,(tm*20%12)+2,1,'#4fc3f7');F(x+3,y+6,8,1,'#2aff8a');for(let k=0;k<4;k++)F(x+3+k*4,y+10,2,2,['#ff4a4a','#ffd23d','#4aff8a','#4fc3f7'][k]);}
+  /* cables from the console to the robot */g.strokeStyle='#2a3440';g.lineWidth=1.5;g.beginPath();g.moveTo(X+R.w-12,Y+R.h-26);g.quadraticCurveTo(X+R.w-14,Y+R.h-50,X+52,Y+52);g.stroke();
   F(R.dx-R.x,R.h-10,R.dw,10,'#1e56c0');F(R.dx-R.x+2,R.h-9,R.dw-4,2,'#3a7ae0');for(let k=0;k<4;k++)F(R.dx-R.x+2+((k*5+Math.floor(tm*8))%(R.dw-4)),R.h-5,2,1,'#bfe4ff');}
-/* owner: from inside the room the cliff above it reads as one tall interior wall up to the cave (traced from the owner's yellow outline; the cave stays an arched opening, orange lines are stone ledges) */
-const FEST_ROOM_WALL=[[996,130],[1040,130],[1040,305],[973,305],[973,189],[988,187],[996,169]];
-function festRoomWall(g,T,tm){const X=T.x0,Y=T.y0,P=FEST_ROOM_WALL,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
-  g.save();g.beginPath();P.forEach((q,i)=>i?g.lineTo(X+q[0],Y+q[1]):g.moveTo(X+q[0],Y+q[1]));g.closePath();g.clip();
-  const gr=g.createLinearGradient(0,Y+130,0,Y+305);gr.addColorStop(0,'#2a2226');gr.addColorStop(1,'#4a3e40');g.fillStyle=gr;g.fillRect(X+960,Y+120,90,190);
-  for(let y=130;y<305;y+=9)for(let x=972+((y/9)%2)*7;x<1040;x+=14){g.fillStyle='rgba(255,230,210,0.06)';g.fillRect(X+x,Y+y,13,8);g.fillStyle='rgba(0,0,0,0.25)';g.fillRect(X+x,Y+y+8,13,1);g.fillRect(X+x+13,Y+y,1,8);}
-  for(const[x1,y1,x2,y2]of[[986,198,1030,198],[986,219,1018,219],[984,284,1030,284],[1030,169,1030,198],[1029,226,1029,284],[986,198,986,212]]){if(y1===y2){F(x1,y1-1,x2-x1,3,'#6a5a58');F(x1,y1-1,x2-x1,1,'#8a7a76');F(x1,y1+2,x2-x1,1,'#1d1d24');}else{F(x1-1,y1,3,y2-y1,'#6a5a58');F(x1-1,y1,1,y2-y1,'#8a7a76');F(x1+2,y1,1,y2-y1,'#1d1d24');}}
-  {const cx=1018,top=140,bot=168,rx=11;g.fillStyle='#5e4a3e';g.beginPath();g.moveTo(X+cx-rx-3,Y+bot);g.lineTo(X+cx-rx-3,Y+top+rx);g.arc(X+cx,Y+top+rx,rx+3,Math.PI,TAU);g.lineTo(X+cx+rx+3,Y+bot);g.closePath();g.fill();g.fillStyle='#0a0a0e';g.beginPath();g.moveTo(X+cx-rx,Y+bot);g.lineTo(X+cx-rx,Y+top+rx);g.arc(X+cx,Y+top+rx,rx,Math.PI,TAU);g.lineTo(X+cx+rx,Y+bot);g.closePath();g.fill();F(cx-rx-3,bot,rx*2+6,2,'#8a7a76');}
-  g.fillStyle='#1d1d24';g.fillRect(X+960,Y+303,90,2);g.restore();}
+/* owner: inside the room is a laboratory. The cliff above it reads as one tall lab wall: flush with the base on the left (owner's yellow line), cut over at the top, and never outside the cliff/waterfall art. A big robot stands inside, side view facing left (owner's teal sketch). */
+const FEST_ROOM_WALL=[[964,305],[964,196],[987,196],[988,187],[996,169],[996,130],[1040,130],[1040,305]];let FEST_LAB_CV=null;
+function festLabWallCanvas(){if(FEST_LAB_CV||!FEST_WF_CV)return FEST_LAB_CV;const A=FEST_WF_ART,c=document.createElement('canvas');c.width=A.w;c.height=A.h;const g=c.getContext('2d'),ox=A.x,oy=A.y,F=(x,y,w,h,col)=>{g.fillStyle=col;g.fillRect(x-ox,y-oy,w,h);};
+  g.beginPath();FEST_ROOM_WALL.forEach((q,i)=>i?g.lineTo(q[0]-ox,q[1]-oy):g.moveTo(q[0]-ox,q[1]-oy));g.closePath();g.save();g.clip();
+  const gr=g.createLinearGradient(0,130-oy,0,305-oy);gr.addColorStop(0,'#3a4450');gr.addColorStop(1,'#7c8794');g.fillStyle=gr;g.fillRect(960-ox,120-oy,90,190);
+  for(let y=130;y<305;y+=14){F(960,y,90,1,'rgba(0,0,0,0.35)');F(960,y+1,90,1,'rgba(255,255,255,0.10)');for(let x=964+((y/14)%2)*10;x<1040;x+=20){F(x,y,1,14,'rgba(0,0,0,0.3)');F(x+2,y+3,1,1,'#a8b2bc');F(x+17,y+3,1,1,'#a8b2bc');}}
+  for(const[y,x1,x2]of[[198,964,1040],[219,964,1040],[284,964,1040]]){F(x1,y-2,x2-x1,4,'#b8c2cc');F(x1,y-2,x2-x1,1,'#e8eef4');F(x1,y+2,x2-x1,1,'#3a4450');for(let x=x1+6;x<x2;x+=16)F(x,y-3,2,6,'#6a7480');}
+  for(const[x,y]of[[967,224],[1028,224]]){F(x,y,10,8,'#1d1d24');F(x+1,y+1,8,6,'#0e3a2a');F(x+2,y+3,3,1,'#5aff9a');F(x+2,y+5,5,1,'#2aff8a');}
+  F(964,296,76,9,'#c8a020');for(let x=962;x<1040;x+=6){g.fillStyle='#1d1d24';g.beginPath();g.moveTo(x-ox,305-oy);g.lineTo(x+3-ox,296-oy);g.lineTo(x+6-ox,296-oy);g.lineTo(x+3-ox,305-oy);g.fill();}
+  {const cx=1018,top=140,bot=168,rx=11;g.fillStyle='#b8c2cc';g.beginPath();g.moveTo(cx-rx-3-ox,bot-oy);g.lineTo(cx-rx-3-ox,top+rx-oy);g.arc(cx-ox,top+rx-oy,rx+3,Math.PI,TAU);g.lineTo(cx+rx+3-ox,bot-oy);g.closePath();g.fill();g.fillStyle='#0a0a0e';g.beginPath();g.moveTo(cx-rx-ox,bot-oy);g.lineTo(cx-rx-ox,top+rx-oy);g.arc(cx-ox,top+rx-oy,rx,Math.PI,TAU);g.lineTo(cx+rx-ox,bot-oy);g.closePath();g.fill();for(let y=top+6;y<bot;y+=4)F(cx-rx,y,rx*2,1,'#3a4450');}
+  g.restore();g.globalCompositeOperation='destination-in';g.drawImage(FEST_WF_CV,0,0);return FEST_LAB_CV=c;}
+function festRobot(g,X,Y,tm){const P=(pts,c)=>{g.fillStyle=c;g.beginPath();pts.forEach((q,i)=>i?g.lineTo(X+q[0],Y+q[1]):g.moveTo(X+q[0],Y+q[1]));g.closePath();g.fill();},E=(x,y,rx,ry,c)=>{g.fillStyle=c;g.beginPath();g.ellipse(X+x,Y+y,rx,ry,0,0,TAU);g.fill();},R=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
+  const OL='#1d1d24',M='#9aa4ae',MD='#6a7480',ML='#d0d8e0',bob=Math.round(Math.sin(tm*1.6));
+  /* back leg + foot */ R(1004,311,12,40,OL);R(1005,311,10,39,MD);P([[1001,349],[1019,349],[1020,364],[996,364]],OL);P([[1002,350],[1018,350],[1019,363],[998,363]],MD);
+  /* front leg + big foot pointing left */ R(998,312,14,40,OL);R(999,312,12,39,M);R(1009,312,2,39,MD);P([[979,364],[981,352],[1014,350],[1016,364]],OL);P([[980,363],[982,353],[1013,351],[1015,363]],M);R(982,353,30,1,ML);R(980,361,35,2,MD);
+  /* hips */ P([[993,303],[1027,303],[1025,320],[995,320]],OL);P([[994,304],[1026,304],[1024,319],[996,319]],MD);
+  /* torso */ g.fillStyle=OL;g.beginPath();g.roundRect(X+986,Y+256+bob,41,52,8);g.fill();g.fillStyle=M;g.beginPath();g.roundRect(X+987,Y+257+bob,39,50,7);g.fill();R(1018,259+bob,6,46,MD);R(989,260+bob,2,40,ML);
+  R(992,268+bob,16,14,OL);R(993,269+bob,14,12,'#2a3440');for(let k=0;k<3;k++)R(995+k*4,272+bob,2,2,['#ff4a4a','#ffd23d','#4aff8a'][(k+Math.floor(tm*2))%3]);R(995,277+bob,10,1,'#4fc3f7');
+  /* neck */ R(1000,252+bob,12,6,OL);R(1001,253+bob,10,5,MD);
+  /* head: big dome, facing left */ E(1004,236+bob,23,21,OL);E(1004,236+bob,22,20,M);E(1011,240+bob,13,14,MD);E(999,229+bob,10,7,ML);
+  g.strokeStyle=OL;g.lineWidth=1.5;g.beginPath();g.moveTo(X+990,Y+232+bob);g.lineTo(X+1018,Y+225+bob);g.stroke();
+  R(998,212+bob,2,7,OL);E(999,211+bob,2.5,2.5,'#ff4a4a');
+  const glow=0.75+0.25*Math.sin(tm*3);for(const[ex,ey]of[[988,240],[1001,241]]){E(ex,ey+bob,3,4,OL);g.globalAlpha=glow;E(ex,ey+bob,2.2,3.2,'#4ff0ff');g.globalAlpha=1;R(ex-1,ey-2+bob,1,1,'#ffffff');}
+  /* arm: shoulder, bent forearm, round hand out front */ E(1003,266+bob,7,7,OL);E(1003,266+bob,6,6,MD);P([[998,268],[1006,270],[996,302],[989,299]].map(q=>[q[0],q[1]+bob]),OL);P([[999,269],[1005,271],[995,300],[990,298]].map(q=>[q[0],q[1]+bob]),M);E(986,297+bob,6.5,6,OL);E(986,297+bob,5.5,5,M);E(984,295+bob,2,1.5,ML);}
+function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;FEST_WF_FADE+=((!inRoom&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
   if(!inRoom){g.save();g.beginPath();g.rect(X+A.x,Y+FEST_WF_BASE,A.w,A.h);g.clip();festFalls(g,inV,tm);g.restore();}
