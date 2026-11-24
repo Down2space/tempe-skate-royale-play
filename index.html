@@ -3622,7 +3622,7 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   let WFCV=null;{const A=FEST_WF_ART,c=document.createElement('canvas');c.width=A.w;c.height=A.h;const cx=c.getContext('2d'),id=cx.createImageData(A.w,A.h),d=id.data,raw=atob(A.rle);let p=0;
     for(let i=0;i<raw.length;i+=2){const n=raw.charCodeAt(i),v=raw.charCodeAt(i+1);if(v){const o=(v-1)*6,cr=parseInt(A.pal.substr(o,2),16),cg=parseInt(A.pal.substr(o+2,2),16),cb=parseInt(A.pal.substr(o+4,2),16);for(let k=0;k<n;k++){const j=(p+k)*4;d[j]=cr;d[j+1]=cg;d[j+2]=cb;d[j+3]=255;}}p+=n;}
     cx.putImageData(id,0,0);WFCV=c;FEST_WF_CV=c;FEST_WF_MASK=new Uint8Array(A.w*A.h);for(let i=0;i<A.w*A.h;i++)FEST_WF_MASK[i]=d[i*4+3]>0?1:0;{const hb=FEST_WF_BASE-A.y;g.drawImage(c,0,hb,A.w,A.h-hb,X+A.x,Y+FEST_WF_BASE,A.w,A.h-hb);}
-    for(const[x,y,w]of A.sol)S(x,y,w,4);for(const[x,y,w]of A.wat)S(x,y,w,4,{water:1});{const R=FEST_ROOM;S(R.x,R.y,R.w,32);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
+    for(const[x,y,w]of A.sol)S(x,y,w,4);for(const[x,y,w]of A.wat)S(x,y,w,4,{water:1});{const R=FEST_ROOM;S(R.x,R.y,R.w,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
   /* river stage deck over the water */
   {f(712,316,244,90,'#4a2a10');f(714,318,240,86,'#9a6a3a');for(let k=0;k<240;k+=6)f(714+k,318,1,86,'#7a4e26');for(let k=0;k<86;k+=18)f(714,318+k,240,1,'#7a4e26');
     for(let x=714;x<954;x+=10){f(x,402,2,6,'#5a3418');}f(714,404,240,2,'#6a3e1e');occ(706,308,256,104);}
@@ -3846,15 +3846,12 @@ function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+980,Y+30
   g.fillStyle='rgba(200,240,255,0.7)';for(let i=0;i<8;i++){const t=(tm*0.25+i/8)%1,x=984-t*84,y=410+t*30+((i*5)%9);g.fillRect(X+x,Y+y,4,1);}}
 /* waterfall upper half: drawn over people; it fades away while the player is behind it, and the whole base shows as one RESTRICTED ACCESS panel */
 function festRoomDraw(g,T,tm){const R=FEST_ROOM,X=T.x0+R.x,Y=T.y0+R.y,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
-  F(0,0,R.w,R.h,'#2e2a30');for(let y=10;y<R.h-4;y+=8)for(let x=4+((y/8)%2)*6;x<R.w-4;x+=12)F(x,y,11,7,'#383238');
-  F(0,0,R.w,32,'#5e4a3e');F(0,0,R.w,2,'#ab8374');for(let y=4;y<30;y+=7)for(let x=((y/7)%2)*5;x<R.w;x+=10){F(x,y,9,6,'#6a5448');F(x,y,9,1,'#7a6458');}F(0,30,R.w,2,'#1d1d24');
-  F(0,0,4,R.h,'#4a3a32');F(R.w-4,0,4,R.h,'#4a3a32');F(0,R.h-4,R.dx-R.x+R.x-R.x,4,'#4a3a32');F(R.dx-R.x+R.dw,R.h-4,R.w-(R.dx-R.x+R.dw),4,'#4a3a32');
-  F(R.dx-R.x,R.h-10,R.dw,10,'#1e56c0');F(R.dx-R.x+2,R.h-9,R.dw-4,2,'#3a7ae0');for(let k=0;k<4;k++)F(R.dx-R.x+2+((k*5+Math.floor(tm*8))%(R.dw-4)),R.h-5,2,1,'#bfe4ff');
-  for(const lx of[16,R.w-16]){const fl=0.75+Math.sin(tm*5+lx)*0.08;g.save();g.globalAlpha=0.22*fl;g.fillStyle='#ffd27a';g.beginPath();g.arc(X+lx,Y+20,20,0,TAU);g.fill();g.restore();F(lx-2,14,4,6,'#3a3a42');F(lx-1,15,2,4,'#ffd27a');}}
+  F(0,0,R.w,R.h,'#2e2a30');for(let y=1;y<R.h;y+=8)for(let x=((y>>3)%2)*6-6;x<R.w;x+=12)F(Math.max(0,x),y,Math.min(11,x+11)-Math.max(0,x)+Math.min(0,0),7,'#383238');
+  F(R.dx-R.x,R.h-10,R.dw,10,'#1e56c0');F(R.dx-R.x+2,R.h-9,R.dw-4,2,'#3a7ae0');for(let k=0;k<4;k++)F(R.dx-R.x+2+((k*5+Math.floor(tm*8))%(R.dw-4)),R.h-5,2,1,'#bfe4ff');}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;FEST_WF_FADE+=((!inRoom&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
   if(!inRoom){g.save();g.beginPath();g.rect(X+A.x,Y+FEST_WF_BASE,A.w,A.h);g.clip();festFalls(g,inV,tm);g.restore();}
-  if(f>0.02){g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive)drawNpc(g,mb);g.restore();}
+  if(f>0.02){g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive)drawNpc(g,mb);g.restore();}if(inRoom&&player&&player.alive)drawSk(g,player);
   if(f<0.98&&!inRoom){g.save();g.globalAlpha=1-f;const M=FEST_WF_MASK;let x0=A.w;for(let r=hh;r<hh+76&&r<A.h;r++)for(let x=0;x<A.w;x++)if(M[r*A.w+x]){if(x<x0)x0=x;break;}
     /* the whole base becomes one RESTRICTED ACCESS panel */
     const bx=X+A.x+x0-1,by=Y+FEST_ROOM.y,bw=X+T.w-bx,bh=FEST_ROOM.h;
