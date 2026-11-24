@@ -3872,6 +3872,9 @@ function festOnRoof(x,y){return festPip(FEST_WF_ROOF,x,y);}
 /* owner: the top of the falls is stepped: top of the cliff over the cave (2), the cave-mouth ledge (1), the lower step across the top of the falls (0). Step down freely, jump to go up, off the last step you parachute */
 const FEST_WF_TOP=[[983,163],[988,118],[1003,88],[1040,78],[1040,180],[990,160]],FEST_WF_STEPA=[[975,172],[990,160],[1040,180],[1040,195],[970,182]],FEST_WF_STEPB=[[957,193],[970,182],[1040,195],[1040,208],[1026,220],[960,200]];
 function festZone(x,y){if(festPip(FEST_WF_STEPA,x,y))return 1;if(festPip(FEST_WF_STEPB,x,y))return 0;if(festPip(FEST_WF_TOP,x,y)&&!(x>996&&x<1029&&y>138&&y<172))return 2;return null;}
+/* owner: the parachute always lands on real ground in front of / beside the cliff, never on the cliff art or the lab box */
+function festChuteLand(T,x,y){const A=FEST_WF_ART,M=FEST_WF_MASK,inArt=(yy)=>{const ax=Math.round(x-A.x),ay=Math.round(yy-A.y);return ax>=0&&ay>=0&&ax<A.w&&ay<A.h&&M&&M[ay*A.w+ax];};
+  let ly=y+24;while(ly<560&&(inArt(ly)||inArt(ly-6)||!isFree(T.x0+x,T.y0+ly)||(x>958&&ly<FEST_ROOM.y+FEST_ROOM.h+6)))ly+=2;return ly;}
 function festLabTick(T){const p=player;if(!p||!p.alive){FEST_LAB.m='none';return;}const x=p.x-T.x0,y=p.y-T.y0,L=FEST_LAB,air=(p.z||0)>3,now=performance.now(),cool=now-(L.t||0)>700;if(L.m!=='none'&&(x<800||y>520||x>T.w+20||y<0)){L.m='none';}
   if(L.m==='none'||L.m==='room'){L.m=festInRoom0(T)?'room':'none';if(L.m==='room'&&y<309&&x>1025&&x<1037)L.m='climb';}
   if(L.m==='climb'){if(y>310&&x>1020){L.m='room';return;}
@@ -3880,11 +3883,11 @@ function festLabTick(T){const p=player;if(!p||!p.alive){FEST_LAB.m='none';return
   if(L.m==='roof'){/* back in: walk right into the doorway */if(!air&&cool&&x>1010&&x<1028&&y<186&&(p.vx||0)>0){L.m='climb';L.t=now;p.x=T.x0+1016;p.y=T.y0+182;p.vx=p.vy=0;return;}
     if(!air&&x>995&&x<1029&&y<171){p.y=T.y0+171;return;}/* the cave's back wall */
     {const z=festZone(x,y);if(L.lv==null)L.lv=1;
-      if(z===null){if(!air){L.m='chute';L.cy=Math.max(y+30,300);L.cx=x;L.ct=now;sfx&&sfx('pick',0.3);return;}}
+      if(z===null){if(!air){L.m='chute';L.cy=festChuteLand(T,x,y);L.cx=x;L.ct=now;sfx&&sfx('pick',0.3);return;}}
       else if(z>L.lv){if(air&&(p.z||0)>5)L.lv=z;else if(L.px!=null){p.x=T.x0+L.px;p.y=T.y0+L.py;}}
       else if(z<L.lv)L.lv=z;
       L.px=p.x-T.x0;L.py=p.y-T.y0;}return;}
-  if(L.m==='chute'){/* float straight down the height of the cliff to the ground below */const dt=Math.min(0.05,(now-L.ct)/1000);L.ct=now;L.cx+=Math.max(-0.15,Math.min(0.15,x-L.cx));p.x=T.x0+L.cx;p.z=0;p.vz=0;p.vx=0;p.vy=0;p.y=Math.min(T.y0+L.cy,p.y+dt*42);if(p.y>=T.y0+L.cy-0.5){L.m='top';sfx&&sfx('thud',0.35);}return;}
+  if(L.m==='chute'){/* float straight down the height of the cliff to the ground below */const dt=Math.min(0.05,(now-L.ct)/1000);L.ct=now;L.cx+=Math.max(-0.15,Math.min(0.15,x-L.cx));p.x=T.x0+L.cx;p.z=0;p.vz=0;p.vx=0;p.vy=0;p.y=Math.min(T.y0+L.cy,p.y+dt*42);if(p.y>=T.y0+L.cy-0.5){L.m='none';const q=isFree(p.x,p.y)?{x:p.x,y:p.y}:freeNear(p.x,p.y);p.x=q.x;p.y=q.y;sfx&&sfx('thud',0.35);}return;}
   if(L.m==='top'){if(!festWfBehind(T)&&!air)L.m='none';}}
 function festChuteDraw(g){const p=player,L=FEST_LAB;if(L.m!=='chute'||!p)return;const x=Math.round(p.x),y=Math.round(p.y-(p.z||0))-FH-26,sw=Math.sin(performance.now()/300)*1.5;
   g.strokeStyle='#1d1d24';g.lineWidth=1;g.beginPath();g.moveTo(x-14+sw,y);g.lineTo(x-3,y+22);g.moveTo(x+14+sw,y);g.lineTo(x+3,y+22);g.moveTo(x+sw,y-2);g.lineTo(x,y+22);g.stroke();
