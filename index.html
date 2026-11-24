@@ -3613,25 +3613,37 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   for(const P of FEST_PATHS)for(let i=0;i<P.length-1;i++){const a2=P[i],b2=P[i+1],L=Math.hypot(b2[0]-a2[0],b2[1]-a2[1]);const nx=-(b2[1]-a2[1])/L,ny=(b2[0]-a2[0])/L;for(let d=22;d<L-6;d+=26){const cx=a2[0]+(b2[0]-a2[0])*d/L,cy=a2[1]+(b2[1]-a2[1])*d/L;for(let k=-12;k<=12;k++)f(cx+nx*k,cy+ny*k,1,1,'#a09c94');}}
   /* blossom plaza */
   for(let i=0;i<40;i++){const a=i/40*TAU;f(520+Math.cos(a)*74-1,372+Math.sin(a)*48-1,3,3,NEON[i%5]);}
-  /* ---- waterfall (seen at 45 degrees like the rest of the map): rocky cliff on the east edge, a cave in its face spills the creek, which runs down the cliff foot, under the river-deck corner and widens into the pond ---- */
-  const WFS=festCreek();
-  const creek=()=>{const q=rng0(5161);
-    for(const p of WFS)if(p.t>0.72)e(p.x,p.y,p.r+5,p.r+4,'#7a7a82');for(const p of WFS)if(p.t>0.72)e(p.x,p.y,p.r+3,p.r+2,'#a8a8b0');
-    for(const p of WFS)e(p.x,p.y,p.r,p.r*0.9,'#1e56c0');for(const p of WFS)e(p.x,p.y,p.r-2,p.r*0.9-2,'#2a6ad8');for(const p of WFS)e(p.x,p.y,Math.max(2,p.r*0.45),Math.max(2,p.r*0.4),'#3a7ae0');
-    for(let i=0;i<WFS.length;i+=2){const p=WFS[i];if(p.t>0.72)for(const sd of[-1,1])e(p.x+p.nx*(p.r+3)*sd,p.y+p.ny*(p.r+3)*sd,2+q()*2,1.5+q(),q()<0.5?'#c8c8ce':'#8a8a92');for(let k=0;k<2;k++){const o=(q()*2-1)*p.r*0.8;f(p.x+p.nx*o-p.tx*3,p.y+p.ny*o-p.ty*3,1+Math.abs(p.tx)*4,1+Math.abs(p.ty)*4,q()<0.6?'#7ab8f4':'#bfe4ff');}}
-    for(const t of[0.16,0.34,0.5,0.63]){const p=WFS[Math.round(t*(WFS.length-1))],o=p.r*0.3;e(p.x+p.nx*o,p.y+p.ny*o+1,5,4,'#3e2a18');e(p.x+p.nx*o,p.y+p.ny*o,5,3.5,'#7a5636');e(p.x+p.nx*o-1,p.y+p.ny*o-1,2,1.5,'#a07a4e');e(p.x+p.nx*o-6,p.y+p.ny*o+2,3,1.5,'#e8f6ff');}};
-  {const q=rng0(5150),RK='#7a5636',RKD='#4e3420',RKL='#a07a4e',RKF='#5e4028';
-    const LE=[[1010,90],[998,120],[994,160],[998,210],[1002,270],[1004,330],[1008,390],[1016,424],[1030,436],[1040,438]];
-    const CL=[[1040,84],[1020,84]].concat(LE);
-    poly(CL.map(p=>[p[0]-6,p[1]+6]),'rgba(0,0,0,0.3)');poly(CL,RKF);poly([[1040,80],[1022,80]].concat(LE.map(p=>[p[0]+10,p[1]-8])).concat([[1040,420]]),RK);
-    for(let i=0;i<70;i++){const y=96+q()*320,x=1012+q()*26;e(x,y,3+q()*6,2+q()*4,RKD);e(x-1,y-1,2+q()*4,1.5+q()*3,q()<0.5?RKL:RK);}
-    for(let i=0;i<LE.length-1;i++){const a2=LE[i],b2=LE[i+1];for(let s=0;s<1;s+=0.2){const x=a2[0]+(b2[0]-a2[0])*s,y=a2[1]+(b2[1]-a2[1])*s;f(x+1,y,8,1,RKD);if(q()<0.4)e(x+5,y+2,3,2,RKD);}}
-    /* the cave mouth, set in the cliff's face and turned toward the viewer at 45 degrees */
-    g.save();g.translate(X+1004,Y+168);g.rotate(-0.7);g.fillStyle=RKD;g.beginPath();g.ellipse(0,0,17,12,0,0,TAU);g.fill();g.fillStyle='#24180e';g.beginPath();g.ellipse(0,1,13,9,0,0,TAU);g.fill();g.fillStyle='#0a0604';g.beginPath();g.ellipse(2,2,8,6,0,0,TAU);g.fill();g.fillStyle=RKL;g.beginPath();g.ellipse(0,-11,16,3,0,0,TAU);g.fill();g.restore();
-    const pine=(x,y,s)=>{f(x-1,y-3,2,4,'#4a2a10');poly([[x-7*s,y-2],[x,y-14*s],[x+7*s,y-2]],'#1e5a2e');poly([[x-5*s,y-8*s],[x,y-18*s],[x+5*s,y-8*s]],'#2a7a3a');poly([[x,y-18*s],[x+5*s,y-8*s],[x,y-8*s]],'#1e5a2e');};
-    for(const[x,y,s]of[[1030,100,0.8],[1028,300,1],[1016,350,0.9],[1032,372,1.1],[1018,416,0.9],[1032,428,1]])pine(x,y,s);
+  /* ---- waterfall, traced from the owner's reference (FEST_WF): stacked rock-ledge cliff on the east edge, a cave near the top pours a curtain of water straight down beside the Rainfall deck, and a short creek runs between boulders into the pond ---- */
+  const WF=FEST_WF,wpath=(P)=>{g.beginPath();g.moveTo(X+P[0][0],Y+P[0][1]);for(let i=1;i<P.length;i++)g.lineTo(X+P[i][0],Y+P[i][1]);g.closePath();};
+  const pip=(P,x,y)=>{let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a2=P[i],b2=P[j];if((a2[1]>y)!==(b2[1]>y)&&x<(b2[0]-a2[0])*(y-a2[1])/(b2[1]-a2[1])+a2[0])c=!c;}return c;};
+  const creek=()=>{const q=rng0(5161);poly(WF.creek.map(p=>[p[0],p[1]+2]),'#274575');poly(WF.creek,'#0e70e6');g.save();wpath(WF.creek);g.clip();
+      for(let i=0;i<14;i++)e(900+q()*80,412+q()*44,8+q()*10,3,'#007efc');for(let i=0;i<70;i++){const x=888+q()*100,y=408+q()*52;f(x,y,3+q()*4,1,q()<0.6?'#0ec4fe':'#6be5f4');}
+      for(let i=0;i<14;i++)e(964+q()*24,406+q()*8,2+q()*3,1.5+q(),'#e8fbff');g.restore();
+    for(const[x,y,rr]of WF.stones){e(x,y+1.5,rr+1,rr*0.75+1,'#3a3a42');e(x,y,rr,rr*0.72,'#7a7a84');e(x-rr*0.3,y-rr*0.3,rr*0.5,rr*0.3,'#a8a8b2');}};
+  {const q=rng0(5150),TOP='#ab8374',TOPL='#c39a88',MID='#755d58',FACE='#534447',DK='#1d1d24',MOSS='#4c7f39',MOSSL='#9fc583',C=WF.cliff;
+    poly(C.map(p=>[p[0]-5,p[1]+5]),'rgba(0,0,0,0.3)');poly(C,FACE);
+    g.save();wpath(C);g.clip();
+      for(let y=84;y<440;y+=13){for(let x=964+((y/13)%2)*7;x<1046;x+=15+q()*4){const sx=x+q()*4,sy=y+q()*4,w=12+q()*6,h=5+q()*3,d=6+q()*4;
+        poly([[sx,sy+h+d],[sx,sy+h],[sx+w,sy+h],[sx+w,sy+h+d]],q()<0.5?MID:FACE);f(sx,sy+h+d-1,w,1,DK);f(sx+w-1,sy+h,1,d,DK);
+        poly([[sx+2,sy],[sx+w-2,sy],[sx+w,sy+h/2],[sx+w-1,sy+h],[sx+1,sy+h],[sx,sy+h/2]],TOP);f(sx+2,sy,w-5,1,TOPL);
+        if(q()<0.35){const mx=sx+q()*w;for(let k=0;k<6;k++)e(mx+q()*6-3,sy+q()*3,1.5+q()*1.5,1+q(),k%2?MOSS:MOSSL);}}}
+      for(let i=0;i<24;i++){const y=96+q()*330,x=966+q()*76;for(let k=0;k<5;k++)e(x+q()*5,y+q()*3,1.5,1,k%2?MOSS:'#76b04a');}
+      g.strokeStyle=DK;g.lineWidth=2;wpath(C);g.stroke();g.restore();
+    for(let y=190;y<404;y+=3){if(q()<0.6)e(963+q()*1.5,y,1.2,1.5,q()<0.5?MOSS:'#76b04a');}
+    /* the cave: rounded arch in the cliff face with a flat lip the water spills over */
+    {const[cx,cy,rx,ry]=WF.cave;e(cx,cy-1,rx+4,ry+4,MID);e(cx,cy,rx+2,ry+2,FACE);g.fillStyle=DK;g.beginPath();g.ellipse(X+cx,Y+cy,rx,ry,0,Math.PI,TAU);g.fill();f(cx-rx,cy,rx*2,ry*0.9,DK);e(cx+2,cy+2,rx*0.6,ry*0.6,'#0a0a0e');f(cx-rx-2,cy+ry*0.9,rx*2+4,2,TOP);}
+    /* the falls: the lip pouring out of the cave, then the straight curtain down to the ground */
+    poly(WF.lip,'#007efc');g.save();wpath(WF.lip);g.clip();for(let k=0;k<12;k++){g.strokeStyle=k%3?'#0ec4fe':'#6be5f4';g.lineWidth=1;g.beginPath();g.moveTo(X+1004+k*2.2,Y+170);g.quadraticCurveTo(X+996+k*2,Y+176,X+967+k*2.6,Y+194);g.stroke();}g.restore();
+    {const[x0,y0,w0,w1,y1]=WF.curtain;const cw=y=>w0+(w1-w0)*(y-y0)/(y1-y0);f(x0-2,y0,2,y1-y0,'#274575');
+      for(let y=y0;y<y1;y++){const w=cw(y);f(x0,y,w,1,'#007efc');f(x0+w,y,1.5,1,'#274575');}
+      for(let k=0;k<9;k++){const t=(k+0.5)/9;for(let y=y0;y<y1;y+=1){const x=x0+cw(y)*t;f(x,y,k%3===1?1:2,1,k%3===1?'#6be5f4':'#0ec4fe');}}
+      for(let y=y0;y<y1;y+=2)if(q()<0.4)f(x0+q()*cw(y),y,1,3+q()*5,'#e8fbff');}
     creek();
-    for(let y=80;y<436;y+=8){let lx=1040;for(let i=0;i<LE.length-1;i++)if(y>=LE[i][1]&&y<LE[i+1][1])lx=LE[i][0]+(LE[i+1][0]-LE[i][0])*(y-LE[i][1])/(LE[i+1][1]-LE[i][1]);if(y<90)lx=1010;S(lx+2,y,1040-lx-2,8);}
+    for(let i=0;i<22;i++)e(962+q()*28,404+q()*6,2+q()*3,1.5+q()*1.5,i%3?'#ffffff':'#bfe4ff');
+    const pine=(x,y,s)=>{f(x-1,y-3,2,4,'#4a2a10');poly([[x-7*s,y-2],[x,y-14*s],[x+7*s,y-2]],'#1e5a2e');poly([[x-5*s,y-8*s],[x,y-18*s],[x+5*s,y-8*s]],'#2a7a3a');poly([[x,y-18*s],[x+5*s,y-8*s],[x,y-8*s]],'#1e5a2e');};
+    for(const[x,y,s]of WF.pines){e(x,y,8*s,3*s,MOSS);pine(x,y,s);}
+    for(let y=84;y<440;y+=4)for(let x=956;x<1040;x+=4)if(pip(C,x+2,y+2))S(x,y,4,4);
+    for(let y=400;y<472;y+=4)for(let x=880;x<1000;x+=4){const cx=x+2,cy=y+2;if(cx<958&&cy<409)continue;if(pip(WF.creek,cx,cy))S(x,y,4,4,{water:1});}
     occ(940,80,100,360);}
   /* river stage deck over the water */
   {f(712,316,244,90,'#4a2a10');f(714,318,240,86,'#9a6a3a');for(let k=0;k<240;k+=6)f(714+k,318,1,86,'#7a4e26');for(let k=0;k<86;k+=18)f(714,318+k,240,1,'#7a4e26');
@@ -3689,9 +3701,8 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
     bridge(PX-12,404,24,PY-IRY+4-404,true);bridge(PX-RX-6,PY-10,RX-IR+10,20,false);
     for(let y=PY-RY;y<=PY+RY;y+=4){const t=(y-PY)/RY,w=RX*Math.sqrt(Math.max(0,1-t*t));for(let x=Math.floor(PX-w);x<PX+w;x+=4){const isl=((x+2-IX)/(IR-2))**2+((y+2-IY)/(IRY-2))**2<1;const onB=(x+4>PX-12&&x<PX+12&&y<PY)||(y+4>PY-10&&y<PY+10&&x<PX);if(!isl&&!onB)S(x,y,4,4,{water:1});}}
     occ(PX-RX-26,PY-RY-24,RX*2+52,RY*2+48);
-    /* creek mouth: redraw the creek over the sidewalk ring (clipped below the deck and right of the island bridge), water cells */
-    {g.save();g.beginPath();g.rect(X+876,Y+409,170,90);g.clip();creek();g.restore();
-      for(let y=150;y<484;y+=4)for(let x=860;x<1012;x+=4){const cx=x+2,cy=y+2;if(cx<958&&cy<410)continue;for(const p of WFS)if((cx-p.x)**2+(cy-p.y)**2<(p.r-1)**2){S(x,y,4,4,{water:1});break;}}}
+    /* creek mouth: redraw the creek over the sidewalk ring (clipped below the deck and right of the island bridge) */
+    {g.save();g.beginPath();g.rect(X+876,Y+409,170,90);g.ellipse(X+PX,Y+PY,RX-1,RY-1,0,0,TAU);g.clip('evenodd');creek();g.restore();}
     const ring=(a,o)=>[PX+Math.cos(a)*(RX+13+o),PY+Math.sin(a)*(RY+12+o)];
     [[3.6,0],[4.1,2],[5.62,4],[5.85,1],[0.45,3],[0.95,0],[2.2,2],[2.7,4]].forEach((q,i)=>{const p=ring(q[0],22);const k=i%4;if(k===0)totem(p[0],p[1],q[1]);else if(k===1)neonFlower(p[0],p[1],NEON[q[1]],28);else if(k===2)shroom(p[0],p[1],1,NEON[q[1]]);else crystal(p[0],p[1],26,NEON[q[1]]);});
     for(let k=0;k<12;k++){const a=k/12*TAU+0.13;const p=ring(a,-1);glow(p[0],p[1]-10,18,'#ffd27a',0.3);tripLamp(g,X+p[0],Y+p[1]);}
@@ -3843,14 +3854,17 @@ function festWheel(g,inV,tm){const T=TRIPS.fest,cx=T.x0+150,cy=T.y0+210,R=46;if(
     g.fillStyle=SKN[i%4];g.fillRect(px-4,py+2,3,3);g.fillStyle=SKN[(i+2)%4];g.fillRect(px+1,py+2,3,3);g.fillStyle='#2a1a10';g.fillRect(px-4,py+2,3,1);g.fillRect(px+1,py+2,3,1);
     g.fillStyle=c;g.fillRect(px-6,py+5,12,6);g.fillStyle='#ffffff';g.fillRect(px-5,py+6,10,1);g.fillStyle=shade(c,-0.3);g.fillRect(px-6,py+10,12,1);}
   g.fillStyle='#ffc23d';g.beginPath();g.arc(cx,cy,5,0,TAU);g.fill();}
-/* waterfall path shared by the ground art, the water cells and the motion: cave mouth -> down the cliff foot -> under the river-deck corner -> into the pond */
-let FEST_CREEK=null;function festCreek(){if(FEST_CREEK)return FEST_CREEK;const P=[[998,172],[984,176],[974,190],[972,240],[976,300],[974,350],[964,384],[944,408],[918,434],[902,458],[896,474]],out=[];
-  for(let i=0;i<P.length-1;i++){const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(P.length-1,i+2)];for(let s=0;s<1;s+=0.125){const s2=s*s,s3=s2*s,c=(k)=>0.5*(2*p1[k]+(-p0[k]+p2[k])*s+(2*p0[k]-5*p1[k]+4*p2[k]-p3[k])*s2+(-p0[k]+3*p1[k]-3*p2[k]+p3[k])*s3);out.push({x:c(0),y:c(1)});}}
-  out.push({x:P[P.length-1][0],y:P[P.length-1][1]});const n=out.length;out.forEach((p,i)=>{const t=i/(n-1),a=out[Math.max(0,i-1)],b=out[Math.min(n-1,i+1)],L=Math.hypot(b.x-a.x,b.y-a.y)||1;p.t=t;p.tx=(b.x-a.x)/L;p.ty=(b.y-a.y)/L;p.nx=-p.ty;p.ny=p.tx;p.r=t<0.6?7+t*8:11.8+(t-0.6)/0.4*12;});return FEST_CREEK=out;}
-/* waterfall motion: streaks sliding down the creek, foam where it leaves the cave (skips where the deck covers it) */
-function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+960,Y+320,260))return;const C=festCreek(),n=C.length;
-  g.fillStyle='rgba(225,245,255,0.8)';for(let i=0;i<26;i++){const p=C[Math.floor(((tm*0.12+i/26)%1)*(n-1))],o=(((i*37)%11)/5-1)*p.r*0.7,x=p.x+p.nx*o,y=p.y+p.ny*o;if(x<958&&y<410)continue;g.fillRect(X+x,Y+y,1+Math.abs(p.tx)*3,1+Math.abs(p.ty)*4);}
-  g.fillStyle='#ffffff';for(let i=0;i<5;i++){const a=(tm*1.4+i/5)%1;g.globalAlpha=0.8*(1-a);g.beginPath();g.ellipse(X+986-a*6+i,Y+176+i*2,1.5+a*3,1+a*2,0,0,TAU);g.fill();}g.globalAlpha=1;}
+/* the owner's waterfall reference, traced into map coordinates */
+const FEST_WF={cliff:[[985,90],[1040,82],[1040,428],[1020,432],[1002,433],[984,428],[968,420],[962,408],[962,300],[963,200],[968,180],[974,150],[980,118]],
+  cave:[1016,162,14,11],lip:[[1003,170],[1029,170],[1024,178],[999,192],[967,195],[972,188]],curtain:[967,192,31,22,405],
+  creek:[[962,403],[990,406],[988,414],[970,422],[950,430],[937,437],[925,448],[922,466],[888,466],[888,440],[896,428],[906,418],[920,412],[940,410],[958,409]],
+  stones:[[984,417,5],[974,423,4],[962,428,5],[949,435,4.5],[939,442,4],[930,449,3.5],[920,412,4.5],[906,416,4],[897,424,4.5],[890,433,3.5]],
+  pines:[[1030,276,1.1],[1007,360,1],[1030,350,1.2],[1028,404,0.9]]};
+/* waterfall motion: bright streaks sliding down the curtain, foam at its foot, ripples in the creek */
+function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+980,Y+300,260))return;const[x0,y0,w0,w1,y1]=FEST_WF.curtain;
+  g.fillStyle='rgba(235,250,255,0.85)';for(let i=0;i<24;i++){const y=y0+((tm*0.55+i*0.137)%1)*(y1-y0),w=w0+(w1-w0)*(y-y0)/(y1-y0);g.fillRect(X+x0+(((i*7)%13)/13)*w,Y+y,1,6);}
+  g.fillStyle='#ffffff';for(let i=0;i<7;i++){const a=(tm*1.5+i/7)%1;g.globalAlpha=0.85*(1-a);g.beginPath();g.ellipse(X+x0+2+i*3.6,Y+y1-1-a*5,1.5+a*3,1+a*2,0,0,TAU);g.fill();}g.globalAlpha=1;
+  g.fillStyle='rgba(200,240,255,0.7)';for(let i=0;i<8;i++){const t=(tm*0.25+i/8)%1,x=984-t*84,y=410+t*30+((i*5)%9);g.fillRect(X+x,Y+y,4,1);}}
 function festStageFx(g,inV,tm,phase){const T=TRIPS.fest;if(!T)return;if(phase==='under'){festWheel(g,inV,tm);festFalls(g,inV,tm);}const X=T.x0,Y=T.y0,cols=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff'];const beat=Math.floor(tm*2.2);
   const scr=[[406,120,228,36,0,['#ff3d9a','#ff7ad8','#c46bff','#ffb4e8','#ff9ac8']],[766,246,128,36,0,['#4fc3f7','#8ad0ff','#3a8aff','#bff0ff','#2a6ad8']],[24,384,30,172,1,['#ffd23d','#ff8a3a','#ff4a6a','#d83a8a','#ffb43a']]];
   if(phase==='under'){for(const[sx,sy,sw,sh,vert,pal]of scr){if(!inV(X+sx+sw/2,Y+sy+sh/2,200))continue;g.fillStyle='#0a0612';g.fillRect(X+sx,Y+sy,sw,sh);const n=vert?Math.floor(sh/6):Math.floor(sw/6);
