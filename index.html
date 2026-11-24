@@ -3613,6 +3613,29 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   for(const P of FEST_PATHS)for(let i=0;i<P.length-1;i++){const a2=P[i],b2=P[i+1],L=Math.hypot(b2[0]-a2[0],b2[1]-a2[1]);const nx=-(b2[1]-a2[1])/L,ny=(b2[0]-a2[0])/L;for(let d=22;d<L-6;d+=26){const cx=a2[0]+(b2[0]-a2[0])*d/L,cy=a2[1]+(b2[1]-a2[1])*d/L;for(let k=-12;k<=12;k++)f(cx+nx*k,cy+ny*k,1,1,'#a09c94');}}
   /* blossom plaza */
   for(let i=0;i<40;i++){const a=i/40*TAU;f(520+Math.cos(a)*74-1,372+Math.sin(a)*48-1,3,3,NEON[i%5]);}
+  /* ---- waterfall: rocky cliff on the east edge, a cave up top, the falls drop into a pool and the creek runs under the river-deck corner into the pond ---- */
+  const WFC=[[1000,388],[976,394],[958,406],[962,432],[968,452],[966,480]];
+  const creek=()=>{const q=rng0(5161);path(WFC,32,'#6a6a72');path(WFC,28,'#9a9aa2');path(WFC,20,'#1e56c0');path(WFC,16,'#2a6ad8');path(WFC,8,'#3a7ae0');
+    for(let i=0;i<WFC.length-1;i++){const a=WFC[i],b=WFC[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),nx=-(b[1]-a[1])/L,ny=(b[0]-a[0])/L;for(let d=0;d<L;d+=5){const cx=a[0]+(b[0]-a[0])*d/L,cy=a[1]+(b[1]-a[1])*d/L;for(const sd of[-1,1]){const o=11+q()*3;e(cx+nx*o*sd,cy+ny*o*sd,2+q()*2,1.5+q(),q()<0.5?'#b4b4bc':'#7a7a82');}if(q()<0.5)f(cx-2+q()*4,cy-1,3+q()*3,1,'#9ad8ff');}}};
+  {const q=rng0(5150),RK='#7a5636',RKD='#4e3420',RKL='#a07a4e';
+    const CL=[[1040,80],[968,80]];for(let y=96;y<=356;y+=10)CL.push([962+Math.sin(y/26)*5+q()*4,y]);CL.push([968,372],[982,384],[1020,386],[1040,380]);
+    poly(CL.map(p=>[p[0]-5,p[1]+5]),'rgba(0,0,0,0.28)');poly(CL,RKD);poly(CL.map(p=>[p[0]+5,p[1]-4]),RK);
+    for(let i=0;i<120;i++){const x=972+q()*64,y=86+q()*286;e(x,y,2+q()*5,1.5+q()*3,q()<0.5?RKL:'#6a4a2e');}
+    for(let y=104;y<370;y+=16+((q()*10)|0)){const x0=968+q()*8;f(x0,y,1040-x0,2,RKD);f(x0+2,y-1,1038-x0,1,RKL);}
+    for(let i=0;i<30;i++){const x=972+q()*62,y=90+q()*280;f(x,y,1,3+q()*5,'#3e2a18');}
+    /* the cave at the top */
+    e(1004,118,26,22,RKD);e(1004,104,28,8,RKL);e(1004,121,19,17,'#24180e');e(1004,125,13,12,'#0c0806');f(992,134,24,4,'#0c0806');
+    /* the falls down the cliff face */
+    const FP=[[1004,134],[1003,200],[1005,270],[1002,340],[1000,386]];
+    path(FP,26,'#8a8a92');path(FP,22,'#1e56c0');path(FP,16,'#3a7ae0');path(FP,6,'#7ab8f4');
+    for(let y=140;y<384;y+=3){const xx=995+q()*16;f(xx,y,1,3+q()*4,q()<0.6?'#bfe4ff':'#ffffff');}
+    for(const ly of[200,270,340]){e(1004,ly,12,3,'#e8f6ff');e(1004,ly+1,8,2,'#ffffff');}
+    for(let y=140;y<380;y+=9){e(990+q()*2,y,3,2,'#8a8a92');e(1018-q()*2,y,3,2,'#8a8a92');}
+    /* pines on the rock */
+    const pine=(x,y,s)=>{f(x-1,y-3,2,4,'#4a2a10');poly([[x-7*s,y-2],[x,y-14*s],[x+7*s,y-2]],'#1e5a2e');poly([[x-5*s,y-8*s],[x,y-18*s],[x+5*s,y-8*s]],'#2a7a3a');poly([[x,y-18*s],[x+5*s,y-8*s],[x,y-8*s]],'#1e5a2e');};
+    for(const[x,y,s]of[[978,112,1],[1030,96,0.9],[1032,168,1.1],[980,196,0.9],[1030,240,1],[982,282,1.1],[1032,318,0.9],[978,350,0.8],[1026,370,0.8]])pine(x,y,s);
+    creek();e(1000,388,22,10,'#6a6a72');e(1000,388,19,8,'#2a6ad8');e(1001,386,11,4,'#e8f6ff');
+    S(966,80,74,300);S(984,380,56,4);occ(946,80,94,420);}
   /* river stage deck over the water */
   {f(712,316,244,90,'#4a2a10');f(714,318,240,86,'#9a6a3a');for(let k=0;k<240;k+=6)f(714+k,318,1,86,'#7a4e26');for(let k=0;k<86;k+=18)f(714,318+k,240,1,'#7a4e26');
     for(let x=714;x<954;x+=10){f(x,402,2,6,'#5a3418');}f(714,404,240,2,'#6a3e1e');occ(706,308,256,104);}
@@ -3669,8 +3692,13 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
     bridge(PX-12,404,24,PY-IRY+4-404,true);bridge(PX-RX-6,PY-10,RX-IR+10,20,false);
     for(let y=PY-RY;y<=PY+RY;y+=4){const t=(y-PY)/RY,w=RX*Math.sqrt(Math.max(0,1-t*t));for(let x=Math.floor(PX-w);x<PX+w;x+=4){const isl=((x+2-IX)/(IR-2))**2+((y+2-IY)/(IRY-2))**2<1;const onB=(x+4>PX-12&&x<PX+12&&y<PY)||(y+4>PY-10&&y<PY+10&&x<PX);if(!isl&&!onB)S(x,y,4,4,{water:1});}}
     occ(PX-RX-26,PY-RY-24,RX*2+52,RY*2+48);
+    /* creek mouth: redraw the creek over the sidewalk ring (below the deck), a little footbridge, water cells */
+    {g.save();g.beginPath();g.rect(X+930,Y+409,120,90);g.clip();creek();g.restore();
+      f(952,450,38,20,'rgba(0,0,0,0.25)');f(954,450,34,16,'#9a6a3a');for(let k=0;k<34;k+=5)f(954+k,450,1,16,'#6a3e1e');f(954,448,34,2,'#5a3418');f(954,466,34,2,'#5a3418');for(const k of[0,12,24,33]){f(952+k,447,4,4,'#4a2a10');f(952+k,465,4,4,'#4a2a10');}
+      const dseg=(x,y)=>{let m=1e9;for(let i=0;i<WFC.length-1;i++){const a=WFC[i],b=WFC[i+1],dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy)));m=Math.min(m,Math.hypot(x-a[0]-dx*t,y-a[1]-dy*t));}return m;};
+      for(let y=376;y<484;y+=4)for(let x=936;x<1028;x+=4){const cx=x+2,cy=y+2;if(cx<958&&cy<410)continue;if(x+4>954&&x<988&&y+4>450&&y<466)continue;if(dseg(cx,cy)<10||((cx-1000)/19)**2+((cy-388)/8)**2<1)S(x,y,4,4,{water:1});}}
     const ring=(a,o)=>[PX+Math.cos(a)*(RX+13+o),PY+Math.sin(a)*(RY+12+o)];
-    [[3.6,0],[4.1,2],[5.3,4],[5.85,1],[0.45,3],[0.95,0],[2.2,2],[2.7,4]].forEach((q,i)=>{const p=ring(q[0],22);const k=i%4;if(k===0)totem(p[0],p[1],q[1]);else if(k===1)neonFlower(p[0],p[1],NEON[q[1]],28);else if(k===2)shroom(p[0],p[1],1,NEON[q[1]]);else crystal(p[0],p[1],26,NEON[q[1]]);});
+    [[3.6,0],[4.1,2],[5.62,4],[5.85,1],[0.45,3],[0.95,0],[2.2,2],[2.7,4]].forEach((q,i)=>{const p=ring(q[0],22);const k=i%4;if(k===0)totem(p[0],p[1],q[1]);else if(k===1)neonFlower(p[0],p[1],NEON[q[1]],28);else if(k===2)shroom(p[0],p[1],1,NEON[q[1]]);else crystal(p[0],p[1],26,NEON[q[1]]);});
     for(let k=0;k<12;k++){const a=k/12*TAU+0.13;const p=ring(a,-1);glow(p[0],p[1]-10,18,'#ffd27a',0.3);tripLamp(g,X+p[0],Y+p[1]);}
     crystal(848,522,26,'#ff3d9a');crystal(866,516,34,'#4fc3f7');crystal(882,526,22,'#c46bff');crystal(836,532,16,'#7dff6a');crystal(876,536,14,'#ffc23d');
     }
@@ -3820,7 +3848,13 @@ function festWheel(g,inV,tm){const T=TRIPS.fest,cx=T.x0+150,cy=T.y0+210,R=46;if(
     g.fillStyle=SKN[i%4];g.fillRect(px-4,py+2,3,3);g.fillStyle=SKN[(i+2)%4];g.fillRect(px+1,py+2,3,3);g.fillStyle='#2a1a10';g.fillRect(px-4,py+2,3,1);g.fillRect(px+1,py+2,3,1);
     g.fillStyle=c;g.fillRect(px-6,py+5,12,6);g.fillStyle='#ffffff';g.fillRect(px-5,py+6,10,1);g.fillStyle=shade(c,-0.3);g.fillRect(px-6,py+10,12,1);}
   g.fillStyle='#ffc23d';g.beginPath();g.arc(cx,cy,5,0,TAU);g.fill();}
-function festStageFx(g,inV,tm,phase){const T=TRIPS.fest;if(!T)return;if(phase==='under')festWheel(g,inV,tm);const X=T.x0,Y=T.y0,cols=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff'];const beat=Math.floor(tm*2.2);
+/* waterfall motion: streaks sliding down the falls, foam at the pool, ripples drifting down the creek (skips the deck and the footbridge) */
+function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+990,Y+300,260))return;
+  g.fillStyle='rgba(255,255,255,0.8)';for(let i=0;i<16;i++){const ph=(tm*0.8+i*0.371)%1,yy=140+ph*236;g.fillRect(X+996+((i*7)%15),Y+yy,1,5+(i%3)*2);}
+  g.fillStyle='#ffffff';for(let i=0;i<6;i++){const a=(tm*1.6+i/6)%1;g.globalAlpha=0.8*(1-a);g.beginPath();g.ellipse(X+988+i*5,Y+387-a*4,1.5+a*3,1+a*2,0,0,TAU);g.fill();}g.globalAlpha=1;
+  const P=[[996,390],[976,394],[960,408],[962,432],[968,452],[966,478]],L=[];let tot=0;for(let i=0;i<P.length-1;i++){const l=Math.hypot(P[i+1][0]-P[i][0],P[i+1][1]-P[i][1]);L.push(l);tot+=l;}
+  g.fillStyle='rgba(200,235,255,0.75)';for(let i=0;i<10;i++){let d=((tm*0.3+i/10)%1)*tot,k=0;while(k<L.length-1&&d>L[k]){d-=L[k];k++;}const t=d/L[k],x=P[k][0]+(P[k+1][0]-P[k][0])*t,y=P[k][1]+(P[k+1][1]-P[k][1])*t;if(x<958&&y<410)continue;if(y>446&&y<470)continue;g.fillRect(X+x-2+((i*3)%5)-2,Y+y,3,1);}}
+function festStageFx(g,inV,tm,phase){const T=TRIPS.fest;if(!T)return;if(phase==='under'){festWheel(g,inV,tm);festFalls(g,inV,tm);}const X=T.x0,Y=T.y0,cols=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff'];const beat=Math.floor(tm*2.2);
   const scr=[[406,120,228,36,0,['#ff3d9a','#ff7ad8','#c46bff','#ffb4e8','#ff9ac8']],[766,246,128,36,0,['#4fc3f7','#8ad0ff','#3a8aff','#bff0ff','#2a6ad8']],[24,384,30,172,1,['#ffd23d','#ff8a3a','#ff4a6a','#d83a8a','#ffb43a']]];
   if(phase==='under'){for(const[sx,sy,sw,sh,vert,pal]of scr){if(!inV(X+sx+sw/2,Y+sy+sh/2,200))continue;g.fillStyle='#0a0612';g.fillRect(X+sx,Y+sy,sw,sh);const n=vert?Math.floor(sh/6):Math.floor(sw/6);
       for(let i=0;i<n;i++){const v=0.25+0.75*Math.abs(Math.sin(tm*3.1+i*0.7)*Math.cos(tm*1.3+i*0.31));const c=pal[(i+beat)%5];g.fillStyle=c;if(vert){const L=sw*v;g.fillRect(X+sx+(sw-L)/2,Y+sy+i*6+1,L,4);}else{const L=sh*v;g.fillRect(X+sx+i*6+1,Y+sy+sh-L,4,L);}}
