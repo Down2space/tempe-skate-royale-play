@@ -3848,10 +3848,19 @@ function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+980,Y+30
 function festRoomDraw(g,T,tm){const R=FEST_ROOM,X=T.x0+R.x,Y=T.y0+R.y,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
   F(0,0,R.w,R.h,'#2e2a30');for(let y=1;y<R.h;y+=8)for(let x=((y>>3)%2)*6-6;x<R.w;x+=12)F(Math.max(0,x),y,Math.min(11,x+11)-Math.max(0,x)+Math.min(0,0),7,'#383238');
   F(R.dx-R.x,R.h-10,R.dw,10,'#1e56c0');F(R.dx-R.x+2,R.h-9,R.dw-4,2,'#3a7ae0');for(let k=0;k<4;k++)F(R.dx-R.x+2+((k*5+Math.floor(tm*8))%(R.dw-4)),R.h-5,2,1,'#bfe4ff');}
+/* owner: from inside the room the cliff above it reads as one tall interior wall up to the cave (traced from the owner's yellow outline; the cave stays an arched opening, orange lines are stone ledges) */
+const FEST_ROOM_WALL=[[996,130],[1040,130],[1040,305],[973,305],[973,189],[988,187],[996,169]];
+function festRoomWall(g,T,tm){const X=T.x0,Y=T.y0,P=FEST_ROOM_WALL,F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
+  g.save();g.beginPath();P.forEach((q,i)=>i?g.lineTo(X+q[0],Y+q[1]):g.moveTo(X+q[0],Y+q[1]));g.closePath();g.clip();
+  const gr=g.createLinearGradient(0,Y+130,0,Y+305);gr.addColorStop(0,'#2a2226');gr.addColorStop(1,'#4a3e40');g.fillStyle=gr;g.fillRect(X+960,Y+120,90,190);
+  for(let y=130;y<305;y+=9)for(let x=972+((y/9)%2)*7;x<1040;x+=14){g.fillStyle='rgba(255,230,210,0.06)';g.fillRect(X+x,Y+y,13,8);g.fillStyle='rgba(0,0,0,0.25)';g.fillRect(X+x,Y+y+8,13,1);g.fillRect(X+x+13,Y+y,1,8);}
+  for(const[x1,y1,x2,y2]of[[986,198,1030,198],[986,219,1018,219],[984,284,1030,284],[1030,169,1030,198],[1029,226,1029,284],[986,198,986,212]]){if(y1===y2){F(x1,y1-1,x2-x1,3,'#6a5a58');F(x1,y1-1,x2-x1,1,'#8a7a76');F(x1,y1+2,x2-x1,1,'#1d1d24');}else{F(x1-1,y1,3,y2-y1,'#6a5a58');F(x1-1,y1,1,y2-y1,'#8a7a76');F(x1+2,y1,1,y2-y1,'#1d1d24');}}
+  {const cx=1018,top=140,bot=168,rx=11;g.fillStyle='#5e4a3e';g.beginPath();g.moveTo(X+cx-rx-3,Y+bot);g.lineTo(X+cx-rx-3,Y+top+rx);g.arc(X+cx,Y+top+rx,rx+3,Math.PI,TAU);g.lineTo(X+cx+rx+3,Y+bot);g.closePath();g.fill();g.fillStyle='#0a0a0e';g.beginPath();g.moveTo(X+cx-rx,Y+bot);g.lineTo(X+cx-rx,Y+top+rx);g.arc(X+cx,Y+top+rx,rx,Math.PI,TAU);g.lineTo(X+cx+rx,Y+bot);g.closePath();g.fill();F(cx-rx-3,bot,rx*2+6,2,'#8a7a76');}
+  g.fillStyle='#1d1d24';g.fillRect(X+960,Y+303,90,2);g.restore();}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;FEST_WF_FADE+=((!inRoom&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
   if(!inRoom){g.save();g.beginPath();g.rect(X+A.x,Y+FEST_WF_BASE,A.w,A.h);g.clip();festFalls(g,inV,tm);g.restore();}
-  if(f>0.02){g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive)drawNpc(g,mb);g.restore();}if(inRoom&&player&&player.alive)drawSk(g,player);
+  if(f>0.02){g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive)drawNpc(g,mb);g.restore();}if(inRoom)festRoomWall(g,T,tm);if(inRoom&&player&&player.alive)drawSk(g,player);
   if(f<0.98&&!inRoom){g.save();g.globalAlpha=1-f;const M=FEST_WF_MASK;let x0=A.w;for(let r=hh;r<hh+76&&r<A.h;r++)for(let x=0;x<A.w;x++)if(M[r*A.w+x]){if(x<x0)x0=x;break;}
     /* the whole base becomes one RESTRICTED ACCESS panel */
     const bx=X+A.x+x0-1,by=Y+FEST_ROOM.y,bw=X+T.w-bx,bh=FEST_ROOM.h;
