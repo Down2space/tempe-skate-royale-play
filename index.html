@@ -3558,7 +3558,7 @@ const FEST_PATHS=[
   [[722,705],[728,742],[740,770],[640,772],[560,764],[520,758]]];
 const FEST_OCC=[];
 const FEST_SAILS=[[[206,440],[290,430],[248,488],'#c46bff'],[[276,432],[360,444],[318,492],'#4fc3f7'],[[330,446],[400,450],[370,500],'#ffc23d']];
-const FEST_PERF=[['walk',0,0],['walk',1,0],['walk',2,0],['fire',470,448],['fire',452,772],['hoop',378,452],['hoop',612,660],['stilt',544,0],['juggle',434,650],['bubble',360,610],['drum',236,650],['poi',690,312],['glow',968,774],['statue',722,592],['hoop',300,440],['fire',640,440]];
+const FEST_PERF=[['walk',0,0],['walk',1,0],['walk',2,0],['fire',470,448],['fire',452,772],['hoop',378,452],['hoop',612,660],['stilt',544,0],['juggle',434,650],['bubble',360,610],['drum',236,650],['poi',690,312],['glow',634,718],['statue',722,592],['hoop',300,440],['fire',640,440]];
 function festNearPath(x,y,m){for(const P of FEST_PATHS)for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1],dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy;let t=((x-a[0])*dx+(y-a[1])*dy)/L;t=Math.max(0,Math.min(1,t));if(Math.hypot(x-a[0]-dx*t,y-a[1]-dy*t)<m)return true;}return false;}
 function festOcc(x,y,m){for(const q of FEST_OCC)if(x>q[0]-m&&x<q[0]+q[2]+m&&y>q[1]-m&&y<q[1]+q[3]+m)return true;return false;}
 function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h,r=rng0(4242);
@@ -3726,7 +3726,6 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
     for(const[cx,c]of[[30,'#ff3d9a'],[380,'#4fc3f7']]){for(let k=0;k<28;k+=4){f(cx+k,856,2,20,c);f(cx+k+2,856,2,20,'#f4efe4');}f(cx,876,28,2,shade(c,-0.3));}
     const bus=(x,y,c,str)=>{f(x+2,y+3,80,26,'rgba(0,0,0,0.25)');blk(x,y,80,24,c);for(let k=0;k<6;k++)f(x+8+k*11,y+6,8,7,'#2a3a5a');f(x+72,y+5,6,12,'#2a3a5a');f(x+2,y+16,76,2,str);e(x+14,y+24,5,3,'#14101a');e(x+64,y+24,5,3,'#14101a');};
     bus(590,826,'#f4efe4','#2a6ad8');bus(790,826,'#ffc23d','#14101a');bus(890,826,'#2a6ad8','#f4efe4');bus(890,900,'#f4efe4','#e8323a');
-    f(560,890,100,24,'#6a6a72');f(560,890,100,2,'#c8c8ce');for(let k=0;k<4;k++)f(568+k*24,901,14,2,'#ffd23d');
     f(0,948,W2,52,'#3e3e46');f(0,948,W2,2,'#c8c8ce');for(let x=0;x<W2;x+=30)f(x,973,16,2,'#ffd23d');
     occ(0,800,W2,200);}
   /* ---- lamp posts along every path + string lights between them ---- */
@@ -8038,6 +8037,7 @@ const JOKES=[
   ['Max says the secret to art is ____.',['stealing from yourself so nobody can sue','drawing what you feel','practice']],
   ['My uncle\'s idea of a skate trick is ____.',['standing on it and saying "Look, I\'m a surfer"','rolling down the driveway','none']],
   ['The ghost at the Abandoned House just wants ____.',['someone to finally land the window gap','his house back','peace']],
+  ['Lucas\'s comic book collection is worth ____.',['more than our house, emotionally','a couple hundred bucks','not much']],
   ['My fortune cookie said ____.',['"Rent is a social construct. Pay it anyway."','"You will find a new board."','"Good luck."']]];
 function startComedy(){initAudio();const sel=shuffle(JOKES).slice(0,5).map(j=>{const opts=j[1].map((t,i)=>({t,v:[3,1,0][i]}));return{setup:j[0],opts:shuffle(opts)};});
   mgOpen('comedy',{title:'COMEDY TENT',P:CHARS.dre,jokes:sel,ji:0,phase:'setup',pt:2.2,pick:null,laughs:0,meter:0.4,react:'',rt:0,cur:0,dir:1,over:false,LW:320,cards:[]});}
@@ -20303,7 +20303,7 @@ function fsGary(){if(FSTY.gary&&npcs.includes(FSTY.gary))return FSTY.gary;const 
   const n={x:q.x,y:q.y,hx:q.x,hy:q.y,P,name:'Gate Crasher Gary',cname:'Gate Crasher Gary',offer:null,given:true,done:false,anim:0,face:1,t:3,dir:0,vx:0,vy:0,hp:999,alive:true,fleeT:0,fx:0,fy:0,flash:0,deadT:0,civ:false,fixed:true,fsGary:true,_hwT:1};npcs.push(n);FSTY.gary=n;return n;}
 function fsTarget(s){if(!s||s.t!=='cust')return null;const p=player;if(s.k==='fence'){if(fsInside(p))return fsGary();return null;}if(s.k==='statue')return fsStatue();if(s.k==='kandi')return fsKandi();if(s.k==='josh')return fsJosh();return null;}
 const _sLabFS=storyLabel;storyLabel=function(s){if(s&&s.t==='cust')return s.label;return _sLabFS(s);};
-const _sMkFS=storyMarker;storyMarker=function(){const s=storyStep();if(s&&s.t==='cust'){if(s.k==='fence'&&!fsInside(player)){const G=fsGate();return{x:G.x-90,y:G.y+10,c:'#ffc23d',icon:'go'};}const n=fsTarget(s);return n?{x:n.x,y:n.y,c:'#ffc23d',icon:'talk'}:null;}return _sMkFS();};
+const _sMkFS=storyMarker;storyMarker=function(){const s=storyStep();if(s&&s.t==='cust'){if(s.k==='fence'&&!fsInside(player)){const G=fsGate();return{x:G.x+20,y:G.y+82,c:'#ffc23d',icon:'go'};}const n=fsTarget(s);return n?{x:n.x,y:n.y,c:'#ffc23d',icon:'talk'}:null;}return _sMkFS();};
 function fsTalkDone(s,n){if(n)n.face=player.x<n.x?-1:1;const L=(s.k==='fence'&&storyRun.k==='dylan')?s.linesDy:s.lines;storyDialog(L,()=>{if(s.k==='fence'){FSG.mode='idle';}storyAdvance();});}
 const _bActFS=busActs;busActs=function(cand,p){_bActFS(cand,p);if(gameMode!=='story'||!storyRun||storyRun.dlg)return;const s=storyStep();if(!s||s.t!=='cust')return;const n=fsTarget(s);if(!n)return;const d=D(p.x,p.y,n.x,n.y);
   if(s.k==='statue'){if(!FSTY.proj&&d<110)cand(d-30,110,'THROW GLOW STICK',()=>fsThrow(n),n);return;}
