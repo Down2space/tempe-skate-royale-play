@@ -13786,40 +13786,69 @@ function clBreak(M,f,why){const T=M.T;if(f.broken||f.fixed)return;f.broken=true;
   if(M.rope&&M.rope.A[0].f===f)clDetach(M);}
 
 /* ---------- 2. GRAPPLING HOOK + ROPE ---------- */
-function clFire(M,tx,ty){const p=M.p;if(M.rope)clDetach(M);const hx=p.x,hy=p.y-CL_HY;const d=Math.hypot(tx-hx,ty-hy)||1;
+function clFire(M,tx,ty){const p=M.p;if(M.rope)clDetach(M);const hx=p.x,hy=p.y-M.hoff;const d=Math.hypot(tx-hx,ty-hy)||1;
   M.hook={x:hx,y:hy,dx:(tx-hx)/d,dy:(ty-hy)/d,dist:0,state:'fly',t:0};tone(700,1100,0.04,'square',0.03);}
 function clDetach(M){if(M.rope){M.relT=0.45;M.relV={x:M.p.vx,y:M.p.vy};}M.rope=null;if(M.hook&&M.hook.state!=='back'){M.hook.state='back';M.hook.t=0;}}
 function clHookStep(M,h){const H=M.hook;if(!H)return;const T=M.T,p=M.p;H.t+=h;
   if(H.state==='fly'){const step=CLC.HOOK_SPD*h;for(let s2=0;s2<step;s2+=1.5){const nx=H.x+H.dx*1.5,ny=H.y+H.dy*1.5;H.dist+=1.5;
-      if(clSolid(T,nx,ny)){/* bite: anchor at the exact surface point */const f=clForm(T,nx,ny);const L=Math.hypot(H.x-p.x,H.y-(p.y-CL_HY));
-        M.rope={A:[{x:H.x,y:H.y,hx:nx,hy:ny,f,sg:0}],L:Math.max(CLC.ROPE_MIN,L*0.88),fixed:0,t:0,hit:0};{const ux=(H.x-p.x)/(L||1),uy=(H.y-(p.y-CL_HY))/(L||1);p.vx+=ux*CLC.LATCH;p.vy+=uy*CLC.LATCH;}H.state='set';M.lastAnchorY=H.y;M.lastAnchor={x:H.x,y:H.y};
+      if(clSolid(T,nx,ny)){/* bite: anchor at the exact surface point */const f=clForm(T,nx,ny);const L=Math.hypot(H.x-p.x,H.y-(p.y-M.hoff));
+        M.rope={A:[{x:H.x,y:H.y,hx:nx,hy:ny,f,sg:0}],L:Math.max(CLC.ROPE_MIN,L*0.88),fixed:0,t:0,hit:0};{const ux=(H.x-p.x)/(L||1),uy=(H.y-(p.y-M.hoff))/(L||1);p.vx+=ux*CLC.LATCH;p.vy+=uy*CLC.LATCH;}H.state='set';M.lastAnchorY=H.y;M.lastAnchor={x:H.x,y:H.y};
         if(f&&(f.mat===2||f.mat===3))f.t=0;M.shake=Math.max(M.shake,1.8);clFx(M,H.x,H.y,10,90,M.map==='gym'&&f&&f.col?[f.col,'#ffffff']:CLMAP[M.map].spark);sfx('thud',0.22);
         for(const b of M.haz.boulders)if(b.rest&&Math.hypot(b.x-H.x,b.y-H.y)<26){b.rest=false;b.vx=rnd(-20,20);}return;}
       H.x=nx;H.y=ny;if(H.dist>=CLC.REACH){H.state='back';H.t=0;tone(300,200,0.05,'square',0.02);return;}}}
-  else if(H.state==='back'){const dx=p.x-H.x,dy=p.y-CL_HY-H.y,d=Math.hypot(dx,dy);if(d<10){M.hook=null;return;}const sp=Math.max(600,d*12)*h;H.x+=dx/d*Math.min(d,sp);H.y+=dy/d*Math.min(d,sp);}
+  else if(H.state==='back'){const dx=p.x-H.x,dy=p.y-M.hoff-H.y,d=Math.hypot(dx,dy);if(d<10){M.hook=null;return;}const sp=Math.max(600,d*12)*h;H.x+=dx/d*Math.min(d,sp);H.y+=dy/d*Math.min(d,sp);}
   else if(H.state==='set'){if(!M.rope){H.state='back';H.t=0;return;}H.x=M.rope.A[0].x;H.y=M.rope.A[0].y;}}
 function clRopeStep(M,h){const R=M.rope;if(!R)return;const T=M.T,p=M.p;R.t+=h;
   /* controllable retraction while the touch is held */
   let reel=0;if(M.hold){R.ht=(R.ht||0)+h;reel=Math.min(CLC.REEL_MAX,CLC.REEL_MIN+CLC.REEL_ACC*R.ht)+(M.dragY||0)*CLC.DRAG_REEL;reel=clamp(reel,-160,CLC.REEL_MAX+120);}R.reel=reel;
-  const P=R.A[R.A.length-1],bx=p.x,by=p.y-CL_HY;const dx=bx-P.x,dy=by-P.y,d=Math.hypot(dx,dy)||1;
-  R.L=clamp(R.L-reel*h,R.fixed+CLC.ROPE_MIN,R.fixed+CLC.REACH*1.4);
-  const Lf=R.L-R.fixed;let dv=0;
+  const P=R.A[R.A.length-1],bx=p.x,by=p.y-M.hoff;const dx=bx-P.x,dy=by-P.y,d=Math.hypot(dx,dy)||1;
+  R.L=clamp(R.L-reel*h,R.fixed+(R.A.length>1?CLC.R+6:CLC.ROPE_MIN),R.fixed+CLC.REACH*1.4);
+  const Lf=R.L-R.fixed;let dv=0;if(R.skip>0){R.skip--;R.L=Math.max(R.L,R.fixed+d);}else{
   /* bungee rope: pulls back in proportion to how far it is stretched, damps the bounce, goes rigid past MAX_STRETCH */
   if(d>Lf){const nx=dx/d,ny=dy/d,ext=d-Lf;p.vx-=nx*CLC.K*ext*h;p.vy-=ny*CLC.K*ext*h;dv+=CLC.K*ext*h;
     let vr=p.vx*nx+p.vy*ny;if(vr>0){const k=Math.min(1,CLC.DAMP*h);p.vx-=vr*k*nx;p.vy-=vr*k*ny;}
-    const tx=-ny,ty=nx,vt=p.vx*tx+p.vy*ty;if(Math.abs(vt)>8){p.vx+=tx*Math.sign(vt)*CLC.PUMP*h;p.vy+=ty*Math.sign(vt)*CLC.PUMP*h;}
-    const mx=Lf*(1+CLC.MAX_STRETCH);if(d>mx){p.x=P.x+nx*mx;p.y=P.y+ny*mx+CL_HY;vr=p.vx*nx+p.vy*ny;if(vr>0){p.vx-=vr*nx;p.vy-=vr*ny;}}}
+    const tx=-ny,ty=nx,vt=p.vx*tx+p.vy*ty;if(Math.abs(vt)>8&&R.A.length===1&&!M.ground){p.vx+=tx*Math.sign(vt)*CLC.PUMP*h;p.vy+=ty*Math.sign(vt)*CLC.PUMP*h;}
+    const mx=Lf*(1+CLC.MAX_STRETCH);if(d>mx){p.x=P.x+nx*mx;p.y=P.y+ny*mx+M.hoff;vr=p.vx*nx+p.vy*ny;if(vr>0){p.vx-=vr*nx;p.vy-=vr*ny;}}}}
   {const sp=Math.hypot(p.vx,p.vy);if(sp>CLC.VMAX_ROPE){p.vx*=CLC.VMAX_ROPE/sp;p.vy*=CLC.VMAX_ROPE/sp;}}
   R.tension=lerp(R.tension||0,dv/h,0.15);
   /* unstable anchor timers */
   const f=R.A[0].f;if(f&&!f.broken&&(f.mat===2||f.mat===3)){f.t+=h;if(f.t>=CLC.GRIP){clBreak(M,f,f.mat===3?CLMAP[M.map].ice:CLMAP[M.map].crumb);clDetach(M);M.lastAnchorY=null;return;}}}
+/* when the rope is bent over a rock edge and you're reeling in, haul the climber up and over that edge
+   instead of leaving them pinned underneath it (Hang Line style mantle) */
+function clGlide(M,t,h){const p=M.p,R=M.rope;const dx=t.x-p.x,dy=t.y-p.y,dl=Math.hypot(dx,dy)||1;const st=Math.min(dl,230*h);const nx=p.x+dx/dl*st,ny=p.y+dy/dl*st;
+  if(!clSolidCircle(M.T,nx,ny,CLC.R-1)){p.x=nx;p.y=ny;}p.vx=dx/dl*150;p.vy=dy/dl*150;if(R)R.skip=2;}
+function clSolidCircle(T,x,y,r){if(clSolid(T,x,y))return true;for(let a=0;a<8;a++)if(clSolid(T,x+Math.cos(a*Math.PI/4)*r,y+Math.sin(a*Math.PI/4)*r))return true;return false;}
+function clMantle(M,h){const R=M.rope;if(!R||!M.hold){if(R)R.mt=0;return;}
+  if(R.A.length<2){/* not bent: hands are over a lip but the body is pressed into the rock below it -> climb up onto it */
+    const T=M.T,p=M.p,P=R.A[0],sp=Math.hypot(p.vx,p.vy),d=Math.hypot(p.x-P.x,p.y-M.hoff-P.y);R.mt2=(M.touchT>0&&!M.ground&&d>CLC.R+4&&P.y<p.y-4)?(R.mt2||0)+h:Math.max(0,(R.mt2||0)-h*0.5);if(R.mt2<0.2)return;
+    let best=null,bd=Math.hypot(p.x-P.x,p.y-P.y);for(let oy=-4;oy>=-24;oy-=4)for(let ox=-12;ox<=12;ox+=4){const tx=p.x+ox,ty=p.y+oy;if(clSolidCircle(T,tx,ty,CLC.R-1))continue;if(!clLineClear(T,p.x,p.y,tx,ty,0,0))continue;const dd=Math.hypot(tx-P.x,ty-P.y)+Math.abs(ox)*0.2;if(dd<bd-3){bd=dd;best={x:tx,y:ty};}}
+    if(!best)return;clGlide(M,best,h);return;}const T=M.T,p=M.p,P=R.A[R.A.length-1],Q=R.A[R.A.length-2],bx=p.x,by=p.y-M.hoff;
+  const d=Math.hypot(bx-P.x,by-P.y),sp=Math.hypot(p.vx,p.vy);R.mt=(d<CLC.R+30||sp<60||M.touchT>0)?(R.mt||0)+h:Math.max(0,(R.mt||0)-h*0.5);if(R.mt<0.2)return;
+  /* best open spot around the edge that can see the next rope point */
+  let best=null,bd=1e9;for(let a=0;a<16;a++){const ang=a/16*TAU;for(const rr of[CLC.R+4,CLC.R+9]){const tx=P.x+Math.cos(ang)*rr,ty=P.y+Math.sin(ang)*rr+M.hoff;if(clSolidCircle(T,tx,ty,CLC.R-1))continue;if(!clLineClear(T,tx,ty-M.hoff,Q.x,Q.y,4,4))continue;
+    const sc=Math.hypot(tx-p.x,ty-p.y)+(ty-p.y)*0.6;if(sc<bd){bd=sc;best={x:tx,y:ty};}}}
+  if(!best)return;const dx=best.x-p.x,dy=best.y-p.y,dl=Math.hypot(dx,dy)||1;
+  if(dl<3){R.fixed-=Math.hypot(P.x-Q.x,P.y-Q.y);R.A.pop();R.mt=0;p.vy=Math.min(p.vy,-60);return;}
+  /* glide toward it (the rope hauls you along the rock, over the lip) */
+  clGlide(M,best,h);}
 /* rope wraps around rock corners and unwraps when you swing back */
-function clRopeWrap(M){const R=M.rope;if(!R)return;const T=M.T,p=M.p,bx=p.x,by=p.y-CL_HY;
+function clRopeWrap(M){const R=M.rope;if(!R)return;const T=M.T,p=M.p,bx=p.x,by=p.y-M.hoff;
+  const clear=(P,x,y)=>clLineClear(T,P.x,P.y,x,y,3,4);
   for(let guard=0;guard<3;guard++){const P=R.A[R.A.length-1];const d=Math.hypot(bx-P.x,by-P.y);if(d<6)break;
-    const n=Math.ceil(d/1.5),sx=(bx-P.x)/n,sy=(by-P.y)/n;let hit=-1;for(let i=5;i<n-3;i++){if(clSolid(T,P.x+sx*i,P.y+sy*i)&&clSolid(T,P.x+sx*(i+1),P.y+sy*(i+1))){hit=i;break;}}if(hit<0)break;
-    let wx=P.x+sx*(hit-1),wy=P.y+sy*(hit-1);let best=null,bf=-1;for(let a=0;a<8;a++){const ox=Math.cos(a*Math.PI/4),oy=Math.sin(a*Math.PI/4);let free=0;for(let k=1;k<=3;k++)if(!clSolid(T,wx+ox*k,wy+oy*k))free++;if(free>bf){bf=free;best=[ox,oy];}}
-    wx+=best[0]*1;wy+=best[1]*1;const seg=Math.hypot(wx-P.x,wy-P.y);if(seg<6)break;if(R.L-R.fixed-seg<10)R.L=R.fixed+seg+10;
-    R.A.push({x:wx,y:wy,sg:Math.sign((wx-P.x)*(by-wy)-(wy-P.y)*(bx-wx))||1});R.fixed+=seg;}
+    if(clear(P,bx,by)){R.lb={x:bx,y:by};break;}
+    /* swept wrap: find the moment the rope first touched rock between the last clear body spot and now, and bend it at that corner */
+    let w=null;const lb=R.lb;
+    if(lb&&clear(P,lb.x,lb.y)){let lo=0,hi=1;for(let it=0;it<10;it++){const m=(lo+hi)/2;if(clear(P,lb.x+(bx-lb.x)*m,lb.y+(by-lb.y)*m))lo=m;else hi=m;}
+      const cl={x:lb.x+(bx-lb.x)*lo,y:lb.y+(by-lb.y)*lo},ch={x:lb.x+(bx-lb.x)*hi,y:lb.y+(by-lb.y)*hi};
+      const dh=Math.hypot(ch.x-P.x,ch.y-P.y),n=Math.ceil(dh/1);let ds=-1;for(let i=3;i<n;i++){const x=P.x+(ch.x-P.x)*i/n,y=P.y+(ch.y-P.y)*i/n;if(clSolid(T,x,y)){ds=i/n*dh;break;}}
+      if(ds>0){const dl=Math.hypot(cl.x-P.x,cl.y-P.y)||1;w={x:P.x+(cl.x-P.x)/dl*ds,y:P.y+(cl.y-P.y)/dl*ds};}}
+    if(!w){/* fallback: walk the rope from the anchor and stop just before rock */const n=Math.ceil(d/1.5),sx=(bx-P.x)/n,sy=(by-P.y)/n;let hit=-1;for(let i=3;i<n-3;i++){if(clSolid(T,P.x+sx*i,P.y+sy*i)&&clSolid(T,P.x+sx*(i+1),P.y+sy*(i+1))){hit=i;break;}}if(hit<0)break;w={x:P.x+sx*(hit-1),y:P.y+sy*(hit-1)};}
+    /* nudge the bend point out of the rock into open air */
+    for(let k=0;k<4&&clSolid(T,w.x,w.y);k++){let best=null,bf=-1;for(let a=0;a<8;a++){const ox=Math.cos(a*Math.PI/4),oy=Math.sin(a*Math.PI/4);let free=0;for(let q=1;q<=3;q++)if(!clSolid(T,w.x+ox*q,w.y+oy*q))free++;if(free>bf){bf=free;best=[ox,oy];}}w.x+=best[0];w.y+=best[1];}
+    {let best=null,bf=-1;for(let a=0;a<8;a++){const ox=Math.cos(a*Math.PI/4),oy=Math.sin(a*Math.PI/4);let free=0;for(let q=1;q<=3;q++)if(!clSolid(T,w.x+ox*q,w.y+oy*q))free++;if(free>bf){bf=free;best=[ox,oy];}}w.x+=best[0];w.y+=best[1];}
+    if(clSolid(T,w.x,w.y))break;const seg=Math.hypot(w.x-P.x,w.y-P.y);if(seg<5||R.L-R.fixed-seg<2)break;
+    R.A.push({x:w.x,y:w.y,sg:Math.sign((w.x-P.x)*(by-w.y)-(w.y-P.y)*(bx-w.x))||1});R.fixed+=seg;R.lb=null;
+    if(clear(R.A[R.A.length-1],bx,by))R.lb={x:bx,y:by};}
   while(R.A.length>1){const P=R.A[R.A.length-1],Q=R.A[R.A.length-2];const cr=(P.x-Q.x)*(by-P.y)-(P.y-Q.y)*(bx-P.x);if(Math.sign(cr)===P.sg||cr===0)break;if(!clLineClear(T,bx,by,Q.x,Q.y,4,8))break;R.fixed-=Math.hypot(P.x-Q.x,P.y-Q.y);R.A.pop();}}
 
 /* ---------- 1. CHARACTER PHYSICS (stable central body) ---------- */
@@ -13834,18 +13863,20 @@ function clCollide(M,o,rad,rest,onHit){const T=M.T;let grounded=false,gn=null;
     if(best.ny<-0.65){grounded=true;gn=best;}if(Math.abs(best.nx)>0.6)o.wallN=best.nx;if(onHit)onHit(best,vn);}
   return{grounded,gn};}
 function clBodyStep(M,h){const p=M.p,C=CLC;
+  {let o=CL_HY;for(let k=2;k<=CL_HY;k+=2)if(clSolid(M.T,p.x,p.y-k)){o=Math.max(2,k-3);break;}M.hoff=o;}
   p.vy+=C.G*h;const dr=Math.exp(-C.DRAG*h);p.vx*=dr;p.vy*=dr;const sp=Math.hypot(p.vx,p.vy);if(sp>C.VMAX){p.vx*=C.VMAX/sp;p.vy*=C.VMAX/sp;}
   p.x+=p.vx*h;p.y+=p.vy*h;
   clRopeStep(M,h);
-  p.wallN=0;let hitV=0;const res=clCollide(M,p,C.R,C.REST,(b,vn)=>{hitV=Math.max(hitV,-vn);if(b.m===4&&b.ny<-0.5)M.spiked=true;});
+  p.wallN=0;let hitV=0,touched=false;const res=clCollide(M,p,C.R,C.REST,(b,vn)=>{touched=true;hitV=Math.max(hitV,-vn);if(b.m===4&&b.ny<-0.5)M.spiked=true;});
+  M.touchT=touched?0.2:Math.max(0,(M.touchT||0)-h);
   if(p.wallN){M.wallT=0.25;M.wallN=p.wallN;}else M.wallT=Math.max(0,(M.wallT||0)-h);
   if(M.spiked){M.spiked=false;if(M.inv<=0){p.vy=-260;clHurt(M,'SPIKES!');}}
   const was=M.ground;M.ground=res.grounded;
-  if(M.ground){if(!M.rope)p.vx*=Math.exp(-C.FRICT*h);if(!was&&M.started){M.dbg.land++;M.dbg.landAt=[Math.round(p.x),Math.round(p.y),!!M.rope];M.anim.land=Math.min(1,hitV/400);}
+  if(M.ground){p.vx*=Math.exp(-C.FRICT*(M.rope?0.6:1)*h);if(!was&&M.started){M.dbg.land++;M.dbg.landAt=[Math.round(p.x),Math.round(p.y),!!M.rope];M.anim.land=Math.min(1,hitV/400);}
     const f=clForm(M.T,p.x,p.y+C.R+2);if(f&&!f.broken&&(f.mat===2||f.mat===3)){f.t+=h;if(f.t>=C.GRIP)clBreak(M,f,f.mat===3?CLMAP[M.map].ice:CLMAP[M.map].crumb);}}
   else if(hitV>140&&!M.rope){M.anim.bonk=0.3;}
   if(hitV>200){M.shake=Math.max(M.shake,Math.min(4,hitV/150));clFx(M,p.x,p.y,6,60,['#ffffff','#e8e2da']);}
-  clRopeWrap(M);
+  clRopeWrap(M);clMantle(M,h);
   if(clSolid(M.T,p.x,p.y))M.dbg.inside++;}
 
 /* ---------- 4. HAZARDS ---------- */
@@ -13926,11 +13957,11 @@ function clDrawSprite(g,C,anim,fi,x,y,rot,face,pivot){const fr=pframe(C,anim,fi,
   if(pivot==='hand')g.drawImage(fr.c,-W*170/180,-H*96/287,W*sr,H*sr);else g.drawImage(fr.c,-W*0.5,-H*284/287,W*sr,H*sr);g.restore();}
 function clDrawClimber(g,M,x,y){const A=M.anim,C=clChar(M),p=M.p;let anim,fi=0;
   if(M.rope){anim='hang';const vs=p.vx*Math.cos(A.a)+p.vy*Math.sin(A.a);A.legT=lerp(+A.legT||0,clamp(-vs/260,-1,1)*A.face,0.25);if(!isFinite(A.legT))A.legT=0;fi=Math.round(A.legT*2)+2;}else if(A.bonk>0)anim='stun';else if(M.ground)anim='idle';else anim=p.vy<40?'clfly':'clfall';if(anim==='clfall')fi=Math.floor(A.t*8);if(anim==='idle')fi=Math.floor(A.t*6);
-  if(anim==='hang')clDrawSprite(g,C,anim,fi,x,y-CL_HY,A.a,A.face,'hand');else clDrawSprite(g,C,anim,fi,x,y+CLC.R,anim==='idle'?0:A.a*0.7,A.face,'feet');}
+  if(anim==='hang')clDrawSprite(g,C,anim,fi,x,y-(M.hoff||CL_HY),A.a,A.face,'hand');else clDrawSprite(g,C,anim,fi,x,y+CLC.R,anim==='idle'?0:A.a*0.7,A.face,'feet');}
 /* ---------- SETUP ---------- */
 function startClimb(map){if(!map){sheetMenu('ROCK CLIMBING','Pick a wall.',[{name:'Climbing Gym',sub:'Indoor rock wall',btn:'CLIMB',fn:()=>{sheetClose();startClimb('gym');}},{name:'Las Cruces Mountains',sub:'Desert rock spires',btn:'CLIMB',fn:()=>{sheetClose();startClimb('cruces');}},{name:'Salt Lake Mountains',sub:'Granite and pines',btn:'CLIMB',fn:()=>{sheetClose();startClimb('slc');}}]);return;}
   initAudio();const CM=CLMAP[map];mgOpen('climb',{title:'CLIMB · '+CM.t,map,LW:320,LH:200,ox:0});climbReset(MGM);}
-function climbReset(M){M.seed=rnd(1,9999);M.phase='start';M.t=0;M.p={x:160,y:178-CLC.R,vx:0,vy:0};M.pp={x:160,y:178-CLC.R};M.rope=null;M.hook=null;M.ground=true;M.started=false;M.lastAnchorY=null;
+function climbReset(M){M.seed=rnd(1,9999);M.phase='start';M.t=0;M.p={x:160,y:178-CLC.R,vx:0,vy:0};M.pp={x:160,y:178-CLC.R};M.rope=null;M.hook=null;M.ground=true;M.started=false;M.lastAnchorY=null;M.hoff=CL_HY;
   M.lives=CLC.LIVES;M.inv=0;M.best=0;M.paid=false;M.fx=[];M.ft=[];M.msg='';M.msgT=0;M.shake=0;M.res=0;M.acc=0;M.cp=null;M.gp=[];M.gpT=0;M.dbg={inside:0,clip:0,land:0};
   M.dbgOn=false;M.relT=0;M.relV=null;M.hold=false;M.anim={t:0,a:0,av:0,leg:[0,0],knee:[0.2,0.2],arm:[Math.PI-0.3,Math.PI+0.3],land:0};
   M.haz={rocks:[],boulders:[],birds:[],trig:[],av:300,avOn:false};
@@ -13987,7 +14018,7 @@ function climbFrame(g,c,dt){const M=MGM,s=Math.min(c.height/200,c.width/320),LW=
     g.fillStyle=M.map==='slc'?'rgba(220,236,250,0.75)':'rgba(140,90,60,0.6)';for(let i=0;i<16;i++){const x=X0+((i*37+M.t*40)%LW),yy=y0-6-((i*13+M.t*30)%16);g.fillRect(x,yy,3+(i%3),3+(i%3));}}
   for(const f of M.fx){g.fillStyle=f.c;g.fillRect(Math.round(f.x)-1,Math.round(f.y)-1,2,2);}
   /* rope (through any wrap points) and hook */
-  const bx=ix,by=iy-CL_HY;
+  const bx=ix,by=iy-(M.hoff||CL_HY);
   if(M.rope){const R=M.rope;const pts=R.A.map(a=>[a.x,a.y]);pts.push([bx,by]);const w=Math.max(0,1-R.t/0.35)*4;
     const draw=()=>{g.beginPath();g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];if(i===pts.length-1&&w>0){const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;for(let k=1;k<=10;k++){const u=k/10,o=Math.sin(u*Math.PI)*Math.sin(u*Math.PI*3-R.t*45)*w;g.lineTo(a[0]+dx*u+nx*o,a[1]+dy*u+ny*o);}}else g.lineTo(b[0],b[1]);}};
     g.strokeStyle='#2a1a10';g.lineWidth=2.4;draw();g.stroke();g.strokeStyle='#e8c070';g.lineWidth=1;draw();g.stroke();
