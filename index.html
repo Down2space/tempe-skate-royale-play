@@ -3917,12 +3917,7 @@ function festLabWallCanvas(){if(FEST_LAB_CV||!FEST_WF_CV)return FEST_LAB_CV;cons
   return FEST_LAB_CV=c;}
 /* the lab robot is the MECH_P character drawn big (5.2x), side view facing left, standing pose */
 function festRobot(g,X,Y,tm){const fr=pframe(MECH_P,'walk',3,'down',12),k=5.2;g.save();g.translate(X+1004,Y+366-2*k);g.scale(-1,1);g.drawImage(fr.c,-PCX*PK/2*k,-PG*PK/2*k,fr.c.width/2*k,fr.c.height/2*k);g.restore();}
-function festScaffold(g,X,Y){const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
-  for(const px of[984,1006,1022])F(px-1,276,4,92,'#1d1d24'),F(px,276,2,92,'#e8a020'),F(px,276,1,92,'#ffd27a');
-  for(const py of[280,316,350]){F(982,py-1,44,5,'#1d1d24');F(983,py,42,3,'#9a6a3a');F(983,py,42,1,'#c8945a');for(let x=986;x<1024;x+=8)F(x,py,1,3,'#6a3e1e');}
-  g.strokeStyle='#c88a18';g.lineWidth=1.2;g.beginPath();g.moveTo(X+985,Y+316);g.lineTo(X+1006,Y+283);g.moveTo(X+1006,Y+316);g.lineTo(X+1022,Y+283);g.moveTo(X+985,Y+350);g.lineTo(X+1006,Y+319);g.stroke();
-  F(1012,276,8,4,'#1d1d24');F(1013,277,6,2,'#d6283a');}
-function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);festScaffold(g,T.x0,T.y0);}
+function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;const LM=FEST_LAB.m;FEST_WF_FADE+=((LM==='none'&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
   if(!inRoom){g.save();g.beginPath();g.rect(X+A.x,Y+FEST_WF_BASE,A.w,A.h);g.clip();festFalls(g,inV,tm);g.restore();}
