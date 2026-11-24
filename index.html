@@ -3647,7 +3647,7 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   let WFCV=null;{const A=FEST_WF_ART,c=document.createElement('canvas');c.width=A.w;c.height=A.h;const cx=c.getContext('2d'),id=cx.createImageData(A.w,A.h),d=id.data,raw=atob(A.rle);let p=0;
     for(let i=0;i<raw.length;i+=2){const n=raw.charCodeAt(i),v=raw.charCodeAt(i+1);if(v){const o=(v-1)*6,cr=parseInt(A.pal.substr(o,2),16),cg=parseInt(A.pal.substr(o+2,2),16),cb=parseInt(A.pal.substr(o+4,2),16);for(let k=0;k<n;k++){const j=(p+k)*4;d[j]=cr;d[j+1]=cg;d[j+2]=cb;d[j+3]=255;}}p+=n;}
     cx.putImageData(id,0,0);WFCV=c;FEST_WF_CV=c;FEST_WF_MASK=new Uint8Array(A.w*A.h);for(let i=0;i<A.w*A.h;i++)FEST_WF_MASK[i]=d[i*4+3]>0?1:0;{const hb=FEST_WF_BASE-A.y;g.drawImage(c,0,hb,A.w,A.h-hb,X+A.x,Y+FEST_WF_BASE,A.w,A.h-hb);}
-    for(const[x,y,w]of A.sol)S(x,y,w,4);for(const[x,y,w]of A.wat)S(x,y,w,4,{water:1});S(982,352,36,12);S(968,FEST_ROOM.y+10,12,26);S(1018,FEST_ROOM.y+FEST_ROOM.h-26,22,14);{const R=FEST_ROOM;S(R.x,R.y,R.w,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
+    for(const[x,y,w]of A.sol)S(x,y,w,4);for(const[x,y,w]of A.wat)S(x,y,w,4,{water:1});S(982,352,36,12);S(968,FEST_ROOM.y+10,12,26);S(1018,FEST_ROOM.y+FEST_ROOM.h-26,22,14);{const R=FEST_ROOM;S(R.x,R.y,1026-R.x,4);S(1036,R.y,R.x+R.w-1036,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
   /* river stage deck over the water */
   {f(712,316,244,90,'#4a2a10');f(714,318,240,86,'#9a6a3a');for(let k=0;k<240;k+=6)f(714+k,318,1,86,'#7a4e26');for(let k=0;k<86;k+=18)f(714,318+k,240,1,'#7a4e26');
     for(let x=714;x<954;x+=10){f(x,402,2,6,'#5a3418');}f(714,404,240,2,'#6a3e1e');occ(706,308,256,104);}
@@ -3862,7 +3862,19 @@ const FEST_WF_ART={x:880,y:80,w:160,h:392,pal:'205c25397a28639a3083ba343a37344f4
 function festWfMini(mg){try{if(!FEST_WF_CV||!TRIPS.fest)return;const A=FEST_WF_ART,T=TRIPS.fest,hh=FEST_WF_BASE-A.y;mg.drawImage(FEST_WF_CV,0,0,A.w,hh,(T.x0+A.x)/2,(T.y0+A.y)/2,A.w/2,hh/2);}catch(e){}}
 let FEST_WF_CV=null,FEST_WF_MASK=null,FEST_WF_FADE=1;
 /* owner: the waterfall base is a secret room; its only door is hidden behind the foot of the falls (walk into the water there) */
-const FEST_ROOM={x:964,y:305,w:76,h:101,dx:970,dw:18};function festInRoom(T){const p=player,R=FEST_ROOM;if(!p||!T)return false;const x=p.x-T.x0,y=p.y-T.y0;return x>R.x&&x<R.x+R.w&&y>R.y&&y<R.y+R.h+2;}const FEST_WF_BASE=305;/* above this map row the cliff and falls are scenery you walk behind */
+const FEST_ROOM={x:964,y:305,w:76,h:101,dx:970,dw:18};/* owner: ladder up the lab wall to a platform under the cave; walk into the cave to come out on the rock at the cave mouth. Only reachable from inside the lab.
+   modes: none, climb (ladder/platform, drawn as the lab), rock (standing on the cave rock outside), top (jumped off the rock: cliff stays solid-looking until you leave it) */
+const FEST_LAB={m:'none'};
+function festLabTick(T){const p=player;if(!p||!p.alive){FEST_LAB.m='none';return;}const x=p.x-T.x0,y=p.y-T.y0,L=FEST_LAB,air=(p.z||0)>3;
+  if(L.m==='none'||L.m==='room'){L.m=festInRoom0(T)?'room':(L.m==='room'&&y<309&&x>1024&&x<1038?'climb':'none');if(L.m==='room'&&y<309&&x>1025&&x<1037)L.m='climb';}
+  if(L.m==='climb'){if(y>310&&x>1020){L.m='room';return;}
+    if(y>=188){p.x=T.x0+Math.max(1028,Math.min(1034,x));}
+    else{if(y<171&&x>1008&&x<1028){L.m='rock';L.t=performance.now();p.x=T.x0+1010;p.y=T.y0+179;p.vx=p.vy=0;return;}p.x=T.x0+Math.max(1003,Math.min(1035,x));if(x<1026&&y>184)p.y=T.y0+184;p.y=Math.max(T.y0+171,p.y);}return;}
+  if(L.m==='rock'){if(!air&&y<174.6&&performance.now()-(L.t||0)>700&&(p.vy||0)<0){L.m='climb';p.x=T.x0+1018;p.y=T.y0+182;p.vx=p.vy=0;return;}
+    const dx=(x-1010)/7,dy=(y-178)/4,d=Math.hypot(dx,dy);if(d>1){if(air){L.m='top';return;}p.x=T.x0+1010+dx/d*7;p.y=T.y0+178+dy/d*4;}return;}
+  if(L.m==='top'){if(!festWfBehind(T)&&!air)L.m='none';}}
+function festInRoom(T){return FEST_LAB.m==='room'||FEST_LAB.m==='climb';}
+function festInRoom0(T){const p=player,R=FEST_ROOM;if(!p||!T)return false;const x=p.x-T.x0,y=p.y-T.y0;return x>R.x&&x<R.x+R.w&&y>R.y&&y<R.y+R.h+2;}const FEST_WF_BASE=305;/* above this map row the cliff and falls are scenery you walk behind */
 const FEST_WF={curtain:[964,196,30,20,404]};
 /* waterfall motion: bright streaks sliding down the curtain, foam at its foot, ripples in the creek */
 function festFalls(g,inV,tm){const T=TRIPS.fest,X=T.x0,Y=T.y0;if(!inV(X+980,Y+300,260))return;const[x0,y0,w0,w1,y1]=FEST_WF.curtain;
@@ -3887,14 +3899,21 @@ function festLabWallCanvas(){if(FEST_LAB_CV||!FEST_WF_CV)return FEST_LAB_CV;cons
   for(const[x,y]of[[967,224],[1028,224]]){F(x,y,10,8,'#1d1d24');F(x+1,y+1,8,6,'#0e3a2a');F(x+2,y+3,3,1,'#5aff9a');F(x+2,y+5,5,1,'#2aff8a');}
   F(964,296,76,9,'#c8a020');for(let x=962;x<1040;x+=6){g.fillStyle='#1d1d24';g.beginPath();g.moveTo(x-ox,305-oy);g.lineTo(x+3-ox,296-oy);g.lineTo(x+6-ox,296-oy);g.lineTo(x+3-ox,305-oy);g.fill();}
   {const cx=1018,top=140,bot=168,rx=11;g.fillStyle='#b8c2cc';g.beginPath();g.moveTo(cx-rx-3-ox,bot-oy);g.lineTo(cx-rx-3-ox,top+rx-oy);g.arc(cx-ox,top+rx-oy,rx+3,Math.PI,TAU);g.lineTo(cx+rx+3-ox,bot-oy);g.closePath();g.fill();g.fillStyle='#0a0a0e';g.beginPath();g.moveTo(cx-rx-ox,bot-oy);g.lineTo(cx-rx-ox,top+rx-oy);g.arc(cx-ox,top+rx-oy,rx,Math.PI,TAU);g.lineTo(cx+rx-ox,bot-oy);g.closePath();g.fill();for(let y=top+6;y<bot;y+=4)F(cx-rx,y,rx*2,1,'#3a4450');}
+  /* platform under the cave exit: metal grating with a rail */F(1000,170,40,18,'#1d1d24');F(1001,171,38,16,'#5a6470');for(let x=1002;x<1039;x+=3)F(x,172,1,14,'#3a4450');F(1001,171,38,1,'#a8b2bc');F(1000,186,40,3,'#2a3440');for(const px of[1001,1013,1037])F(px,162,2,10,'#8a96a2');F(1001,162,38,2,'#c8d0d8');
+  /* ladder from the floor up to the platform */for(const lx of[1026,1035])F(lx,186,2,120,'#1d1d24'),F(lx,186,1,120,'#c8d0d8');for(let y=190;y<305;y+=6){F(1026,y,11,2,'#1d1d24');F(1027,y,9,1,'#a8b2bc');}
   g.restore();g.globalCompositeOperation='destination-in';g.drawImage(FEST_WF_CV,0,0);return FEST_LAB_CV=c;}
 /* the lab robot is the MECH_P character drawn big (5.2x), side view facing left, standing pose */
 function festRobot(g,X,Y,tm){const fr=pframe(MECH_P,'walk',3,'down',12),k=5.2;g.save();g.translate(X+1004,Y+366-2*k);g.scale(-1,1);g.drawImage(fr.c,-PCX*PK/2*k,-PG*PK/2*k,fr.c.width/2*k,fr.c.height/2*k);g.restore();}
-function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);}
+function festScaffold(g,X,Y){const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(X+x,Y+y,w,h);};
+  for(const px of[984,1006,1022])F(px-1,276,4,92,'#1d1d24'),F(px,276,2,92,'#e8a020'),F(px,276,1,92,'#ffd27a');
+  for(const py of[280,316,350]){F(982,py-1,44,5,'#1d1d24');F(983,py,42,3,'#9a6a3a');F(983,py,42,1,'#c8945a');for(let x=986;x<1024;x+=8)F(x,py,1,3,'#6a3e1e');}
+  g.strokeStyle='#c88a18';g.lineWidth=1.2;g.beginPath();g.moveTo(X+985,Y+316);g.lineTo(X+1006,Y+283);g.moveTo(X+1006,Y+316);g.lineTo(X+1022,Y+283);g.moveTo(X+985,Y+350);g.lineTo(X+1006,Y+319);g.stroke();
+  F(1012,276,8,4,'#1d1d24');F(1013,277,6,2,'#d6283a');}
+function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);festScaffold(g,T.x0,T.y0);}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
-function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;FEST_WF_FADE+=((!inRoom&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
+function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;const LM=FEST_LAB.m;FEST_WF_FADE+=((LM==='none'&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
   if(!inRoom){g.save();g.beginPath();g.rect(X+A.x,Y+FEST_WF_BASE,A.w,A.h);g.clip();festFalls(g,inV,tm);g.restore();}
-  if(f>0.02){g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive)drawNpc(g,mb);g.restore();}if(inRoom)festRoomWall(g,T,tm);if(inRoom&&player&&player.alive)drawSk(g,player);
+  if(f>0.02){g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive&&LM==='none')drawNpc(g,mb);g.restore();}if(inRoom)festRoomWall(g,T,tm);if((inRoom||LM==='rock'||LM==='top')&&player&&player.alive)drawSk(g,player);
   if(f<0.98&&!inRoom){g.save();g.globalAlpha=1-f;const M=FEST_WF_MASK;let x0=A.w;for(let r=hh;r<hh+76&&r<A.h;r++)for(let x=0;x<A.w;x++)if(M[r*A.w+x]){if(x<x0)x0=x;break;}
     /* the whole base becomes one RESTRICTED ACCESS panel */
     const bx=X+A.x+x0-1,by=Y+FEST_ROOM.y,bw=X+T.w-bx,bh=FEST_ROOM.h;
@@ -3904,7 +3923,7 @@ function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X
     const cx=bx+bw/2,cy=by+30;g.fillStyle='#14101a';g.beginPath();g.arc(cx,cy,11,0,TAU);g.fill();g.fillStyle='#d8202a';g.beginPath();g.arc(cx,cy,10,0,TAU);g.fill();g.fillStyle='#ffffff';g.fillRect(cx-7,cy-2,14,4);
     g.fillStyle='#14101a';g.font='7px Silkscreen, monospace';g.textAlign='center';g.textBaseline='middle';g.fillText('RESTRICTED',cx,by+52);g.fillText('ACCESS',cx,by+62);
     g.restore();}}
-function festStageFx(g,inV,tm,phase){const T=TRIPS.fest;if(!T)return;if(phase==='over'&&FEST_WF_CV&&inV(T.x0+980,T.y0+240,220))festWfOver(g,inV,tm,T,festInRoom(T));if(phase==='under'){festWheel(g,inV,tm);if(festInRoom(T))festRoomDraw(g,T,tm);}const X=T.x0,Y=T.y0,cols=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff'];const beat=Math.floor(tm*2.2);
+function festStageFx(g,inV,tm,phase){const T=TRIPS.fest;if(!T)return;if(phase==='under')festLabTick(T);if(phase==='over'&&FEST_WF_CV&&inV(T.x0+980,T.y0+240,220))festWfOver(g,inV,tm,T,festInRoom(T));if(phase==='under'){festWheel(g,inV,tm);if(festInRoom(T))festRoomDraw(g,T,tm);}const X=T.x0,Y=T.y0,cols=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff'];const beat=Math.floor(tm*2.2);
   const scr=[[406,120,228,36,0,['#ff3d9a','#ff7ad8','#c46bff','#ffb4e8','#ff9ac8']],[766,246,128,36,0,['#4fc3f7','#8ad0ff','#3a8aff','#bff0ff','#2a6ad8']],[24,384,30,172,1,['#ffd23d','#ff8a3a','#ff4a6a','#d83a8a','#ffb43a']]];
   if(phase==='under'){for(const[sx,sy,sw,sh,vert,pal]of scr){if(!inV(X+sx+sw/2,Y+sy+sh/2,200))continue;g.fillStyle='#0a0612';g.fillRect(X+sx,Y+sy,sw,sh);const n=vert?Math.floor(sh/6):Math.floor(sw/6);
       for(let i=0;i<n;i++){const v=0.25+0.75*Math.abs(Math.sin(tm*3.1+i*0.7)*Math.cos(tm*1.3+i*0.31));const c=pal[(i+beat)%5];g.fillStyle=c;if(vert){const L=sw*v;g.fillRect(X+sx+(sw-L)/2,Y+sy+i*6+1,L,4);}else{const L=sh*v;g.fillRect(X+sx+i*6+1,Y+sy+sh-L,4,L);}}
