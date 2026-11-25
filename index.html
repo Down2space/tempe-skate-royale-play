@@ -4065,7 +4065,7 @@ function festRainScreen(g,x,y,w,h,tm){g.save();g.beginPath();g.rect(x,y,w,h);g.c
   g.fillStyle='rgba(255,255,255,0.05)';for(let yy=y;yy<y+h;yy+=3)g.fillRect(x,yy,w,1);g.restore();}
 function festRainCloud(g,X,Y,tm){
   /* big hanging raindrop cutouts (tip -> bulb bottom, width) */
-  const DR=[[750,219,748,258,13],[760,249,757,274,10],[787,219,784,249,9],[820,237,817,260,8],[861,218,859,253,9],[907,215,899,275,14],[798,226,796,265,9],[837,229,837,255,10],[915,226,915,260,10]];
+  const DR=[[750,219,748,258,13],[760,249,757,274,10],[787,219,784,249,9],[820,222,817,247,8],[861,218,859,253,9],[907,215,899,275,14],[798,226,796,265,9],[837,229,837,255,10],[915,226,915,260,10]];
   DR.forEach(([tx,ty,bx,by,w],k)=>{const bg=3+(1-Math.cos(tm*0.9+k*1.1))*4,ax=X+bx,ay=Y+ty+bg*0.35,cx=X+bx,r=w/2,cy=Y+by-r+bg;const BL=['#9ae8ff','#4fc3f7','#2a8aff','#1e5ad8','#3ab8e8','#7ad0ff'],ph=tm*0.6+k*0.7,c0=BL[Math.floor(ph)%6],c1=BL[(Math.floor(ph)+2)%6],c2=BL[(Math.floor(ph)+4)%6];
     const drop=(gr)=>{g.beginPath();g.moveTo(ax,ay-gr);g.bezierCurveTo(ax+r*0.25+gr,ay+(cy-ay)*0.45,cx+r+gr,cy-r*0.6,cx+r+gr,cy);g.arc(cx,cy,r+gr,0,Math.PI);g.bezierCurveTo(cx-r-gr,cy-r*0.6,ax-r*0.25-gr,ay+(cy-ay)*0.45,ax,ay-gr);g.closePath();};
     drop(1.4);g.fillStyle='#0e2a3a';g.fill();drop(0);const lg=g.createLinearGradient(cx-r,0,cx+r,0);lg.addColorStop(0,c0);lg.addColorStop(0.55,c1);lg.addColorStop(1,c2);g.fillStyle=lg;g.globalAlpha=0.92;g.fill();g.globalAlpha=1;
