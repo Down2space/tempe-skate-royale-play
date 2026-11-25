@@ -3682,7 +3682,11 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
     for(const ty of[sy0-8,sy0+sh]){f(sx0-4,ty,sw+8,8,'#5a5a62');for(let k=0;k<sw+8;k+=8)f(sx0-4+k,ty,1,8,'#3a3a42');for(let k=0;k<7;k++)e(sx0+k*14,ty+4,2,2,NEON[k%5]);}
     for(const ty of[sy0-36,sy0+sh+8]){S(sx0+40,ty,44,28);f(sx0+40,ty,44,28,'#0e0c12');for(let k=0;k<3;k++){e(sx0+50+k*13,ty+14,5,6,'#2a2630');e(sx0+50+k*13,ty+14,2,2.5,'#4a4450');}}
     poly([[sx0,sy0+4],[4,sy0+sh/2],[sx0,sy0+sh-4]],'#ff6a2a');poly([[sx0,sy0+sh/2],[4,sy0+sh/2],[sx0,sy0+sh-4]],shade('#ff6a2a',-0.2));
-    for(let j=sy0-20;j<sy0+sh+20;j+=8){f(sx0+sw+10,j,1,7,'#c8ccd2');f(sx0+sw+15,j,1,7,'#c8ccd2');f(sx0+sw+10,j,6,1,'#a8acb2');}S(sx0+sw+10,sy0-20,6,sh+40,{low:1});
+    /* grindable rail all the way around the stage + speakers */
+    {const L=4,R=118,Tp=318,Bt=622,seg=[[L,Tp,R,Tp],[R,Tp,R,Bt],[R,Bt,L,Bt],[L,Bt,L,Tp]];
+     for(const[x1,y1,x2,y2]of seg){const len=Math.hypot(x2-x1,y2-y1);for(let d=0;d<=len;d+=12){const px=x1+(x2-x1)*d/len,py=y1+(y2-y1)*d/len;f(px-1,py-1,3,6,'#14101a');f(px,py,1,5,'#8a8e96');}}
+     for(const[x1,y1,x2,y2]of seg){RAILS.push([X+x1,Y+y1,X+x2,Y+y2]);g.lineCap='square';g.strokeStyle='#14101a';g.lineWidth=4;g.beginPath();g.moveTo(X+x1,Y+y1);g.lineTo(X+x2,Y+y2);g.stroke();g.strokeStyle='#d8dde2';g.lineWidth=2;g.stroke();}
+     S(L-1,Tp-1,R-L+2,3,{low:1});S(L-1,Bt-1,R-L+2,3,{low:1});S(L-1,Tp-1,3,Bt-Tp+2,{low:1});S(R-1,Tp-1,3,Bt-Tp+2,{low:1});}
     
     for(let y=sy0+10;y<sy0+sh-10;y+=2){const xx=150+Math.sin((y-sy0)/30)*6;f(xx,y,1,2,'#3a3a42');if(y%14===0)f(xx,y-1,3,3,NEON[(y/14)%5]);}
     occ(0,sy0-70,214,sh+130);}
