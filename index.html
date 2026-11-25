@@ -3755,7 +3755,7 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   /* ---- skate zone pad (rails added later) ---- */
   {const PAD=[[14,672],[22,656],[40,652],[188,652],[206,666],[240,698],[290,728],[340,749],[400,768],[446,780],[444,785],[16,785]];
     const padPath=(o)=>{g.beginPath();PAD.forEach((q,i)=>{const cx=X+q[0]+(q[0]<120?-o:o*0.6),cy=Y+q[1]+(q[1]<700&&q[0]<200?-o:o*0.4);i?g.lineTo(cx,cy):g.moveTo(cx,cy);});g.closePath();};
-    g.save();g.lineJoin='round';padPath(0);g.strokeStyle='#8a8680';g.lineWidth=3;g.stroke();
+    g.save();g.lineJoin='round';padPath(0);g.strokeStyle='rgba(0,0,0,0.18)';g.lineWidth=10;g.stroke();g.strokeStyle='#7e7a72';g.lineWidth=6;g.stroke();
     padPath(0);g.fillStyle='#8e86a8';g.fill();g.clip();
     for(let i=0;i<1800;i++)f(10+r()*440,648+r()*140,1,1,['#857d9e','#9a92b4','#a29abc','#7e7696'][(r()*4)|0]);
     for(let x=60;x<450;x+=56){g.fillStyle='#7a7292';g.fillRect(X+x,Y+648,1,140);}g.fillStyle='#7a7292';g.fillRect(X+10,Y+712,440,1);
