@@ -4046,23 +4046,33 @@ function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X
 function festSunTop(g,cx,cy,tm){const gr=g.createRadialGradient(cx,cy,2,cx,cy,34);gr.addColorStop(0,'rgba(255,210,61,0.7)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(cx-34,cy-34,68,68);
   g.strokeStyle='#ffb43a';g.lineWidth=2;for(let k=0;k<12;k++){const a=k/12*TAU+tm*0.3;g.beginPath();g.moveTo(cx+Math.cos(a)*12,cy+Math.sin(a)*12);g.lineTo(cx+Math.cos(a)*20,cy+Math.sin(a)*20);g.stroke();}
   g.fillStyle='#ff9a2a';g.beginPath();g.arc(cx,cy,12,0,TAU);g.fill();g.fillStyle='#ffd23d';g.beginPath();g.arc(cx,cy,9,0,TAU);g.fill();}
+let FSS_CV=null,FSS_T=-1,FSS_F=null;
 function festStormScreen(g,x,y,w,h,tm){const hsh=v=>{const s=Math.sin(v*127.1)*43758.5;return s-Math.floor(s);};
-  /* drawn in the stage's frame: rotated so "up" is the back of the stage and lightning strikes down onto the stage floor */
+  /* pixel-art cumulus: organic outline, billows lit from the back of the stage, banded tones, drifting rainbow colors */
+  const PAD=16,CW=Math.ceil(w+PAD*2),CH=Math.ceil(h+PAD*2),ox=x-PAD,oy=y-PAD;
+  if(!FSS_CV||FSS_CV.width!==CW||FSS_CV.height!==CH){FSS_CV=document.createElement('canvas');FSS_CV.width=CW;FSS_CV.height=CH;}
   const P=[];for(let k=0;k<=18;k++){const yy=y+2+k*(h-4)/18,cx=x+w/2+Math.sin(k*0.9)*5+Math.sin(k*2.3)*2,R=10+Math.sin(k*1.3)*3.5+hsh(k+0.1)*3+Math.sin(tm*1.1+k)*0.6;P.push([cx,yy,R]);
     for(let j=0;j<2;j++){const an=(j?0:Math.PI)+(hsh(k*2+j)-0.5)*1.6,d=R*(0.75+hsh(k*3+j)*0.2),r2=3.5+hsh(k*5+j)*4;P.push([cx+Math.cos(an)*d,yy+Math.sin(an)*d,r2+Math.sin(tm*1.4+k+j)*0.4]);}}
   P.push([x+w/2-4,y-4,8],[x+w/2+5,y-1,6],[x+w/2+3,y+h+3,8],[x+w/2-6,y+h,6]);
-  const shape=(grow)=>{g.beginPath();for(const q of P){g.moveTo(q[0]+q[2]+grow,q[1]);g.arc(q[0],q[1],q[2]+grow,0,TAU);}};
-  shape(1.5);g.fillStyle='#14061e';g.fill();
-  g.save();g.translate(x+w/2,y+h/2);g.rotate(-Math.PI/2);const W=h+30,H=w+20,L0=-W/2,T0=-H/2,B0=w/2;
+  const B=[];const rows=[[-9,15,22],[-1,12,17],[7,10,13],[13,8,10]];
+  rows.forEach((rw,ri)=>{const sp=rw[2],n=Math.ceil((h+40)/sp)+1,drift=(tm*(2+ri*1.5))%sp;for(let k=0;k<n;k++){const cy=y-20+k*sp+drift+hsh(ri*31+k)*5,cx=x+w/2+rw[0]+(hsh(ri*17+k)-0.5)*5,r=rw[1]+(hsh(ri*7+k)-0.5)*4;B.push([cx,cy,r,ri,k]);}});
+  const STOP=[[255,122,168],[255,184,106],[196,107,255],[79,195,247],[90,240,208],[255,122,216]];
+  const col=v=>{v=((v%STOP.length)+STOP.length)%STOP.length;const a=Math.floor(v),f=v-a,A=STOP[a],Bc=STOP[(a+1)%STOP.length];return[A[0]+(Bc[0]-A[0])*f,A[1]+(Bc[1]-A[1])*f,A[2]+(Bc[2]-A[2])*f];};
+  const mix=(c,d,t)=>[c[0]+(d[0]-c[0])*t,c[1]+(d[1]-c[1])*t,c[2]+(d[2]-c[2])*t];const WH=[255,255,255],SH=[42,16,80];
   const slot=Math.floor(tm*7),flash=hsh(slot)<0.55,fc=['#ff3d9a','#4fc3f7','#7dff6a','#ffc23d','#c46bff','#ffffff'][Math.floor(hsh(slot+0.5)*6)];
-  g.save();g.rotate(Math.PI/2);g.translate(-(x+w/2),-(y+h/2));shape(0);g.translate(x+w/2,y+h/2);g.rotate(-Math.PI/2);g.clip();g.fillStyle='#2a0a4a';g.fillRect(L0-20,T0-20,W+40,H+40);
-  const CC=['#c46bff','#ff3d9a','#4fc3f7','#7a4ac8','#ff7ad8'];
-  for(let i=0;i<5;i++){const ry=T0+1+i*10,c=CC[(i+Math.floor(tm*1.2))%5],c2=CC[(i+2+Math.floor(tm*1.2))%5],off=(tm*6*(i%2?1:-1))%24,dk=i/4*0.2;
-    const bl=[];for(let k=-1;k<=W/9+1;k++)bl.push([L0+k*9+off+Math.sin(i*3.7+k*1.9)*2,ry+Math.sin(i*2.1+k*1.3)*3,9+Math.sin(i*1.3+k*2.7)*2.5]);
-    g.fillStyle='rgba(10,0,24,0.4)';g.beginPath();for(const q of bl){g.moveTo(q[0]+q[2]+1,q[1]+3);g.arc(q[0],q[1]+3,q[2]+1,0,TAU);}g.fill();
-    for(const q of bl){const[qx,qy,r]=q;const gr=g.createRadialGradient(qx-r*0.25,qy-r*0.45,r*0.1,qx,qy,r);gr.addColorStop(0,shade(c2,0.35-dk));gr.addColorStop(0.6,shade(c,0.05-dk));gr.addColorStop(1,shade(c,-0.3-dk));g.fillStyle=gr;g.beginPath();g.arc(qx,qy,r,0,TAU);g.fill();}}
-  if(flash){g.globalAlpha=0.3;g.fillStyle=fc;g.fillRect(L0-20,T0-20,W+40,H+40);g.globalAlpha=1;}
-  g.restore();
+  const redo=Math.abs(tm-FSS_T)>0.07||flash!==FSS_F;if(redo){FSS_T=tm;FSS_F=flash;
+  const cg=FSS_CV.getContext('2d'),id=cg.createImageData(CW,CH),D=id.data;const inM=(px,py)=>{for(const q of P){const dx=px-q[0],dy=py-q[1];if(dx*dx+dy*dy<q[2]*q[2])return true;}return false;};
+  const M=new Uint8Array(CW*CH);for(let j=0;j<CH;j++)for(let i=0;i<CW;i++)if(inM(ox+i+0.5,oy+j+0.5))M[j*CW+i]=1;
+  const LX=-0.8,LY=-0.6;
+  for(let j=0;j<CH;j++)for(let i=0;i<CW;i++){const m=j*CW+i,o=m*4;
+    if(!M[m]){if(M[m-1]||M[m+1]||M[m-CW]||M[m+CW]){D[o]=20;D[o+1]=6;D[o+2]=30;D[o+3]=255;}continue;}
+    const px=ox+i+0.5,py=oy+j+0.5;let best=null;for(const b of B){const dx=px-b[0],dy=py-b[1];if(dx*dx+dy*dy<b[2]*b[2]){if(!best||b[3]>best[3]||(b[3]===best[3]&&b[4]>best[4]))best=b;}}
+    let base=col((py-y)/46+tm*0.15+(best?best[3]*0.35:0)),c;
+    if(!best)c=mix(base,SH,0.55);else{const dx=(px-best[0])/best[2],dy=(py-best[1])/best[2],d=dx*LX+dy*LY,e=Math.sqrt(dx*dx+dy*dy);
+      const t=d+0.25*(1-e);c=t>0.6?mix(base,WH,0.5):t>0.2?mix(base,WH,0.22):t>-0.3?base:mix(base,SH,0.5);if(e>0.86&&d<0.1)c=mix(c,SH,0.25);}
+    if(flash)c=mix(c,WH,0.1);D[o]=c[0];D[o+1]=c[1];D[o+2]=c[2];D[o+3]=255;}
+  cg.putImageData(id,0,0);}const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(FSS_CV,ox,oy);g.imageSmoothingEnabled=sm;
+  g.save();g.translate(x+w/2,y+h/2);g.rotate(-Math.PI/2);const W=h+30,L0=-W/2,B0=w/2;
   if(flash){for(let b=0;b<2;b++){const sd=slot*3+b;let lx=L0+12+hsh(sd)*(W-24),ly=B0-12;const L=34+hsh(sd+0.7)*30;g.lineCap='round';g.lineJoin='round';
     const pts=[[lx,ly]];for(let k=0;k<7;k++){lx+=(hsh(sd+k*1.3)-0.5)*16;ly+=L/7;pts.push([lx,ly]);}
     const br=[pts[3],[pts[3][0]+(hsh(sd+9)-0.5)*20,pts[3][1]+8],[pts[3][0]+(hsh(sd+11)-0.5)*26,pts[3][1]+16]];
