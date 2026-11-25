@@ -3684,8 +3684,8 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
     poly([[sx0,sy0+4],[4,sy0+sh/2],[sx0,sy0+sh-4]],'#ff6a2a');poly([[sx0,sy0+sh/2],[4,sy0+sh/2],[sx0,sy0+sh-4]],shade('#ff6a2a',-0.2));
     /* grindable rail all the way around the stage + speakers */
     {const L=4,R=118,Tp=318,Bt=622,seg=[[L,Tp,R,Tp],[R,Tp,R,Bt],[R,Bt,L,Bt],[L,Bt,L,Tp]];
-     for(const[x1,y1,x2,y2]of seg){const len=Math.hypot(x2-x1,y2-y1);for(let d=0;d<=len;d+=12){const px=x1+(x2-x1)*d/len,py=y1+(y2-y1)*d/len;f(px-1,py-1,3,6,'#14101a');f(px,py,1,5,'#8a8e96');}}
-     for(const[x1,y1,x2,y2]of seg){RAILS.push([X+x1,Y+y1,X+x2,Y+y2]);g.lineCap='square';g.strokeStyle='#14101a';g.lineWidth=4;g.beginPath();g.moveTo(X+x1,Y+y1);g.lineTo(X+x2,Y+y2);g.stroke();g.strokeStyle='#d8dde2';g.lineWidth=2;g.stroke();}
+     for(const q of seg)RAILS.push([X+q[0],Y+q[1],X+q[2],Y+q[3]]);
+     g.lineJoin='miter';g.beginPath();g.rect(X+L,Y+Tp,R-L,Bt-Tp);g.strokeStyle='#0a0a0e';g.lineWidth=4;g.stroke();g.beginPath();g.rect(X+L,Y+Tp-0.5,R-L,Bt-Tp);g.strokeStyle='#3a3a44';g.lineWidth=1;g.stroke();
      S(L-1,Tp-1,R-L+2,3,{low:1});S(L-1,Bt-1,R-L+2,3,{low:1});S(L-1,Tp-1,3,Bt-Tp+2,{low:1});S(R-1,Tp-1,3,Bt-Tp+2,{low:1});}
     
     for(let y=sy0+10;y<sy0+sh-10;y+=2){const xx=150+Math.sin((y-sy0)/30)*6;f(xx,y,1,2,'#3a3a42');if(y%14===0)f(xx,y-1,3,3,NEON[(y/14)%5]);}
