@@ -4065,7 +4065,7 @@ function festStormScreen(g,x,y,w,h,tm){const hsh=v=>{const s=Math.sin(v*127.1)*4
   const M=new Uint8Array(CW*CH);for(let j=0;j<CH;j++)for(let i=0;i<CW;i++)if(inM(ox+i+0.5,oy+j+0.5))M[j*CW+i]=1;
   const LX=-0.8,LY=-0.6;
   for(let j=0;j<CH;j++)for(let i=0;i<CW;i++){const m=j*CW+i,o=m*4;
-    if(!M[m]){if(M[m-1]||M[m+1]||M[m-CW]||M[m+CW]){D[o]=20;D[o+1]=6;D[o+2]=30;D[o+3]=255;}continue;}
+    if(!M[m]){if(M[m-1]||M[m+1]||M[m-CW]||M[m+CW]){D[o]=255;D[o+1]=196;D[o+2]=222;D[o+3]=255;}continue;}
     const px=ox+i+0.5,py=oy+j+0.5;let best=null;for(const b of B){const dx=px-b[0],dy=py-b[1];if(dx*dx+dy*dy<b[2]*b[2]){if(!best||b[3]>best[3]||(b[3]===best[3]&&b[4]>best[4]))best=b;}}
     let base=col((py-y)/46+tm*0.35+(best?best[3]*0.35:0)),c;
     if(!best)c=mix(base,SH,0.55);else{const dx=(px-best[0])/best[2],dy=(py-best[1])/best[2],d=dx*LX+dy*LY,e=Math.sqrt(dx*dx+dy*dy);
