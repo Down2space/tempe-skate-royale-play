@@ -3769,7 +3769,7 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   /* ---- services ---- */
   {for(let i=0;i<4;i++){const bx=700+i*18,by=120;blk(bx,by,14,20,'#3a8ad8');f(bx+2,by+2,10,3,'#8ad0ff');}occ(696,100,80,44);
     for(let i=0;i<4;i++){const bx=20+i*18,by=110;blk(bx,by,14,20,'#3a8ad8');f(bx+2,by+2,10,3,'#8ad0ff');}occ(16,104,76,30);
-    blk(688,280,22,16,'#2a6ad8');e(699,286,4,4,'#8ad0ff');blk(326,250,22,16,'#2a6ad8');e(337,256,4,4,'#8ad0ff');occ(684,276,30,24);occ(322,246,30,24);
+    blk(688,280,22,16,'#2a6ad8');e(699,286,4,4,'#8ad0ff');occ(684,276,30,24);occ(322,246,30,24);
     blk(612,676,40,26,'#f4efe4');f(626,682,12,3,'#e8323a');f(630,678,4,11,'#e8323a');occ(608,660,48,46);
     
     blk(30,620,16,22,'#2a8a4a');f(33,624,10,7,'#9affc8');occ(26,616,24,30);}
@@ -4217,7 +4217,7 @@ window.__probTrip=probTrip;window.__dmtTrip=dmtTrip;window.__CHARS=CHARS;
 const NEON_C=['#ff3d9a','#4fc3f7','#ffc23d','#7dff6a','#c46bff'];
 function festDecor(plant,bush,agave,prickly){const T=TRIPS.fest,X=T.x0,Y=T.y0,r=rng0(8181);
   const ok=(x,y,m)=>!festOcc(x,y,m)&&!festNearPath(x,y,24)&&x>12&&x<T.w-12&&y>96&&y<790;
-  for(let i=0;i<1400;i++){const x=16+r()*(T.w-32),y=98+r()*690;if(!ok(x,y,14))continue;const k=r();
+  const NO=[[323,210],[272,276],[276,306],[259,316],[258,299]];for(let i=0;i<1400;i++){const x=16+r()*(T.w-32),y=98+r()*690;if(!ok(x,y,14))continue;const k=r();if(NO.some(q=>Math.abs(q[0]-x)<3&&Math.abs(q[1]-y)<3))continue;
     if(k<0.32)plant('mq',X+x,Y+y);else if(k<0.44)plant('ol',X+x,Y+y);else if(k<0.56)plant('jac',X+x,Y+y);else if(k<0.62)plant('palm',X+x,Y+y);else if(k<0.66)plant('alien',X+x,Y+y);else r();}}
 
 let FSA=1;function festSails(g,inV){const T=TRIPS.fest;if(!inV(T.x0+300,T.y0+460,160))return;const f=camFocus();let under=false;
