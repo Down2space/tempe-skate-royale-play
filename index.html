@@ -4052,8 +4052,8 @@ function festStormScreen(g,x,y,w,h,tm){const hsh=v=>{const s=Math.sin(v*127.1)*4
   const PAD=16,CW=Math.ceil(w+PAD*2),CH=Math.ceil(h+PAD*2),ox=x-PAD,oy=y-PAD;
   if(!FSS_CV||FSS_CV.width!==CW||FSS_CV.height!==CH){FSS_CV=document.createElement('canvas');FSS_CV.width=CW;FSS_CV.height=CH;}
   const P=[];for(let k=0;k<=18;k++){const yy=y+2+k*(h-4)/18,cx=x+w/2+Math.sin(k*0.9)*5+Math.sin(k*2.3)*2,R=10+Math.sin(k*1.3)*3.5+hsh(k+0.1)*3+Math.sin(tm*1.1+k)*0.6;P.push([cx,yy,R]);
-    }
-  P.push([x+w/2-2,y-3,9],[x+w/2+2,y+h+2,9]);
+    for(let j=0;j<2;j++){const an=(j?0:Math.PI)+(hsh(k*2+j)-0.5)*1.6,d=R*(0.75+hsh(k*3+j)*0.2),r2=3.5+hsh(k*5+j)*4;P.push([cx+Math.cos(an)*d,yy+Math.sin(an)*d,r2+Math.sin(tm*1.4+k+j)*0.4]);}}
+  P.push([x+w/2-4,y-4,8],[x+w/2+5,y-1,6],[x+w/2+3,y+h+3,8],[x+w/2-6,y+h,6]);
   const B=[];const rows=[[-9,15,22],[-1,12,17],[7,10,13],[13,8,10]];
   rows.forEach((rw,ri)=>{const sp=rw[2],n=Math.ceil((h+40)/sp)+1,drift=(tm*(2+ri*1.5))%sp;for(let k=0;k<n;k++){const cy=y-20+k*sp+drift+hsh(ri*31+k)*5,cx=x+w/2+rw[0]+(hsh(ri*17+k)-0.5)*5,r=rw[1]+(hsh(ri*7+k)-0.5)*4;B.push([cx,cy,r,ri,k]);}});
   const STOP=[[255,122,168],[255,184,106],[196,107,255],[79,195,247],[90,240,208],[255,122,216]];
