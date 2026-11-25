@@ -919,6 +919,7 @@ function frontPrint(g,C,cx,ty,w,h,view){const p=C.print;if(p==='nicklogo'){if(vi
   else if(p==='skull'){ell(g,cx,ty+8,4.5,4,'#ececec');box(g,cx-2.6,ty+10.5,5.2,3,'#ececec');ell(g,cx-1.7,ty+8,1.2,1.4,C.shirt);ell(g,cx+1.7,ty+8,1.2,1.4,C.shirt);}
   else if(p==='text'){let pc=C.printC||'#ffffff';{/* owner: print always contrasts with the shirt */const L=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(h||'');if(!m)return 0.5;const v=parseInt(m[1],16);return(0.3*(v>>16)+0.59*((v>>8)&255)+0.11*(v&255))/255;};if(Math.abs(L(pc)-L(C.shirt))<0.35)pc=L(C.shirt)>0.5?'#14101a':'#f4f2ee';}g.fillStyle=pc;const t=C.printT||'TEMPE';g.font='bold 5px monospace';g.textAlign='center';g.textBaseline='top';if(t.length>5){/* owner: long words sit lower on the chest and squeeze to fit between the arms */const tw=g.measureText(t).width,mw=w-9;const k=tw>mw?mw/tw:1;g.save();g.translate(cx,ty+9);g.scale(k,1);g.fillText(t,0,0);g.restore();}else g.fillText(t,cx,ty+6);}
   else if(p==='stripe'){box(g,cx-w/2,ty+9,w,3,C.printC||'#ffffff');}
+  else if(p==='bee'){box(g,cx-w/2,ty+7,w,3,'#14101a');box(g,cx-w/2,ty+14,w,3,'#14101a');}
   else if(p==='logo'){ell(g,cx+3,ty+7,2.6,2.6,C.printC||'#ffffff');}
   else if(p==='band'){g.fillStyle=C.printC||'#ffffff';g.fillRect(cx-5,ty+5,10,1.2);g.fillRect(cx-4,ty+8,8,4);g.fillStyle=C.shirt;g.fillRect(cx-2,ty+9,4,2);}
   if(C.top==='race'){// front race jersey
@@ -1021,6 +1022,7 @@ function torsoSide(g,C,hx,hy,L){g.save();g.translate(hx,hy);g.rotate(L);const bw
       else if(C.print==='mech'){const B=(x,y)=>{ell(g,x,y,1.3,1.3,'#1d1d24');ell(g,x,y,0.8,0.8,'#d8e0e8');};box(g,-7,-25,14,0.8,'#5a6470');box(g,-7,-14,14,0.8,'#5a6470');box(g,1,-24,0.8,10,'#5a6470');rrect(g,2.4,-22.6,4.6,6,1.2);g.fillStyle='#1d1d24';g.fill();ell(g,4.7,-19.6,1.6,1.6,'#6ee6ff');B(-5,-23);B(5.5,-12);B(-5,-12);B(-5,-6);B(5.5,-6);box(g,-8,-4.6,16,1.6,'#d6283a');}
       else if(C.print==='skeleton'){const bn='#dcd6ca';box(g,-1,-27,2,24,bn);for(let r=0;r<5;r++){const y=-24+r*3.6,w=8-r*0.6;box(g,-w,y,w-1.4,1.3,bn);box(g,1.4,y,w-1.4,1.3,bn);}box(g,-3,-6,6,2,bn);}
       else if(C.print==='stripe'){box(g,-20,-17,30,3,C.printC||'#fff');}
+      else if(C.print==='bee'){box(g,-20,-21,30,3,'#14101a');box(g,-20,-14,30,3,'#14101a');}
       else if(C.print==='nicklogo'){if(NICKLOGO.ok)g.drawImage(NICKLOGO,-5,-20,12,11);else box(g,-3,-21,7,6,'#f4f4f0');}
       else if(C.print==='text'||C.print==='band'||C.print==='logo'){box(g,-3,-20,7,6,C.printC||'#fff');}
       g.restore();}
@@ -1535,7 +1537,13 @@ function cfBodyFront(g,C,cx,hipY,back,phase){const bw=C.build||1;if(C.hwc)hwcBod
   if(C.chupaLook){const SP='#5a2a4a',SPL='#8a4a6a';if(phase==='behind'){for(let i=0;i<6;i++){const y=hipY-31+i*4.6,L=19-Math.abs(i-1.5)*2.4;for(const sd of[-1,1])cfSpike(g,cx+sd*13*bw,y,sd>0?-0.45:Math.PI+0.45,L,3.4,SP,SPL);}}
     else if(back){for(let i=0;i<7;i++){const y=hipY-30+i*4;cfSpike(g,cx,y+3,-Math.PI/2,7,3,SP,SPL);}}}
   if(C.mascotLook&&((phase==='behind'&&!back)||(phase==='front'&&back)))mascotWings(g,cx,hipY-31,back,false);if(C.mascotLook&&phase==='front'&&!back)mascotAbs(g,C,cx,hipY);const tail=(C.devilLook||C.mascotLook)?'devil':C.catTail?'cat':null;if(tail&&((phase==='behind'&&!back)||(phase==='front'&&back)))cfTail(g,cx+(back?-3:3),hipY-2,back?-1:1,tail,C);}
-function cfBodySide(g,C,hx,hy,L){const bw=C.build||1;g.save();g.translate(hx,hy);g.rotate(L);if(C.hwc)hwcBodySide(g,C);
+function fcWings(g,C,x,y,side,sq){const O='#14101a';const s=sq||1;
+  if(C.festCost==='bee'){for(const d of side){g.fillStyle='#5a6a7a';g.beginPath();g.ellipse(x+d*15*s,y-9,12,6.6,d*-0.6,0,TAU);g.fill();g.fillStyle='#e8f6ff';g.beginPath();g.ellipse(x+d*15*s,y-9,10.6,5.2,d*-0.6,0,TAU);g.fill();g.fillStyle='#ffffff';g.beginPath();g.ellipse(x+d*14*s,y-10,4.6,2,d*-0.6,0,TAU);g.fill();}return;}
+  const W=C.bfW;for(const d of side){const E=(ex,ey,rx,ry,r,col)=>{g.fillStyle=col;g.beginPath();g.ellipse(x+d*ex*s,ey+y,rx*s,ry,d*r,0,TAU);g.fill();};
+    E(17,-10,15,11,-0.5,O);E(14,8,10.5,8.5,0.45,O);E(17,-10,13.6,9.6,-0.5,W[0]);E(14,8,9.1,7.1,0.45,W[1]);E(19,-11,7,4.6,-0.5,W[1]);E(15,9,4.4,3.2,0.45,W[0]);
+    E(27,-15,2,2,0,'#ffffff');E(22,-19,1.6,1.6,0,'#ffffff');E(20,13,1.6,1.6,0,'#ffffff');}}
+const _cbfFc=cfBodyFront;cfBodyFront=function(g,C,cx,hipY,back,phase){if((C.festCost==='butterfly'||C.festCost==='bee')&&((phase==='behind'&&!back)||(phase==='front'&&back)))fcWings(g,C,cx,hipY-24,[-1,1]);return _cbfFc(g,C,cx,hipY,back,phase);};
+function cfBodySide(g,C,hx,hy,L){if(C.festCost==='butterfly'||C.festCost==='bee'){g.save();g.translate(hx,hy);g.rotate(L);fcWings(g,C,-4,-24,[-1],0.55);g.restore();}const bw=C.build||1;g.save();g.translate(hx,hy);g.rotate(L);if(C.hwc)hwcBodySide(g,C);
   if(C.chupaLook){for(let i=0;i<7;i++){const y=-31+i*4.4,Ln=18-Math.abs(i-2)*2;cfSpike(g,-9*bw,y,Math.PI+0.5,Ln,3.6,'#5a2a4a','#8a4a6a');}}
   if(C.mascotLook){mascotWings(g,-6,-31,false,true);}const tail=(C.devilLook||C.mascotLook)?'devil':C.catTail?'cat':null;if(tail)cfTail(g,-10,-2,-1,tail,C);g.restore();}
 function drawSide(g,C,P){const L=P.lean,cs=Math.cos(L),sn=Math.sin(L);const T=(lx,ly)=>({x:P.hipX+lx*cs-ly*sn,y:P.hipY+lx*sn+ly*cs});
@@ -3172,7 +3180,7 @@ function spawnTripAmbience0(){const fixedN=(x,y,P,o)=>{const n=Object.assign({x,
     FEST_TRENCH.n=fixedN(F2.x0+840,F2.y0+128,Object.assign({},npcCfg(1460),{id:'trench',hat:null,shirt:'#a8885a',shirtD:'#7a6038',pants:'#2a2a30',pantsD:'#1a1a20',pantsH:'#3a3a42',top:'tee',print:null,eyewear:'shades'}),{name:'Man in the Trench Coat',dmt:true});
     /* owner: Moonbeam in her pink alien form (MB_ALIEN), standing on the flat rock in the cave mouth */
     FEST_TRENCH.moon=fixedN(F2.x0+1010,F2.y0+177,{"id":"moonalien","mbAlien":true,"skin":"#9df0c0","skinD":"#5cc08a","hair":"#e6d8b8","hairD":"#bcae8a","hairH":"#fff4dc","brow":"#4a9a6a","beard":"#e6d8b8","sole":"#d8ccb0","sock":"#efe2c4","deck":"#555555","deckB":"#888888","arch":"Hippie","hairStyle":"bald","eyeliner":false,"lips":"#3a8a6a","earring":true,"top":"longsleeve","shirt":"#b83a7a","shirtD":"#842a58","print":"chevron","printC":"#d87a2a","neck":"pendant","chain":"#e8c860","legs":"baggy","fishnet":false,"pants":"#6a7a3a","pantsD":"#4a5529","pantsH":"#889561","boots":false,"shoeA":"#8a6a4a","shoeB":"#8a6a4a","bands":["#d87a2a","#7a5232"],"studs":false,"belt":null,"pack":null,"emblem":null,"tattoo":null,"build":1,"num":null,"gloves":null,"shoeCheck":false,"eyewear":null,"hat":null,"printT":null,"cargo":false,"overalls":false,"tie":null,"belly":false,"phones":null,"ak":"hot","fem":true,"lash":true,"crop":false,"skirt":null,"collarC":null,"navel":false,"facial":null,"hip":"shag","hipAcc":null,"hipBand":"#2a6ab8","hipPat":["#b83a7a","#d87a2a","#7a5232"]},{name:'Moonbeam',raved:true,hidden:true});
-    FEST_PERF_N.length=0;FEST_PERF.forEach((q,i)=>{const k=q[0];const COST={fire:'clown',hoop:'blossom',stilt:'clown',juggle:'clown',bubble:'flower',drum:'clown',poi:'flower',glow:'blossom',statue:null,walk:null}[k];let P=COST?festDude(1500+i*3,COST):festRaver(1500+i*3);if(COST)P=Object.assign({},P,{festCost:COST,id:P.id+'_'+COST});if(k==='statue')P=Object.assign({},P,{id:'statue',skin:'#c8ccd2',skinD:'#9a9ea6',hair:'#b8bcc4',hairD:'#8a8e96',hairH:'#e8eaee',shirt:'#b8bcc4',shirtD:'#8a8e96',pants:'#a8acb4',pantsD:'#7a7e86',pantsH:'#c8ccd2',hat:null,eyewear:null});
+    FEST_PERF_N.length=0;FEST_PERF.forEach((q,i)=>{const k=q[0];const COST={fire:'butterfly',hoop:'blossom',stilt:'butterfly',juggle:'bee',bubble:'flower',drum:'bee',poi:'flower',glow:'blossom',statue:null,walk:null}[k];let P=COST?festDude(1500+i*3,COST):festRaver(1500+i*3);if(COST)P=Object.assign({},P,{festCost:COST,id:P.id+'_'+COST});if(k==='glow')P=Object.assign(P,{shirt:'#3aa85a',shirtD:'#2a7a3e',pants:'#2a7a3e',pantsD:'#1a5a2a',pantsH:'#4ab86a',shoeA:'#2a5a2a',shoeB:'#2a5a2a',id:P.id+'_g'});if(k==='statue')P=Object.assign({},P,{id:'statue',skin:'#c8ccd2',skinD:'#9a9ea6',hair:'#b8bcc4',hairD:'#8a8e96',hairH:'#e8eaee',shirt:'#b8bcc4',shirtD:'#8a8e96',pants:'#a8acb4',pantsD:'#7a7e86',pantsH:'#c8ccd2',hat:null,eyewear:null});
       const o={costume:COST,name:{fire:'Fire Spinner',hoop:'Hoop Dancer',stilt:'Stilt Walker',juggle:'Juggler',bubble:'Bubble Artist',drum:'Drummer',poi:'LED Poi',glow:'Glow Dancer',statue:'Living Statue',walk:'Festival Goer'}[k]||'Performer',perfType:k};
       if(k==='walk'||k==='stilt')o.festWalk={k,i:q[1],t:Math.random()*20};
       const x=k==='walk'?522:k==='stilt'?548:q[1],y=k==='walk'?866:k==='stilt'?600:q[2];FEST_PERF_N.push(fixedN(F2.x0+x,F2.y0+y,P,o));});
@@ -3774,6 +3782,8 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
 function festDude(i,role){const P=Object.assign({},townNpc(i),{id:'fd'+i,pack:null,emblem:null,collarC:null,tie:null,hat:null});if(role)Object.assign(P,{crop:false,skirt:null,fishnet:false,navel:false});
   if(role==='security')return Object.assign(P,{id:'sec'+i,hat:null,hairStyle:['buzz','short','buzz'][i%3],facial:null,top:'longsleeve',shirt:'#16161c',shirtD:'#0a0a0e',tie:'#0b0b0e',collarC:'#f4f4f4',print:null,sunV:null,legs:'skinny',cargo:false,overalls:false,pants:'#16161c',pantsD:'#0a0a0e',pantsH:'#26262e',shoeA:'#0a0a0e',shoeB:'#0a0a0e',sole:'#202024',eyewear:'shades',neck:null,build:1.15,bands:null,tattoo:null,earring:false});/* owner: Bloom Fest security are the Men in Black */
   if(role==='clown')return Object.assign(P,{id:'clown'+i,hat:null,top:'tee',shirt:['#e8323a','#3a8ad8','#ffc23d','#7dff6a'][i%4],shirtD:'#5a1a2a',print:'stripe',printC:'#f4efe4',legs:'baggy',cargo:false,pants:['#ffc23d','#c46bff','#3a8ad8','#e8323a'][i%4],pantsD:'#6a4a10',pantsH:'#ffe68a',shoeA:'#e8323a',shoeB:'#e8323a',eyewear:null});
+  if(role==='butterfly'){const W=[['#ff7a3a','#ffc23d'],['#4fc3f7','#c46bff'],['#ff3d9a','#ffd23d'],['#7dff6a','#3affd8']][i%4];return Object.assign(P,{id:'bfly'+i,hat:null,top:'tee',shirt:'#14101a',shirtD:'#0a0810',print:null,legs:'skinny',cargo:false,overalls:false,pants:'#14101a',pantsD:'#0a0810',pantsH:'#2a2430',shoeA:W[0],shoeB:W[0],eyewear:null,bfW:W});}
+  if(role==='bee')return Object.assign(P,{id:'bee'+i,hat:null,top:'tee',shirt:'#ffc23d',shirtD:'#c8901a',print:'bee',legs:'skinny',cargo:false,overalls:false,pants:'#14101a',pantsD:'#0a0810',pantsH:'#2a2430',shoeA:'#14101a',shoeB:'#14101a',eyewear:null});
   if(role==='flower')return Object.assign(P,{id:'flower'+i,hat:null,top:'tee',shirt:'#3aa85a',shirtD:'#2a7a3e',print:null,legs:'skinny',pants:'#2a7a3e',pantsD:'#1a5a2a',pantsH:'#4ab86a',shoeA:'#2a5a2a',shoeB:'#2a5a2a',eyewear:null});
   if(role==='blossom')return Object.assign(P,{id:'blossom'+i,hat:null,top:'tee',shirt:'#ff7ab8',shirtD:'#d84a98',print:null,legs:'skinny',pants:'#ff9ac8',pantsD:'#d86a9a',pantsH:'#ffc8e4',shoeA:'#f4efe4',shoeB:'#f4efe4',eyewear:null});
   return P;}
@@ -16527,10 +16537,13 @@ function festCostHead(g,C,m){const c=C.festCost;
       puff(-10,-6,4.8,W[0]);puff(-6,-13,4.2,W[2]);puff(-11,1,4,W[1]);hat(-0.6);}
     else if(m==='sf'){puff(1,-13.6,4,shade(W[3],-0.25));puff(4,-8,3.6,shade(W[1],-0.25));}
     return;}
+  if(c==='butterfly'||c==='bee'){const O='#14101a',tip=c==='bee'?'#14101a':C.bfW[0];const ant=(x0,y0,x1,y1)=>{g.strokeStyle=O;g.lineWidth=1.4;g.lineCap='round';g.beginPath();g.moveTo(x0,y0);g.quadraticCurveTo(x0+(x1-x0)*0.2,y1+2,x1,y1);g.stroke();g.fillStyle=O;g.beginPath();g.arc(x1,y1,2.6,0,TAU);g.fill();g.fillStyle=tip;g.beginPath();g.arc(x1,y1,1.8,0,TAU);g.fill();};
+    if(m==='f'||m==='b'){ant(-3,-12,-8,-22);ant(3,-12,8,-22);}else if(m==='sn'){ant(1,-13,5,-23);}else if(m==='sf'){ant(-1,-13,-4,-23);}
+    return;}
   if(c==='flower'||c==='blossom'){const pc=c==='flower'?['#ffd23d','#ff8a2a']:['#ff7ab8','#ffb4e8'];const O=c==='flower'?'#8a4a10':'#a83a78';const sp=(typeof matchT!=='undefined'?Math.sin(matchT*1.5)*0.12:0);
     const ring=(cx,cy,R,rx,ry,front,sq)=>{for(let k=0;k<10;k++){const a=k/10*TAU+sp;const s=Math.sin(a);if(front!==null&&(front?s<-0.2:s>=-0.2))continue;const px=cx+Math.cos(a)*R*(sq||1),py=cy+s*R;g.fillStyle=O;g.beginPath();g.ellipse(px,py,rx+0.8,ry+0.8,a,0,TAU);g.fill();g.fillStyle=pc[k%2];g.beginPath();g.ellipse(px,py,rx,ry,a,0,TAU);g.fill();}};
-    if(m==='bf'||m==='bb'){ring(0,-1,15.6,5.4,4,null);}
-    else if(m==='sb'){ring(-1.4,-2,15.4,3.2,4.2,null,0.32);}
+    if(m==='bf'||m==='bb'){ring(0,-1,17.4,6.8,5.2,null);}
+    else if(m==='sb'){ring(-1.4,-2,17.2,4,5.4,null,0.32);}
     return;}}
 const _hFFfc=hairFrontF;hairFrontF=function(g,C,back){const r=_hFFfc(g,C,back);if(C.festCost)festCostHead(g,C,back?'b':'f');return r;};
 const _hFSfc=hairFrontSide;hairFrontSide=function(g,C){const r=_hFSfc(g,C);if(C.festCost)festCostHead(g,C,'sn');return r;};
