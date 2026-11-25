@@ -4172,7 +4172,7 @@ const NEON_C=['#ff3d9a','#4fc3f7','#ffc23d','#7dff6a','#c46bff'];
 function festDecor(plant,bush,agave,prickly){const T=TRIPS.fest,X=T.x0,Y=T.y0,r=rng0(8181);
   const ok=(x,y,m)=>!festOcc(x,y,m)&&!festNearPath(x,y,24)&&x>12&&x<T.w-12&&y>96&&y<790;
   for(let i=0;i<1400;i++){const x=16+r()*(T.w-32),y=98+r()*690;if(!ok(x,y,14))continue;const k=r();
-    if(k<0.32)plant('mq',X+x,Y+y);else if(k<0.44)plant('ol',X+x,Y+y);else if(k<0.56)plant('jac',X+x,Y+y);else if(k<0.62)plant('palm',X+x,Y+y);else if(k<0.66)plant('alien',X+x,Y+y);else bush(X+x,Y+y,['#2e6a2a','#3e7a34','#4a8a3a'][(r()*3)|0]);}}
+    if(k<0.32)plant('mq',X+x,Y+y);else if(k<0.44)plant('ol',X+x,Y+y);else if(k<0.56)plant('jac',X+x,Y+y);else if(k<0.62)plant('palm',X+x,Y+y);else if(k<0.66)plant('alien',X+x,Y+y);else r();}}
 
 let FSA=1;function festSails(g,inV){const T=TRIPS.fest;if(!inV(T.x0+300,T.y0+460,160))return;const f=camFocus();let under=false;
   for(const q of FEST_SAILS){const xs=[q[0][0],q[1][0],q[2][0]],ys=[q[0][1],q[1][1],q[2][1]];if(f&&f.x>T.x0+Math.min(...xs)&&f.x<T.x0+Math.max(...xs)&&f.y>T.y0+Math.min(...ys)&&f.y<T.y0+Math.max(...ys)+10)under=true;}
