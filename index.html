@@ -3753,7 +3753,17 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   /* letters installation */
   {const s='BLOOM';for(let i=0;i<5;i++){const lx=388+i*20,ly=660;S(lx-1,ly+12,16,4);f(lx-1,ly-1,18,18,'#14101a');f(lx,ly,16,16,NEON[i]);for(let pp=0;pp<5;pp++){const aa=pp/5*TAU;e(lx+8+Math.cos(aa)*3.5,ly+8+Math.sin(aa)*3.5,2.6,2.6,'#ffffff');}e(lx+8,ly+8,2,2,'#14101a');glow(lx+8,ly+8,16,NEON[i],0.4);}occ(380,650,104,32);}
   /* ---- skate zone pad (rails added later) ---- */
-  {f(26,676,206,112,'#8a8a92');f(30,680,198,104,'#a8a8b0');for(let i=0;i<360;i++)f(30+r()*198,680+r()*104,1,1,r()<0.5?'#9a9aa2':'#b4b4bc');for(let x=30;x<228;x+=40)f(x,680,1,104,'#9a9aa2');occ(20,664,220,130);}
+  {const PAD=[[14,672],[22,656],[40,652],[188,652],[206,666],[240,698],[290,728],[340,749],[400,768],[446,780],[444,785],[16,785]];
+    const padPath=(o)=>{g.beginPath();PAD.forEach((q,i)=>{const cx=X+q[0]+(q[0]<120?-o:o*0.6),cy=Y+q[1]+(q[1]<700&&q[0]<200?-o:o*0.4);i?g.lineTo(cx,cy):g.moveTo(cx,cy);});g.closePath();};
+    g.save();g.lineJoin='round';padPath(0);g.fillStyle='#2a1a3a';g.fill();g.strokeStyle='#2a1a3a';g.lineWidth=8;g.stroke();g.strokeStyle='#ff3d9a';g.lineWidth=3;g.stroke();
+    padPath(0);g.fillStyle='#8e86a8';g.fill();g.clip();
+    for(let i=0;i<1800;i++)f(10+r()*440,648+r()*140,1,1,['#857d9e','#9a92b4','#a29abc','#7e7696'][(r()*4)|0]);
+    for(let x=60;x<450;x+=56){g.fillStyle='#7a7292';g.fillRect(X+x,Y+648,1,140);}g.fillStyle='#7a7292';g.fillRect(X+10,Y+712,440,1);
+    const stencil=(cx,cy,R,c,a)=>{g.globalAlpha=a;g.fillStyle=c;for(let k=0;k<6;k++){const an=k/6*TAU;g.beginPath();g.ellipse(X+cx+Math.cos(an)*R*0.55,Y+cy+Math.sin(an)*R*0.55*0.6,R*0.42,R*0.26,an,0,TAU);g.fill();}g.fillStyle='#ffe68a';g.beginPath();g.ellipse(X+cx,Y+cy,R*0.22,R*0.15,0,0,TAU);g.fill();g.globalAlpha=1;};
+    stencil(150,704,34,'#4fc3f7',0.28);stencil(300,756,28,'#ffc23d',0.28);stencil(40,700,18,'#7dff6a',0.25);
+    for(let k=0;k<40;k++){g.globalAlpha=0.35;f(10+r()*440,650+r()*136,2,1,NEON[k%5]);}g.globalAlpha=1;
+    g.restore();
+    occ(8,644,206,146);occ(200,680,150,110);occ(340,736,116,54);}
   /* ---- services ---- */
   {for(let i=0;i<4;i++){const bx=700+i*18,by=120;blk(bx,by,14,20,'#3a8ad8');f(bx+2,by+2,10,3,'#8ad0ff');}occ(696,100,80,44);
     for(let i=0;i<4;i++){const bx=20+i*18,by=110;blk(bx,by,14,20,'#3a8ad8');f(bx+2,by+2,10,3,'#8ad0ff');}occ(16,104,76,30);
@@ -4548,8 +4558,19 @@ function drawTripsExtra(g){const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.f
     g.lineWidth=6;g.strokeStyle='#14101a';g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,TAU);g.stroke();for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];g.strokeStyle=cols[i%cols.length];g.lineWidth=3;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();}
     for(let i=0;i<n;i+=3)F(pts[i][0]-1,pts[i][1],2,5,'#5a5a62');LOOPS.push({cx,cy,ids,n});};
   /* FEST: skate zone + path rails + shady vendor tent */
-  {const T=TRIPS.fest,x=T.x0,y=T.y0;kicker(x+40,y+752,24,16);ledge(x+84,y+700,90,10);rail(x+60,y+776,x+200,y+776);kicker(x+196,y+690,24,16);
-    rail(x+250,y+780,x+440,y+780);
+  {const T=TRIPS.fest,x=T.x0,y=T.y0;/* bloom bowl: mini halfpipe */
+    const NEON=NEON_C;{const hx=x+28,hy=y+730,hw=168,hh=48,wl=26;F(hx-3,hy-3,hw+6,hh+6,'#2a1a3a');F(hx,hy,hw,hh,'#a49cc0');for(let i=0;i<wl;i++){const t=i/wl,c=shade('#c46bff',-0.45+t*0.4);F(hx+i,hy,1,hh,c);F(hx+hw-1-i,hy,1,hh,c);}
+     for(const cx of[hx+wl-2,hx+hw-wl])for(let k=0;k<hh;k+=4)F(cx,hy+k,2,2,k%8?'#4fc3f7':'#ff3d9a');F(hx,hy,3,hh,'#ff3d9a');F(hx+hw-3,hy,3,hh,'#ff3d9a');F(hx,hy,hw,2,'#ffe68a');F(hx,hy+hh-2,hw,2,'#5a3a7a');
+     for(let k=0;k<5;k++){const fx=hx+wl+18+k*24;F(fx-3,hy+hh/2-1,6,2,NEON[k]);F(fx-1,hy+hh/2-3,2,6,NEON[k]);}
+     HALFPIPES.push({x:hx,y:hy,w:hw,h:hh,wall:wl});}
+    /* flower loop rail around a neon planter */
+    {const cx=x+92,cy=y+690;F(cx-12,cy-6,24,12,'#2a1a3a');F(cx-11,cy-5,22,10,'#5aae48');for(let k=0;k<5;k++){const a=k/5*TAU;E2(g,cx+Math.cos(a)*4,cy-2+Math.sin(a)*3,2.6,NEON[(k+1)%5]);}E2(g,cx,cy-2,1.8,'#ffe68a');addSolid(cx-12,cy-6,24,12);
+     loop(cx,cy,30,18,14,['#ff3d9a','#ffc23d','#4fc3f7','#7dff6a','#c46bff']);}
+    /* rainbow ledge, flat rail, kickers, hubba rail along the path */
+    {const lx=x+156,ly=y+696;ledge(lx,ly,52,10,'#e8e0f0');for(let k=0;k<5;k++)F(lx+1+k*10,ly+8,10,2,NEON[k]);}
+    rail(x+132,y+664,x+186,y+664,'#4fc3f7');
+    kicker(x+204,y+752,22,14,'#ff3d9a');kicker(x+150,y+668,20,13,'#c46bff');
+    rail(x+238,y+740,x+352,y+772,'#ffc23d');
     {const px=x+950,py=y+680;F(px,py,56,30,'#14101a');for(let i=0;i<7;i++)F(px+1+i*8,py+1,8,20,i%2?'#3a1a4a':'#7a2a8a');F(px+4,py+21,48,8,'#2a1a2a');addSolid(px,py,56,22);}loot(T,6);}
   /* CRUCES: skatepark (southeast lot) + street spot by the bus stop */
   {const T=TRIPS.cruces,X=T.x0-340,Y=T.y0,x=X+1180,y=Y+756,w=400,h=128;F(x-4,y-4,w+8,h+8,'#8a7a6a');F(x,y,w,h,'#a8a8b0');for(let i=0;i<800;i++)F(x+r()*w,y+r()*h,1,1,r()<0.5?'#9a9aa2':'#b4b4bc');for(let xx=x+50;xx<x+w;xx+=50)F(xx,y,1,h,'#9a9aa2');for(let yy=y+50;yy<y+h;yy+=50)F(x,yy,w,1,'#9a9aa2');
