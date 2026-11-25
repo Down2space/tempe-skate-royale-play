@@ -5721,7 +5721,7 @@ function sk8Setup(){if(SK8.done||gameMode!=='story'||npcs.length<100)return;SK8.
   for(const n of npcs){if(!n.P||n.P.arch!=='Skater')continue;if(!(n.name==='Local'||n.name==='Skater'))continue;if(n.band||n.fan||n.sit||n.lie||n.vendor||n.rom||n.cast||n.ice)continue;
     if(typeof inBuilding==='function'&&inBuilding(n.x,n.y))continue;n.fixed=false;n.civ=true;n.sk8r=true;n.sk8G=null;n.sk8Stuck=0;n.hopT=0;n0++;}
   SK8.n=n0;}
-function sk8Pick(n){let best=null;for(let k=0;k<6;k++){const s=SK8_SPOTS[(Math.random()*SK8_SPOTS.length)|0];const d=D(n.x,n.y,s[0],s[1]);if(d>160&&d<900){best=s;break;}}best=best||SK8_SPOTS[(Math.random()*SK8_SPOTS.length)|0];const q=freeNear(best[0]+rnd(-30,30),best[1]+rnd(-30,30));n.sk8G={x:q.x,y:q.y};n.sk8Rest=0;}
+function sk8Pick(n){const FT=TRIPS.fest;if(FT&&n.x>FT.x0&&n.x<FT.x0+FT.w&&n.y>FT.y0&&n.y<FT.y0+FT.h){const P=[[60,700],[150,700],[110,752],[230,756],[300,756],[380,772],[180,668]],s=P[(Math.random()*P.length)|0];const q=freeNear(FT.x0+s[0]+rnd(-12,12),FT.y0+s[1]+rnd(-8,8));n.sk8G={x:q.x,y:q.y};n.sk8Rest=0;return;}let best=null;for(let k=0;k<6;k++){const s=SK8_SPOTS[(Math.random()*SK8_SPOTS.length)|0];const d=D(n.x,n.y,s[0],s[1]);if(d>160&&d<900){best=s;break;}}best=best||SK8_SPOTS[(Math.random()*SK8_SPOTS.length)|0];const q=freeNear(best[0]+rnd(-30,30),best[1]+rnd(-30,30));n.sk8G={x:q.x,y:q.y};n.sk8Rest=0;}
 function sk8Update(n,dt){
   if(player&&player.alive&&D(n.x,n.y,player.x,player.y)<34){n.vx*=0.8;n.vy*=0.8;if(Math.hypot(n.vx,n.vy)<4){n.vx=n.vy=0;}n.face=player.x<n.x?-1:1;return true;}   /* stop so you can talk */
   if(n.sk8Rest>0){n.sk8Rest-=dt;n.vx=n.vy=0;if(n.sk8Rest<=0)sk8Pick(n);return true;}
