@@ -4047,9 +4047,10 @@ function festSunTop(g,cx,cy,tm){const gr=g.createRadialGradient(cx,cy,2,cx,cy,34
   g.strokeStyle='#ffb43a';g.lineWidth=2;for(let k=0;k<12;k++){const a=k/12*TAU+tm*0.3;g.beginPath();g.moveTo(cx+Math.cos(a)*12,cy+Math.sin(a)*12);g.lineTo(cx+Math.cos(a)*20,cy+Math.sin(a)*20);g.stroke();}
   g.fillStyle='#ff9a2a';g.beginPath();g.arc(cx,cy,12,0,TAU);g.fill();g.fillStyle='#ffd23d';g.beginPath();g.arc(cx,cy,9,0,TAU);g.fill();}
 function festStormScreen(g,x,y,w,h,tm){const hsh=v=>{const s=Math.sin(v*127.1)*43758.5;return s-Math.floor(s);};
-  const P=[];for(let yy=y+6;yy<=y+h-6;yy+=11){const k=(yy-y)/11;P.push([x+1+Math.sin(k*2.3)*2,yy,7+((k*7)%3)]);P.push([x+w-1+Math.sin(k*1.7+1)*2,yy+5,7+((k*5)%3)]);}
-  for(let xx=x+6;xx<=x+w-6;xx+=9){P.push([xx,y+2,8]);P.push([xx+3,y+h-2,8]);}
-  const shape=(grow)=>{g.beginPath();g.rect(x,y,w,h);for(const q of P){g.moveTo(q[0]+q[2]+grow,q[1]);g.arc(q[0],q[1],q[2]+grow,0,TAU);}};
+  const P=[];for(let k=0;k<=18;k++){const yy=y+2+k*(h-4)/18,cx=x+w/2+Math.sin(k*0.9)*5+Math.sin(k*2.3)*2,R=10+Math.sin(k*1.3)*3.5+hsh(k+0.1)*3+Math.sin(tm*1.1+k)*0.6;P.push([cx,yy,R]);
+    for(let j=0;j<2;j++){const an=(j?0:Math.PI)+(hsh(k*2+j)-0.5)*1.6,d=R*(0.75+hsh(k*3+j)*0.2),r2=3.5+hsh(k*5+j)*4;P.push([cx+Math.cos(an)*d,yy+Math.sin(an)*d,r2+Math.sin(tm*1.4+k+j)*0.4]);}}
+  P.push([x+w/2-4,y-4,8],[x+w/2+5,y-1,6],[x+w/2+3,y+h+3,8],[x+w/2-6,y+h,6]);
+  const shape=(grow)=>{g.beginPath();for(const q of P){g.moveTo(q[0]+q[2]+grow,q[1]);g.arc(q[0],q[1],q[2]+grow,0,TAU);}};
   shape(1.5);g.fillStyle='#14061e';g.fill();
   g.save();shape(0);g.clip();
   const gr=g.createLinearGradient(x,y,x+w,y);gr.addColorStop(0,'#2a0a4a');gr.addColorStop(1,'#1a0630');g.fillStyle=gr;g.fillRect(x-14,y-14,w+28,h+28);
