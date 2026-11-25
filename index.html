@@ -4072,7 +4072,14 @@ function festStormScreen(g,x,y,w,h,tm){const hsh=v=>{const s=Math.sin(v*127.1)*4
       const t=d+0.25*(1-e);c=t>0.6?mix(base,WH,0.5):t>0.2?mix(base,WH,0.22):t>-0.3?base:mix(base,SH,0.5);if(e>0.86&&d<0.1)c=mix(c,SH,0.25);}
     if(flash)c=mix(c,WH,0.1);D[o]=c[0];D[o+1]=c[1];D[o+2]=c[2];D[o+3]=255;}
   cg.putImageData(id,0,0);}
-  {const sx=x-6,sy=y-24,sw=40,sh=h+48;const sg=g.createLinearGradient(sx,0,sx+sw,0);sg.addColorStop(0,'#3a8ad8');sg.addColorStop(1,'#8ad0ff');g.fillStyle=sg;g.fillRect(sx,sy,sw,sh);}
+  {const sx=x-6,sy=y-24,sw=40,sh=h+48;const sg=g.createLinearGradient(sx,0,sx+sw,0);sg.addColorStop(0,'#3a8ad8');sg.addColorStop(1,'#8ad0ff');g.fillStyle=sg;g.fillRect(sx,sy,sw,sh);
+    g.save();g.beginPath();g.rect(sx,sy,sw,sh);g.clip();g.translate(x+w/2,y+h/2);g.rotate(-Math.PI/2);const GV=19;
+    for(let k=0;k<9;k++){const u=((k*31+tm*4)%250)-125,v=-18+((k*5)%8)+(Math.abs(u)>85?((k*7)%14):0),r=2.5+(k%3);const bl=[[u,v,r],[u-r*1.1,v+1,r*0.75],[u+r*1.2,v+1,r*0.8]];
+      for(const[cl,dy,sc]of[['#9ab8e8',1,1],['#ffffff',0,1],['#e8f0ff',0.8,0.6]]){g.fillStyle=cl;g.beginPath();for(const q of bl){g.moveTo(q[0]+q[2]*sc,q[1]+dy);g.arc(q[0],q[1]+dy,q[2]*sc,0,TAU);}g.fill();}g.fillStyle='#9ab8e8';g.fillRect(u-r*2,v+1.5,r*4,1);}
+    const tree=(u,ht,cr,c1,c2)=>{g.fillStyle='#5a3a1a';g.fillRect(u-1.2,GV-ht,2.4,ht);g.fillStyle='#3a240e';g.fillRect(u+0.4,GV-ht,0.8,ht);
+      for(const[cl,o,sc]of[['#1a4a20',1,1],[c1,0,0.92],[c2,-1,0.55]]){g.fillStyle=cl;g.beginPath();for(const q of[[0,0,cr],[-cr*0.7,cr*0.35,cr*0.7],[cr*0.7,cr*0.35,cr*0.7],[0,-cr*0.6,cr*0.7]]){const qx=u+q[0]+o*0.5,qy=GV-ht+q[1]+o;g.moveTo(qx+q[2]*sc,qy);g.arc(qx,qy,q[2]*sc,0,TAU);}g.fill();}};
+    tree(-96,9,6,'#2e7a34','#5ab84a');tree(-104,15,8,'#3a8a3a','#7ac85a');tree(96,9,6,'#2e7a34','#5ab84a');tree(104,16,8,'#3a8a3a','#7ac85a');
+    g.restore();}
   const sm=g.imageSmoothingEnabled;g.imageSmoothingEnabled=false;g.drawImage(FSS_CV,ox,oy);g.imageSmoothingEnabled=sm;
   g.save();g.translate(x+w/2,y+h/2);g.rotate(-Math.PI/2);const W=h+30,L0=-W/2,B0=w/2;
   if(flash){for(let b=0;b<2;b++){const sd=slot*3+b;let lx=L0+12+hsh(sd)*(W-24),ly=B0-12;const L=34+hsh(sd+0.7)*30;g.lineCap='round';g.lineJoin='round';
