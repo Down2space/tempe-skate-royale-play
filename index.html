@@ -3797,10 +3797,18 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
     blk(30,620,16,22,'#2a8a4a');f(33,624,10,7,'#9affc8');occ(26,616,24,30);}
   /* ---- welcome gate + fence ---- */
   {const gx=520,gy=796;for(let x=0;x<W2;x+=8){if(x>466&&x<574)continue;f(x,gy-8,2,12,'#5a3418');}f(0,gy-6,466,3,'#8a5a2e');f(574,gy-6,W2-574,3,'#8a5a2e');f(0,gy,466,2,'#6a3e1e');f(574,gy,W2-574,2,'#6a3e1e');S(0,gy-8,466,8,{low:1});S(574,gy-8,W2-574,8,{low:1});
-    blk(gx-52,gy-40,14,44,'#2a6a4a');blk(gx+38,gy-40,14,44,'#2a6a4a');for(const sx of[gx-52,gx+38])for(let k=0;k<5;k++){e(sx+7,gy-36+k*8,4,3,NEON[k]);}
-    f(gx-58,gy-54,116,14,'#14101a');f(gx-57,gy-53,114,12,'#7a2a6a');f(gx-58,gy-54,116,2,'#ffc23d');for(let k=0;k<12;k++){const fx=gx-50+k*9;e(fx,gy-47,3,2.5,NEON[k%5]);e(fx,gy-47,1,1,'#ffe68a');}
-    for(let k=0;k<9;k++){const fx=gx-54+k*13.5;e(fx,gy-56,6,5,k%2?'#ff7ad8':'#ffb4e8');e(fx,gy-56,2,2,'#ffe68a');}
-    glow(gx,gy-70,30,'#ff7ab8',0.55);for(let k=0;k<6;k++){const a=k/6*TAU;e(gx+Math.cos(a)*9,gy-70+Math.sin(a)*8,8,7,'#ff7ab8');}e(gx,gy-70,5,5,'#ffe68a');occ(gx-62,gy-84,124,90);}
+    /* gate pillars + arch are depth-sorted sprites (walk behind the pillars, under the arch) */
+    S(gx-52,gy-40,14,44);S(gx+38,gy-40,14,44);for(const sx of[gx-52,gx+38])e(sx+7,gy+3,9,3,'rgba(0,0,0,0.25)');occ(gx-62,gy-84,124,90);
+    {const mk=(w,h,fn)=>{const c=document.createElement('canvas');c.width=w*2;c.height=h*2;const q=c.getContext('2d');q.scale(2,2);fn(q);c.hd=2;return c;};
+     const R=(q,x,y,w,h,c)=>{q.fillStyle=c;q.fillRect(x,y,w,h);},El=(q,x,y,rx,ry,c)=>{q.fillStyle=c;q.beginPath();q.ellipse(x,y,rx,ry,0,0,TAU);q.fill();};
+     const pil=mk(14,44,q=>{R(q,0,0,14,44,'#2a6a4a');R(q,0,0,14,2,shade('#2a6a4a',0.25));R(q,0,42,14,2,shade('#2a6a4a',-0.3));for(let k=0;k<5;k++)El(q,7,4+k*8,4,3,NEON[k]);});
+     for(const sx of[gx-52,gx+38])palms.push({x:X+sx+7,y:Y+gy+4,s:pil,ox:7,oy:44});
+     const arch=mk(124,60,q=>{const ox=gx-62,oy=gy-100,L=(x,y)=>[x-ox,y-oy];
+       const gr=q.createRadialGradient(62,30,1,62,30,30);gr.addColorStop(0,'#ff7ab8');gr.addColorStop(1,'rgba(0,0,0,0)');q.globalAlpha=0.55;q.fillStyle=gr;q.fillRect(32,0,60,60);q.globalAlpha=1;
+       R(q,4,46,116,14,'#14101a');R(q,5,47,114,12,'#7a2a6a');R(q,4,46,116,2,'#ffc23d');for(let k=0;k<12;k++){const fx=gx-50+k*9-ox;El(q,fx,53,3,2.5,NEON[k%5]);El(q,fx,53,1,1,'#ffe68a');}
+       for(let k=0;k<9;k++){const fx=gx-54+k*13.5-ox;El(q,fx,44,6,5,k%2?'#ff7ad8':'#ffb4e8');El(q,fx,44,2,2,'#ffe68a');}
+       for(let k=0;k<6;k++){const a=k/6*TAU;El(q,62+Math.cos(a)*9,30+Math.sin(a)*8,8,7,'#ff7ab8');}El(q,62,30,5,5,'#ffe68a');});
+     palms.push({x:X+gx,y:Y+gy+6,s:arch,ox:62,oy:106});}}
   /* ---- parking + shuttle lot + road ---- */
   {f(0,808,W2,140,'#4e4e56');for(let i=0;i<1600;i++)f(r()*W2,808+r()*140,1,1,r()<0.5?'#5a5a62':'#44444c');f(0,808,W2,2,'#c8c8ce');
     f(483,808,74,140,'#7e7a72');f(486,808,68,140,'#b8b4ac');for(let i=0;i<500;i++)f(486+r()*68,808+r()*140,1,1,r()<0.5?'#a8a49c':'#c8c4bc');for(let k=830;k<948;k+=26)f(486,k,68,1,'#a09c94');
