@@ -3776,7 +3776,6 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
       else if(name==='BOBA'){f(ix-4,iy-5,8,10,'#e8c8a8');f(ix-4,iy-5,8,2,'#ff8ab0');for(let k=0;k<4;k++)e(ix-2+k*1.5,iy+3,1,1,'#3a2418');f(ix+1,iy-9,1,5,'#ff3d9a');}
       else{g.fillStyle='#e8a03a';g.beginPath();g.moveTo(X+ix-8,Y+iy-5);g.lineTo(X+ix+8,Y+iy-5);g.lineTo(X+ix,Y+iy+6);g.fill();f(ix-8,iy-6,16,2,'#c8803a');e(ix-2,iy-2,1.5,1.5,'#c0392b');e(ix+3,iy-3,1.5,1.5,'#c0392b');e(ix,iy+1,1.2,1.2,'#c0392b');}}for(let k=0;k<7;k++)f(x+4+k*8,y+32,8,5,k%2?'#f4efe4':shade(c,-0.2));e(x+12,y+33,5,3,'#14101a');e(x+64,y+33,5,3,'#14101a');};
     truck(374,466,'#e8a03a','TACOS');truck(374,570,'#3a8a4a','ELOTE');truck(590,466,'#ff8ab0','BOBA');truck(590,570,'#3a8ad8','PIZZA');
-    for(let y=448;y<620;y+=26){for(let x=496;x<546;x+=2){const yy=y+Math.sin((x-496)/8)*2;f(x,yy,2,1,'#3a3a42');if(x%8===0)f(x-1,yy+1,3,3,NEON[((x+y)/8|0)%5]);}}
     occ(370,440,300,184);}
   /* letters installation */
   {const s='BLOOM';for(let i=0;i<5;i++){const lx=388+i*20,ly=660;S(lx-1,ly+12,16,4);f(lx-1,ly-1,18,18,'#14101a');f(lx,ly,16,16,NEON[i]);for(let pp=0;pp<5;pp++){const aa=pp/5*TAU;e(lx+8+Math.cos(aa)*3.5,ly+8+Math.sin(aa)*3.5,2.6,2.6,'#ffffff');}e(lx+8,ly+8,2,2,'#14101a');glow(lx+8,ly+8,16,NEON[i],0.4);}occ(380,650,104,32);}
@@ -4070,7 +4069,7 @@ let FEST_FRINGE=null;
 function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const q=c.getContext('2d');q.scale(2,2);const hs=v=>{const z=Math.sin(v*127.1)*43758.5;return z-Math.floor(z);};
   /* one continuous bushy strip: lobed outline (bigger, fewer bumps) blended with flat shade bands */
   const L=[];let y=0;while(y<H){const k=y*0.41,len=7+hs(k)*9,dep=2.2+hs(k+0.4)*1.8;L.push([y,len,dep]);y+=len;}
-  const edge=(inset)=>{q.beginPath();q.moveTo(16,0);for(const[y0,len,dep]of L){const d=Math.max(0.3,dep-inset);q.lineTo(13.5-inset*0.2,y0);q.quadraticCurveTo(13.5-d*2.2,y0+len*0.5,13.5-inset*0.2,y0+len);}q.lineTo(16,H);q.closePath();};
+  const edge=(inset)=>{q.beginPath();q.moveTo(W,0);for(const[y0,len,dep]of L){const d=Math.max(0.3,dep-inset);q.lineTo(13.5-inset*0.2,y0);q.quadraticCurveTo(13.5-d*2.2,y0+len*0.5,13.5-inset*0.2,y0+len);}q.lineTo(W,H);q.closePath();};
   edge(0);q.fillStyle='#205c25';q.fill();
   q.save();q.translate(0.5,-0.8);edge(0.6);q.fillStyle='#397a28';q.fill();q.restore();
   q.save();q.translate(1.1,-1.6);edge(1.4);q.fillStyle='#639a30';q.fill();q.restore();
@@ -4081,7 +4080,7 @@ function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.d
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 let FEST_MB_VIS=true;/* owner: once you've been up there, Moonbeam only comes back after her spot has been off screen */
 function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;const LM=FEST_LAB.m;FEST_WF_FADE+=((LM==='none'&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
-  if(!inRoom){g.save();g.beginPath();g.rect(X+A.x-20,Y+FEST_WF_BASE,A.w+20,A.h);g.clip();g.drawImage(festFringe(),X+947,Y+192,16,214);festFalls(g,inV,tm);g.restore();}
+  if(!inRoom){g.save();g.beginPath();g.rect(X+A.x-20,Y+FEST_WF_BASE,A.w+20,A.h);g.clip();festFalls(g,inV,tm);g.restore();g.save();g.beginPath();g.rect(X+940,Y+FEST_WF_BASE,18,A.h);g.clip();g.drawImage(festFringe(),X+946,Y+192,16,214);g.restore();}
   if(f>0.02){if(!inRoom){g.save();g.globalAlpha=f;g.beginPath();g.rect(X+950,Y+A.y,40,hh);g.clip();g.drawImage(festFringe(),X+947,Y+192,16,214);g.restore();}g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive&&LM==='none'&&FEST_MB_VIS)drawNpc(g,mb);g.restore();}if(inRoom)festRoomWall(g,T,tm);if((inRoom||LM==='roof'||LM==='chute'||LM==='top')&&player&&player.alive){drawSk(g,player);festChuteDraw(g);if(LM==='climb'){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,960-A.x,118-A.y,52,68,X+960,Y+118,52,68);}}
   if(f<0.98&&!inRoom){g.save();g.globalAlpha=1-f;const M=FEST_WF_MASK;let x0=A.w;for(let r=hh;r<hh+76&&r<A.h;r++)for(let x=0;x<A.w;x++)if(M[r*A.w+x]){if(x<x0)x0=x;break;}
     /* the whole base becomes one RESTRICTED ACCESS panel */
@@ -4322,7 +4321,7 @@ window.__probTrip=probTrip;window.__dmtTrip=dmtTrip;window.__CHARS=CHARS;
 const NEON_C=['#ff3d9a','#4fc3f7','#ffc23d','#7dff6a','#c46bff'];
 function festDecor(plant,bush,agave,prickly){const T=TRIPS.fest,X=T.x0,Y=T.y0,r=rng0(8181);
   const ok=(x,y,m)=>!festOcc(x,y,m)&&!festNearPath(x,y,24)&&x>12&&x<T.w-12&&y>96&&y<790;
-  const NO=[[323,210],[272,276],[276,306],[259,316],[258,299]];for(let i=0;i<1400;i++){const x=16+r()*(T.w-32),y=98+r()*690;if(!ok(x,y,14))continue;const k=r();if(NO.some(q=>Math.abs(q[0]-x)<3&&Math.abs(q[1]-y)<3))continue;
+  const NO=[[323,210],[272,276],[276,306],[259,316],[258,299],[560,654],[568,666],[586,648],[640,739],[679,701],[563,657],[968,691],[988,695],[990,698]];for(let i=0;i<1400;i++){const x=16+r()*(T.w-32),y=98+r()*690;if(!ok(x,y,14))continue;const k=r();if(NO.some(q=>Math.abs(q[0]-x)<3&&Math.abs(q[1]-y)<3))continue;
     if(k<0.32)plant('mq',X+x,Y+y);else if(k<0.44)plant('ol',X+x,Y+y);else if(k<0.56)plant('jac',X+x,Y+y);else if(k<0.62)plant('palm',X+x,Y+y);else if(k<0.66)plant('alien',X+x,Y+y);else r();}}
 
 let FSA=1;function festSails(g,inV){const T=TRIPS.fest;if(!inV(T.x0+300,T.y0+460,160))return;const f=camFocus();let under=false;
@@ -4722,7 +4721,7 @@ function drawTripsExtra(g){const F=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.f
     rail(x+132,y+664,x+186,y+664,'#4fc3f7');
     kicker(x+204,y+752,22,14,'#ff3d9a');kicker(x+150,y+668,20,13,'#c46bff');
     rail(x+238,y+740,x+352,y+772,'#ffc23d');
-    {const px=x+950,py=y+680;F(px,py,56,30,'#14101a');for(let i=0;i<7;i++)F(px+1+i*8,py+1,8,20,i%2?'#3a1a4a':'#7a2a8a');F(px+4,py+21,48,8,'#2a1a2a');addSolid(px,py,56,22);}loot(T,6);}
+    loot(T,6);}
   /* CRUCES: skatepark (southeast lot) + street spot by the bus stop */
   {const T=TRIPS.cruces,X=T.x0-340,Y=T.y0,x=X+1180,y=Y+756,w=400,h=128;F(x-4,y-4,w+8,h+8,'#8a7a6a');F(x,y,w,h,'#a8a8b0');for(let i=0;i<800;i++)F(x+r()*w,y+r()*h,1,1,r()<0.5?'#9a9aa2':'#b4b4bc');for(let xx=x+50;xx<x+w;xx+=50)F(xx,y,1,h,'#9a9aa2');for(let yy=y+50;yy<y+h;yy+=50)F(x,yy,w,1,'#9a9aa2');
     const fence=(fx,fy,fw,fh)=>{addSolid(fx,fy,fw,fh);F(fx,fy,fw,fh,'#5a5a62');for(let k=0;k<Math.max(fw,fh);k+=6){if(fw>fh)F(fx+k,fy-2,1,fh+3,'#8a8a92');else F(fx-2,fy+k,fw+3,1,'#8a8a92');}};
