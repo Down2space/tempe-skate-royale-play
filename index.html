@@ -4077,7 +4077,7 @@ function festTufts(){if(FEST_TUFTS)return FEST_TUFTS;const W=14,H=214,c=document
     for(const[col,dx,dy,sc]of[['#205c25',-0.3,0.5,1.05],['#397a28',0,0,0.95],['#639a30',0.4,-0.5,0.6],['#83ba34',0.6,-0.8,0.28]]){q.fillStyle=col;q.beginPath();q.ellipse(cx+dx,y+dy,r*sc*1.2,r*sc,(hs(k+1)-0.5)*0.8,0,TAU);q.ellipse(cx+dx+(hs(k+2)-0.5)*2.4,y+dy+r*0.6,r*sc*0.8,r*sc*0.7,0,0,TAU);q.fill();}
     y+=3+hs(k+0.6)*5;}
   q.clearRect(0,0,W,FEST_FR_TOP);return FEST_TUFTS=c;}
-function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const q=c.getContext('2d');q.scale(2,2);const hs=v=>{const z=Math.sin(v*127.1)*43758.5;return z-Math.floor(z);};
+function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=document.createElement('canvas');c.width=W;c.height=H;const q=c.getContext('2d');/* owner: same pixel size as the falls art (1 art px = 1 map px) */const hs=v=>{const z=Math.sin(v*127.1)*43758.5;return z-Math.floor(z);};
   /* one continuous bushy strip: lobed outline (bigger, fewer bumps) blended with flat shade bands */
   const L=[];let y=0;while(y<H){const k=y*0.41,len=7+hs(k)*9,dep=2.2+hs(k+0.4)*1.8;L.push([y,len,dep]);y+=len;}
   const edge=(inset)=>{q.beginPath();q.moveTo(W,0);for(const[y0,len,dep]of L){const d=Math.max(0.3,dep-inset);q.lineTo(13.5-inset*0.2,y0);q.quadraticCurveTo(13.5-d*2.2,y0+len*0.5,13.5-inset*0.2,y0+len);}for(let i=L.length-1;i>=0;i--){const[y0,len,dep]=L[i];const d=Math.max(0.2,dep*0.5-inset*0.4),rx=W-2.5+inset*0.1;q.lineTo(rx,y0+len);q.quadraticCurveTo(rx+d*1.6,y0+len*0.5,rx,y0);}q.closePath();};
@@ -4089,7 +4089,7 @@ function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=docum
     for(let yy=0;yy<H;yy+=2){if(hs(yy*0.37)<0.55){q.fillStyle='#83ba34';q.fillRect(W-3+((yy>>1)%2),yy,1+((hs(yy)*2)|0),2);}}q.restore();
   for(const[y0,len,dep]of L){if(hs(y0+0.2)<0.55){q.fillStyle='#83ba34';q.fillRect(13.5-dep*0.9,y0+len*0.3,1,1);q.fillRect(13.5-dep*0.6,y0+len*0.3+1,1,1);}}
   for(let yy=6;yy<H;yy+=14+hs(yy)*12){if(hs(yy+0.7)<0.35){q.fillStyle=hs(yy+0.3)<0.5?'#ff7ad8':'#ffe68a';q.fillRect(12,yy,1,1);}}
-  q.clearRect(0,0,W,FEST_FR_TOP);return FEST_FRINGE=c;}
+  q.clearRect(0,0,W,FEST_FR_TOP);{const id=q.getImageData(0,0,W,H),d=id.data;for(let k=3;k<d.length;k+=4)d[k]=d[k]>=110?255:0;q.putImageData(id,0,0);}return FEST_FRINGE=c;}
 function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 let FEST_MB_VIS=true;/* owner: once you've been up there, Moonbeam only comes back after her spot has been off screen */
