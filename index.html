@@ -4065,7 +4065,13 @@ function festLabWallCanvas(){if(FEST_LAB_CV||!FEST_WF_CV)return FEST_LAB_CV;cons
   return FEST_LAB_CV=c;}
 /* the lab robot is the MECH_P character drawn big (5.2x), side view facing left, standing pose */
 function festRobot(g,X,Y,tm){const fr=pframe(MECH_P,'walk',3,'down',12),k=5.2;g.save();g.translate(X+1001.5,Y+366-2*k);g.scale(-1,1);g.drawImage(fr.c,-PCX*PK/2*k,-PG*PK/2*k,fr.c.width/2*k,fr.c.height/2*k);g.restore();}
-let FEST_FRINGE=null;
+let FEST_FRINGE=null,FEST_TUFTS=null;const FEST_FR_TOP=40;/* owner: no bushes beside the bare cliff top */
+/* sparse tufts laid over the seam so the falls art greens and the bush strip read as one */
+function festTufts(){if(FEST_TUFTS)return FEST_TUFTS;const W=14,H=214,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const q=c.getContext('2d');q.scale(2,2);const hs=v=>{const z=Math.sin(v*311.7)*43758.5;return z-Math.floor(z);};
+  let y=3;while(y<H-3){const k=y*0.77,cx=6+(hs(k)-0.5)*2,r=1+hs(k+0.3)*1;
+    for(const[col,dx,dy,sc]of[['#205c25',-0.3,0.5,1.05],['#397a28',0,0,0.95],['#639a30',0.4,-0.5,0.6],['#83ba34',0.6,-0.8,0.28]]){q.fillStyle=col;q.beginPath();q.ellipse(cx+dx,y+dy,r*sc*1.2,r*sc,(hs(k+1)-0.5)*0.8,0,TAU);q.ellipse(cx+dx+(hs(k+2)-0.5)*2.4,y+dy+r*0.6,r*sc*0.8,r*sc*0.7,0,0,TAU);q.fill();}
+    y+=3+hs(k+0.6)*5;}
+  q.clearRect(0,0,W,FEST_FR_TOP);return FEST_TUFTS=c;}
 function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const q=c.getContext('2d');q.scale(2,2);const hs=v=>{const z=Math.sin(v*127.1)*43758.5;return z-Math.floor(z);};
   /* one continuous bushy strip: lobed outline (bigger, fewer bumps) blended with flat shade bands */
   const L=[];let y=0;while(y<H){const k=y*0.41,len=7+hs(k)*9,dep=2.2+hs(k+0.4)*1.8;L.push([y,len,dep]);y+=len;}
@@ -4075,13 +4081,13 @@ function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=docum
   q.save();q.translate(1.1,-1.6);edge(1.4);q.fillStyle='#639a30';q.fill();q.restore();
   for(const[y0,len,dep]of L){if(hs(y0+0.2)<0.55){q.fillStyle='#83ba34';q.fillRect(13.5-dep*0.9,y0+len*0.3,1,1);q.fillRect(13.5-dep*0.6,y0+len*0.3+1,1,1);}}
   for(let yy=6;yy<H;yy+=14+hs(yy)*12){if(hs(yy+0.7)<0.35){q.fillStyle=hs(yy+0.3)<0.5?'#ff7ad8':'#ffe68a';q.fillRect(12,yy,1,1);}}
-  return FEST_FRINGE=c;}
+  q.clearRect(0,0,W,FEST_FR_TOP);return FEST_FRINGE=c;}
 function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 let FEST_MB_VIS=true;/* owner: once you've been up there, Moonbeam only comes back after her spot has been off screen */
 function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;const LM=FEST_LAB.m;FEST_WF_FADE+=((LM==='none'&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
-  if(!inRoom){g.save();g.beginPath();g.rect(X+A.x-20,Y+FEST_WF_BASE,A.w+20,A.h);g.clip();festFalls(g,inV,tm);g.restore();g.save();g.beginPath();g.rect(X+940,Y+FEST_WF_BASE,34,A.h);g.clip();g.drawImage(festFringe(),X+947,Y+192,16,214);/* re-lay the falls art over the bushes so they tuck behind it */g.drawImage(FEST_WF_CV,X+A.x,Y+A.y);festFalls(g,inV,tm);g.restore();}
-  if(f>0.02){if(!inRoom){g.save();g.globalAlpha=f;g.beginPath();g.rect(X+950,Y+A.y,40,hh);g.clip();g.drawImage(festFringe(),X+947,Y+192,16,214);g.restore();}g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive&&LM==='none'&&FEST_MB_VIS)drawNpc(g,mb);g.restore();}if(inRoom)festRoomWall(g,T,tm);if((inRoom||LM==='roof'||LM==='chute'||LM==='top')&&player&&player.alive){drawSk(g,player);festChuteDraw(g);if(LM==='climb'){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,960-A.x,118-A.y,52,68,X+960,Y+118,52,68);}}
+  if(!inRoom){g.save();g.beginPath();g.rect(X+A.x-20,Y+FEST_WF_BASE,A.w+20,A.h);g.clip();festFalls(g,inV,tm);g.restore();g.save();g.beginPath();g.rect(X+940,Y+FEST_WF_BASE,34,A.h);g.clip();g.drawImage(festFringe(),X+947,Y+192,16,214);/* re-lay the falls art over the bushes so they tuck behind it */g.drawImage(FEST_WF_CV,X+A.x,Y+A.y);festFalls(g,inV,tm);g.drawImage(festTufts(),X+953,Y+192,14,214);g.restore();}
+  if(f>0.02){if(!inRoom){g.save();g.globalAlpha=f;g.beginPath();g.rect(X+950,Y+A.y,40,hh);g.clip();g.drawImage(festFringe(),X+947,Y+192,16,214);g.restore();}g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);if(!inRoom)g.drawImage(festTufts(),X+953,Y+192,14,214);const mb=FEST_TRENCH.moon;if(mb&&mb.alive&&LM==='none'&&FEST_MB_VIS)drawNpc(g,mb);g.restore();}if(inRoom)festRoomWall(g,T,tm);if((inRoom||LM==='roof'||LM==='chute'||LM==='top')&&player&&player.alive){drawSk(g,player);festChuteDraw(g);if(LM==='climb'){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,960-A.x,118-A.y,52,68,X+960,Y+118,52,68);}}
   if(f<0.98&&!inRoom){g.save();g.globalAlpha=1-f;const M=FEST_WF_MASK;let x0=A.w;for(let r=hh;r<hh+76&&r<A.h;r++)for(let x=0;x<A.w;x++)if(M[r*A.w+x]){if(x<x0)x0=x;break;}
     /* the whole base becomes one RESTRICTED ACCESS panel */
     const bx=X+A.x+x0-1,by=Y+FEST_ROOM.y,bw=X+T.w-bx,bh=FEST_ROOM.h;
