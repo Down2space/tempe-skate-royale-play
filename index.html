@@ -4068,14 +4068,12 @@ function festLabWallCanvas(){if(FEST_LAB_CV||!FEST_WF_CV)return FEST_LAB_CV;cons
 function festRobot(g,X,Y,tm){const fr=pframe(MECH_P,'walk',3,'down',12),k=5.2;g.save();g.translate(X+1004,Y+366-2*k);g.scale(-1,1);g.drawImage(fr.c,-PCX*PK/2*k,-PG*PK/2*k,fr.c.width/2*k,fr.c.height/2*k);g.restore();}
 let FEST_FRINGE=null;
 function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const q=c.getContext('2d');q.scale(2,2);const hs=v=>{const z=Math.sin(v*127.1)*43758.5;return z-Math.floor(z);};
-  /* irregular leafy foliage: pointed leaves + fern fronds + grass blades in uneven clumps */
-  const leaf=(x,y,a,L,w,col)=>{q.fillStyle=col;q.beginPath();q.moveTo(x,y);q.quadraticCurveTo(x+Math.cos(a-0.5)*L*0.55*w,y+Math.sin(a-0.5)*L*0.55*w,x+Math.cos(a)*L,y+Math.sin(a)*L);q.quadraticCurveTo(x+Math.cos(a+0.5)*L*0.55*w,y+Math.sin(a+0.5)*L*0.55*w,x,y);q.fill();};
-  const COL=['#1e4a1e','#2a5e26','#3a7a30','#4a9a3a','#6ab84a'];
-  for(let pass=0;pass<4;pass++){let y=1;while(y<H-1){const k=y*0.71+pass*13,cx=8+(hs(k)-0.5)*4,sz=1.6+hs(k+0.2)*2.6;
-    const n=3+((hs(k+0.4)*4)|0);for(let m=0;m<n;m++){const a=-Math.PI/2+(hs(k+m*1.7)-0.5)*3.4+(m%2?0.6:-0.6),L=sz*(1.2+hs(k+m*2.3)*1.4);leaf(cx+(hs(k+m)-0.5)*2,y+(hs(k+m*0.9)-0.5)*2,a,L,0.9+hs(k+m*3.1)*0.6,COL[Math.min(4,pass+((hs(k+m*5)*1.6)|0))]);}
-    if(pass===3&&hs(k+0.8)<0.3){q.strokeStyle='#7ac85a';q.lineWidth=0.5;q.beginPath();q.moveTo(cx,y+1);q.lineTo(cx+(hs(k+1.1)-0.5)*3,y-2.5-hs(k)*2);q.stroke();}
-    y+=1.8+hs(k+0.6)*3.6;}}
-  for(let y=4;y<H;y+=6+hs(y)*8){q.fillStyle=hs(y+0.3)<0.5?'#ff7ad8':'#ffe68a';if(hs(y+0.7)<0.35)q.fillRect(7+(hs(y)-0.5)*4,y,1,1);}
+  /* medium: soft uneven bush clumps with a few leaf tips poking out */
+  const leaf=(x,y,a,L,col)=>{q.fillStyle=col;q.beginPath();q.moveTo(x,y);q.quadraticCurveTo(x+Math.cos(a-0.6)*L*0.6,y+Math.sin(a-0.6)*L*0.6,x+Math.cos(a)*L,y+Math.sin(a)*L);q.quadraticCurveTo(x+Math.cos(a+0.6)*L*0.6,y+Math.sin(a+0.6)*L*0.6,x,y);q.fill();};
+  const CL=[];let y=2;while(y<H-2){const k=y*0.53,r=2.2+hs(k)*2.4;CL.push([8+(hs(k+0.3)-0.5)*3.5,y,r,k]);y+=r*(0.9+hs(k+0.5)*0.7);}
+  for(const[col,dx,dy,sc]of[['#1e4a1e',-0.6,0.9,1.08],['#2e6a2a',0,0,1],['#3e8a34',0.5,-0.6,0.72],['#5aa844',0.9,-1.1,0.4]])for(const[x,yy,r,k]of CL){q.fillStyle=col;q.beginPath();q.ellipse(x+dx,yy+dy,r*sc*(0.9+hs(k+1)*0.3),r*sc*(0.75+hs(k+2)*0.25),(hs(k+3)-0.5)*0.8,0,TAU);q.ellipse(x+dx+(hs(k+4)-0.5)*r,yy+dy+r*0.4,r*sc*0.7,r*sc*0.6,0,0,TAU);q.fill();}
+  for(const[x,yy,r,k]of CL){const n=(hs(k+5)*3)|0;for(let m=0;m<n;m++){const a=(hs(k+m*1.3)<0.5?Math.PI:0)+(hs(k+m*2.1)-0.5)*1.6;leaf(x+Math.cos(a)*r*0.7,yy+Math.sin(a)*r*0.5,a,2+hs(k+m)*2,m%2?'#3e8a34':'#2e6a2a');}}
+  for(let yy=6;yy<H;yy+=10+hs(yy)*10){if(hs(yy+0.7)<0.4){q.fillStyle=hs(yy+0.3)<0.5?'#ff7ad8':'#ffe68a';q.fillRect(7+(hs(yy)-0.5)*4,yy,1,1);}}
   return FEST_FRINGE=c;}
 function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
