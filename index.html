@@ -4084,6 +4084,9 @@ function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=docum
   edge(0);q.fillStyle='#205c25';q.fill();
   q.save();q.translate(0.5,-0.8);edge(0.6);q.fillStyle='#397a28';q.fill();q.restore();
   q.save();q.translate(1.1,-1.6);edge(1.4);q.fillStyle='#639a30';q.fill();q.restore();
+  /* colours step up toward the falls art's light leaves (same shape, recolour only): mid -> light -> lightest in pixel bands */
+  q.save();edge(0.6);q.clip();q.fillStyle='#4a8a2c';q.fillRect(W-7,0,1,H);q.fillStyle='#639a30';q.fillRect(W-6,0,6,H);q.fillStyle='#74aa32';q.fillRect(W-4,0,4,H);
+    for(let yy=0;yy<H;yy+=2){if(hs(yy*0.37)<0.55){q.fillStyle='#83ba34';q.fillRect(W-3+((yy>>1)%2),yy,1+((hs(yy)*2)|0),2);}}q.restore();
   for(const[y0,len,dep]of L){if(hs(y0+0.2)<0.55){q.fillStyle='#83ba34';q.fillRect(13.5-dep*0.9,y0+len*0.3,1,1);q.fillRect(13.5-dep*0.6,y0+len*0.3+1,1,1);}}
   for(let yy=6;yy<H;yy+=14+hs(yy)*12){if(hs(yy+0.7)<0.35){q.fillStyle=hs(yy+0.3)<0.5?'#ff7ad8':'#ffe68a';q.fillRect(12,yy,1,1);}}
   q.clearRect(0,0,W,FEST_FR_TOP);return FEST_FRINGE=c;}
