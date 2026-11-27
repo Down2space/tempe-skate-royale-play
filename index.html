@@ -4069,7 +4069,7 @@ let FEST_FRINGE=null;
 function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const q=c.getContext('2d');q.scale(2,2);const hs=v=>{const z=Math.sin(v*127.1)*43758.5;return z-Math.floor(z);};
   /* one continuous bushy strip: lobed outline (bigger, fewer bumps) blended with flat shade bands */
   const L=[];let y=0;while(y<H){const k=y*0.41,len=7+hs(k)*9,dep=2.2+hs(k+0.4)*1.8;L.push([y,len,dep]);y+=len;}
-  const edge=(inset)=>{q.beginPath();q.moveTo(W,0);for(const[y0,len,dep]of L){const d=Math.max(0.3,dep-inset);q.lineTo(13.5-inset*0.2,y0);q.quadraticCurveTo(13.5-d*2.2,y0+len*0.5,13.5-inset*0.2,y0+len);}q.lineTo(W,H);q.closePath();};
+  const edge=(inset)=>{q.beginPath();q.moveTo(W,0);for(const[y0,len,dep]of L){const d=Math.max(0.3,dep-inset);q.lineTo(13.5-inset*0.2,y0);q.quadraticCurveTo(13.5-d*2.2,y0+len*0.5,13.5-inset*0.2,y0+len);}for(let i=L.length-1;i>=0;i--){const[y0,len,dep]=L[i];const d=Math.max(0.2,dep*0.5-inset*0.4),rx=W-2.5+inset*0.1;q.lineTo(rx,y0+len);q.quadraticCurveTo(rx+d*1.6,y0+len*0.5,rx,y0);}q.closePath();};
   edge(0);q.fillStyle='#205c25';q.fill();
   q.save();q.translate(0.5,-0.8);edge(0.6);q.fillStyle='#397a28';q.fill();q.restore();
   q.save();q.translate(1.1,-1.6);edge(1.4);q.fillStyle='#639a30';q.fill();q.restore();
@@ -4080,7 +4080,7 @@ function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.d
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
 let FEST_MB_VIS=true;/* owner: once you've been up there, Moonbeam only comes back after her spot has been off screen */
 function festWfOver(g,inV,tm,T,inRoom){const A=FEST_WF_ART,hh=FEST_WF_BASE-A.y,X=T.x0,Y=T.y0;const LM=FEST_LAB.m;FEST_WF_FADE+=((LM==='none'&&festWfBehind(T)?0:1)-FEST_WF_FADE)*0.15;const f=FEST_WF_FADE;
-  if(!inRoom){g.save();g.beginPath();g.rect(X+A.x-20,Y+FEST_WF_BASE,A.w+20,A.h);g.clip();festFalls(g,inV,tm);g.restore();g.save();g.beginPath();g.rect(X+940,Y+FEST_WF_BASE,18,A.h);g.clip();g.drawImage(festFringe(),X+946,Y+192,16,214);g.restore();}
+  if(!inRoom){g.save();g.beginPath();g.rect(X+A.x-20,Y+FEST_WF_BASE,A.w+20,A.h);g.clip();festFalls(g,inV,tm);g.restore();g.save();g.beginPath();g.rect(X+940,Y+FEST_WF_BASE,30,A.h);g.clip();g.drawImage(festFringe(),X+946,Y+192,16,214);g.restore();}
   if(f>0.02){if(!inRoom){g.save();g.globalAlpha=f;g.beginPath();g.rect(X+950,Y+A.y,40,hh);g.clip();g.drawImage(festFringe(),X+947,Y+192,16,214);g.restore();}g.save();g.globalAlpha=f;g.drawImage(FEST_WF_CV,0,0,A.w,hh,X+A.x,Y+A.y,A.w,hh);g.beginPath();g.rect(X+A.x,Y+A.y,A.w,hh);g.clip();festFalls(g,inV,tm);const mb=FEST_TRENCH.moon;if(mb&&mb.alive&&LM==='none'&&FEST_MB_VIS)drawNpc(g,mb);g.restore();}if(inRoom)festRoomWall(g,T,tm);if((inRoom||LM==='roof'||LM==='chute'||LM==='top')&&player&&player.alive){drawSk(g,player);festChuteDraw(g);if(LM==='climb'){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,960-A.x,118-A.y,52,68,X+960,Y+118,52,68);}}
   if(f<0.98&&!inRoom){g.save();g.globalAlpha=1-f;const M=FEST_WF_MASK;let x0=A.w;for(let r=hh;r<hh+76&&r<A.h;r++)for(let x=0;x<A.w;x++)if(M[r*A.w+x]){if(x<x0)x0=x;break;}
     /* the whole base becomes one RESTRICTED ACCESS panel */
