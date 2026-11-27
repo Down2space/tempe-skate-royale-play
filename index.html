@@ -3685,7 +3685,7 @@ function festGround(g,T,F0,E0,T2,speck,solid0){const X=T.x0,Y=T.y0,W2=T.w,H2=T.h
   let WFCV=null;{const A=FEST_WF_ART,c=document.createElement('canvas');c.width=A.w;c.height=A.h;const cx=c.getContext('2d'),id=cx.createImageData(A.w,A.h),d=id.data,raw=atob(A.rle);let p=0;
     for(let i=0;i<raw.length;i+=2){const n=raw.charCodeAt(i),v=raw.charCodeAt(i+1);if(v){const o=(v-1)*6,cr=parseInt(A.pal.substr(o,2),16),cg=parseInt(A.pal.substr(o+2,2),16),cb=parseInt(A.pal.substr(o+4,2),16);for(let k=0;k<n;k++){const j=(p+k)*4;d[j]=cr;d[j+1]=cg;d[j+2]=cb;d[j+3]=255;}}p+=n;}
     cx.putImageData(id,0,0);WFCV=c;FEST_WF_CV=c;FEST_WF_MASK=new Uint8Array(A.w*A.h);for(let i=0;i<A.w*A.h;i++)FEST_WF_MASK[i]=d[i*4+3]>0?1:0;{const hb=FEST_WF_BASE-A.y;g.drawImage(c,0,hb,A.w,A.h-hb,X+A.x,Y+FEST_WF_BASE,A.w,A.h-hb);}
-    for(const[x,y,w]of A.sol)S(x,y,w,4);FEST_WADE_CELLS=new Set();for(const[x,y,w]of A.wat)for(let k=0;k<w;k+=4)FEST_WADE_CELLS.add((x+k)+','+y);S(982,352,36,12);S(968,FEST_ROOM.y+10,12,26);S(1018,FEST_ROOM.y+FEST_ROOM.h-26,22,14);{const R=FEST_ROOM;S(R.x,R.y,1026-R.x,4);S(1036,R.y,R.x+R.w-1036,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
+    for(const[x,y,w]of A.sol)S(x,y,w,4);FEST_WADE_CELLS=new Set();for(const[x,y,w]of A.wat)for(let k=0;k<w;k+=4)FEST_WADE_CELLS.add((x+k)+','+y);S(978,352,32,12);S(968,FEST_ROOM.y+10,12,26);S(1018,FEST_ROOM.y+FEST_ROOM.h-26,22,14);{const R=FEST_ROOM;S(R.x,R.y,1026-R.x,4);S(1036,R.y,R.x+R.w-1036,4);S(R.x,R.y,4,R.h);S(R.x+R.w-4,R.y,4,R.h);S(R.x,R.y+R.h-4,R.dx-R.x,4);S(R.dx+R.dw,R.y+R.h-4,R.x+R.w-R.dx-R.dw,4);}occ(940,80,100,360);}
   /* river stage deck over the water */
   {f(712,316,244,90,'#4a2a10');f(714,318,240,86,'#9a6a3a');for(let k=0;k<240;k+=6)f(714+k,318,1,86,'#7a4e26');for(let k=0;k<86;k+=18)f(714,318+k,240,1,'#7a4e26');
     for(let x=714;x<954;x+=10){f(x,402,2,6,'#5a3418');}f(714,404,240,2,'#6a3e1e');occ(706,308,256,104);}
@@ -4065,15 +4065,17 @@ function festLabWallCanvas(){if(FEST_LAB_CV||!FEST_WF_CV)return FEST_LAB_CV;cons
     ex.putImageData(id,0,0);g.globalCompositeOperation='destination-in';g.drawImage(er,0,0);}
   return FEST_LAB_CV=c;}
 /* the lab robot is the MECH_P character drawn big (5.2x), side view facing left, standing pose */
-function festRobot(g,X,Y,tm){const fr=pframe(MECH_P,'walk',3,'down',12),k=5.2;g.save();g.translate(X+1004,Y+366-2*k);g.scale(-1,1);g.drawImage(fr.c,-PCX*PK/2*k,-PG*PK/2*k,fr.c.width/2*k,fr.c.height/2*k);g.restore();}
+function festRobot(g,X,Y,tm){const fr=pframe(MECH_P,'walk',3,'down',12),k=5.2;g.save();g.translate(X+999,Y+366-2*k);g.scale(-1,1);g.drawImage(fr.c,-PCX*PK/2*k,-PG*PK/2*k,fr.c.width/2*k,fr.c.height/2*k);g.restore();}
 let FEST_FRINGE=null;
 function festFringe(){if(FEST_FRINGE)return FEST_FRINGE;const W=16,H=214,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const q=c.getContext('2d');q.scale(2,2);const hs=v=>{const z=Math.sin(v*127.1)*43758.5;return z-Math.floor(z);};
-  /* medium: soft uneven bush clumps with a few leaf tips poking out */
-  const leaf=(x,y,a,L,col)=>{q.fillStyle=col;q.beginPath();q.moveTo(x,y);q.quadraticCurveTo(x+Math.cos(a-0.6)*L*0.6,y+Math.sin(a-0.6)*L*0.6,x+Math.cos(a)*L,y+Math.sin(a)*L);q.quadraticCurveTo(x+Math.cos(a+0.6)*L*0.6,y+Math.sin(a+0.6)*L*0.6,x,y);q.fill();};
-  const CL=[];let y=2;while(y<H-2){const k=y*0.53,r=1.1+hs(k)*1;CL.push([13+(hs(k+0.3)-0.5)*1.2,y,r,k]);y+=r*(0.9+hs(k+0.5)*0.7);}
-  for(const[col,dx,dy,sc]of[['#205c25',-0.4,0.6,1.08],['#397a28',0,0,1],['#639a30',0.4,-0.5,0.7],['#83ba34',0.6,-0.8,0.35]])for(const[x,yy,r,k]of CL){q.fillStyle=col;q.beginPath();q.ellipse(x+dx,yy+dy,r*sc*(0.9+hs(k+1)*0.3),r*sc*(0.75+hs(k+2)*0.25),(hs(k+3)-0.5)*0.8,0,TAU);q.ellipse(x+dx+(hs(k+4)-0.5)*r,yy+dy+r*0.4,r*sc*0.7,r*sc*0.6,0,0,TAU);q.fill();}
-  for(const[x,yy,r,k]of CL){const n=hs(k+5)<0.3?1:0;for(let m=0;m<n;m++){const a=(hs(k+m*1.3)<0.5?Math.PI:0)+(hs(k+m*2.1)-0.5)*1.6;leaf(x+Math.cos(a)*r*0.7,yy+Math.sin(a)*r*0.5,a,1.2+hs(k+m)*1.2,m%2?'#639a30':'#397a28');}}
-  for(let yy=6;yy<H;yy+=10+hs(yy)*10){if(hs(yy+0.7)<0.4){q.fillStyle=hs(yy+0.3)<0.5?'#ff7ad8':'#ffe68a';q.fillRect(11+(hs(yy)-0.5)*2,yy,1,1);}}
+  /* one continuous bushy strip: lobed outline (bigger, fewer bumps) blended with flat shade bands */
+  const L=[];let y=0;while(y<H){const k=y*0.41,len=7+hs(k)*9,dep=2.2+hs(k+0.4)*1.8;L.push([y,len,dep]);y+=len;}
+  const edge=(inset)=>{q.beginPath();q.moveTo(16,0);for(const[y0,len,dep]of L){const d=Math.max(0.3,dep-inset);q.lineTo(13.5-inset*0.2,y0);q.quadraticCurveTo(13.5-d*2.2,y0+len*0.5,13.5-inset*0.2,y0+len);}q.lineTo(16,H);q.closePath();};
+  edge(0);q.fillStyle='#205c25';q.fill();
+  q.save();q.translate(0.5,-0.8);edge(0.6);q.fillStyle='#397a28';q.fill();q.restore();
+  q.save();q.translate(1.1,-1.6);edge(1.4);q.fillStyle='#639a30';q.fill();q.restore();
+  for(const[y0,len,dep]of L){if(hs(y0+0.2)<0.55){q.fillStyle='#83ba34';q.fillRect(13.5-dep*0.9,y0+len*0.3,1,1);q.fillRect(13.5-dep*0.6,y0+len*0.3+1,1,1);}}
+  for(let yy=6;yy<H;yy+=14+hs(yy)*12){if(hs(yy+0.7)<0.35){q.fillStyle=hs(yy+0.3)<0.5?'#ff7ad8':'#ffe68a';q.fillRect(12,yy,1,1);}}
   return FEST_FRINGE=c;}
 function festRoomWall(g,T,tm){const c=festLabWallCanvas(),A=FEST_WF_ART;if(c)g.drawImage(c,T.x0+A.x,T.y0+A.y);festRobot(g,T.x0,T.y0,tm);}
 function festWfBehind(T){const p=player;if(!p||!p.alive||!FEST_WF_MASK)return false;const A=FEST_WF_ART;for(let k=0;k<=30;k+=6)for(const dx of[-4,0,4]){const x=Math.round(p.x-T.x0-A.x+dx),y=Math.round(p.y-k-T.y0-A.y);if(x<0||y<0||x>=A.w||y+A.y>=FEST_WF_BASE)continue;if(FEST_WF_MASK[y*A.w+x])return true;}return false;}
