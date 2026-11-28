@@ -4335,8 +4335,9 @@ window.__probTrip=probTrip;window.__dmtTrip=dmtTrip;window.__CHARS=CHARS;
 const NEON_C=['#ff3d9a','#4fc3f7','#ffc23d','#7dff6a','#c46bff'];
 function festDecor(plant,bush,agave,prickly){const T=TRIPS.fest,X=T.x0,Y=T.y0,r=rng0(8181);
   const ok=(x,y,m)=>!festOcc(x,y,m)&&!festNearPath(x,y,24)&&x>12&&x<T.w-12&&y>96&&y<790;
-  const NO=[[323,210],[272,276],[276,306],[259,316],[258,299],[560,654],[568,666],[586,648],[640,739],[679,701],[563,657],[968,691],[988,695],[990,698]];for(let i=0;i<1400;i++){const x=16+r()*(T.w-32),y=98+r()*690;if(!ok(x,y,14))continue;const k=r();if(NO.some(q=>Math.abs(q[0]-x)<3&&Math.abs(q[1]-y)<3))continue;
-    if(k<0.32)plant('mq',X+x,Y+y);else if(k<0.44)plant('ol',X+x,Y+y);else if(k<0.56)plant('jac',X+x,Y+y);else if(k<0.62)plant('palm',X+x,Y+y);else if(k<0.66)plant('alien',X+x,Y+y);else r();}}
+  const NOZ=[[700,60,962,200],[700,560,1040,782]];/* owner: cleared tree zones (behind Rainfall Stage, around the Comedy Tent) */const NO=[[323,210],[272,276],[276,306],[259,316],[258,299],[560,654],[568,666],[586,648],[640,739],[679,701],[563,657],[968,691],[988,695],[990,698]];for(let i=0;i<1400;i++){const x=16+r()*(T.w-32),y=98+r()*690;if(!ok(x,y,14))continue;const k=r();if(NO.some(q=>Math.abs(q[0]-x)<3&&Math.abs(q[1]-y)<3))continue;if(NOZ.some(z=>x>z[0]&&x<z[2]&&y>z[1]&&y<z[3])){r();continue;}
+    if(k<0.32)plant('mq',X+x,Y+y);else if(k<0.44)plant('ol',X+x,Y+y);else if(k<0.56)plant('jac',X+x,Y+y);else if(k<0.62)plant('palm',X+x,Y+y);else if(k<0.66)plant('alien',X+x,Y+y);else r();}
+  /* owner-placed trees */for(const[x,y]of[[839,121],[884,148],[948,141],[786,168],[903,181],[900,617],[978,631],[845,776],[982,744]])plant('mq',X+x,Y+y);}
 
 let FSA=1;function festSails(g,inV){const T=TRIPS.fest;if(!inV(T.x0+300,T.y0+460,160))return;const f=camFocus();let under=false;
   for(const q of FEST_SAILS){const xs=[q[0][0],q[1][0],q[2][0]],ys=[q[0][1],q[1][1],q[2][1]];if(f&&f.x>T.x0+Math.min(...xs)&&f.x<T.x0+Math.max(...xs)&&f.y>T.y0+Math.min(...ys)&&f.y<T.y0+Math.max(...ys)+10)under=true;}
